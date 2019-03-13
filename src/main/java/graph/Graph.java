@@ -1,5 +1,7 @@
 package main.java.graph;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.sql.*;
 
@@ -7,43 +9,81 @@ public class Graph {
 
     private int graphId;
 
-    private List<Node> nodes;
+    private HashMap<Integer, Node> nodes = new HashMap<Integer, Node>();
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     static final String DB_URL = "jdbc:mariadb://127.0.0.1/db";
 
     //  Database credentials
-    static final String USER = "root";
-    static final String PASS = "H0m3b34ch2";
+    static final String USERNAME = "root";
+    static final String PASSWORD = "root";
 
+    public void loadNodes(ResultSet nodes) {
 
-    public void loadGraph() {
+        try {
 
+            while (nodes.next()) {
+
+                int nodeId = nodes.getInt("node_id");
+                ResultSet edges = executeSQLQuery("SELECT * FROM graph.nodes WHERE node_id=" + nodeId);
+                List<Edge> connections = loadEdges(edges);
+                Node node = new Node(nodeId, connections);
+
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public List<Edge> loadEdges(ResultSet edges) {
+
+        List<Edge> connections = null;
+
+        try {
+
+            connections = new LinkedList<Edge>();
+
+            while (edges.next()) {
+
+                int edgeId = edges.getInt("edge_id");
+                int node1Id = edges.getInt("from_node_id");
+                int node2Id = edges.getInt("to_node_id");
+                int graphId = edges.getInt("graph_id");
+
+                Edge edge = new Edge(edgeId, node1Id, node2Id, graphId);
+
+                connections.add(edge);
+
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    return connections;
+    }
+
+    public ResultSet executeSQLQuery(String sqlQuery) {
 
         Connection conn = null;
         Statement stmt = null;
+        ResultSet resultSet = null;
+
         try {
-            //STEP 2: Register JDBC driver
-            Class.forName("org.mariadb.jdbc.Driver");
 
-            //STEP 3: Open a connection
-            System.out.println("Connecting to a selected database...");
-            conn = DriverManager.getConnection(
-                    "jdbc:mariadb://192.168.100.174/db", "root", "root");
-            System.out.println("Connected database successfully...");
+            Class.forName(JDBC_DRIVER );
 
-            //STEP 4: Execute a query
+            System.out.println("Connecting to a selected database.");
+            conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+            System.out.println("Connected database successfully.");
+
             System.out.println("Creating table in given database...");
             stmt = conn.createStatement();
 
-            String sql = "CREATE TABLE REGISTRATION "
-                    + "(id INTEGER not NULL, "
-                    + " first VARCHAR(255), "
-                    + " last VARCHAR(255), "
-                    + " age INTEGER, "
-                    + " PRIMARY KEY ( id ))";
+            resultSet = stmt.executeQuery(sqlQuery);
 
-            stmt.executeUpdate(sql);
             System.out.println("Created table in given database...");
         } catch (SQLException se) {
             //Handle errors for JDBC
@@ -52,24 +92,33 @@ public class Graph {
             //Handle errors for Class.forName
             e.printStackTrace();
         } finally {
-            //finally block used to close resources
+
             try {
                 if (stmt != null) {
                     conn.close();
                 }
             } catch (SQLException se) {
-            }// do nothing
+            }
             try {
                 if (conn != null) {
                     conn.close();
                 }
             } catch (SQLException se) {
                 se.printStackTrace();
-            }//end finally try
-        }//end try
+            }
+        }
         System.out.println("Goodbye!");
 
-
+    return resultSet;
     }
 
+
+
+    public void loadGraph() {
+
+        ResultSet nodes = executeSQLQuery("SELECT * FROM graph.node");
+
+        loadNodes(nodes);
+
+    }
 }
