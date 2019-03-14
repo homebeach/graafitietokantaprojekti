@@ -1,34 +1,42 @@
-package main.java.graph;
+package graph;
 
+import java.sql.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.sql.*;
+
 
 public class Graph {
 
+    public Graph(int graphId) {
+        this.graphId = graphId;
+    }
+
     private int graphId;
 
-    private HashMap<Integer, Node> nodes = new HashMap<Integer, Node>();
+    private LinkedList<Node> nodes;
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    static final String DB_URL = "jdbc:mariadb://127.0.0.1/db";
+    static final String DB_URL = "jdbc:mariadb://127.0.0.1/graph";
 
     //  Database credentials
     static final String USERNAME = "root";
     static final String PASSWORD = "root";
 
-    public void loadNodes(ResultSet nodes) {
+    public void loadNodes(ResultSet rsNodes) {
+
+        nodes = new LinkedList<Node>();
 
         try {
 
-            while (nodes.next()) {
+            while (rsNodes.next()) {
 
-                int nodeId = nodes.getInt("node_id");
-                ResultSet edges = executeSQLQuery("SELECT * FROM graph.nodes WHERE node_id=" + nodeId);
+                int graphId = rsNodes.getInt("graph_id");
+                int nodeId = rsNodes.getInt("node_id");
+                ResultSet edges = executeSQLQuery("SELECT * FROM graph.edges WHERE edges.from_node_id=" + nodeId);
                 List<Edge> connections = loadEdges(edges);
-                Node node = new Node(nodeId, connections);
-
+                Node node = new Node(graphId, nodeId, connections);
+                nodes.add(node);
             }
 
         } catch (SQLException e) {
@@ -75,21 +83,14 @@ public class Graph {
 
             Class.forName(JDBC_DRIVER );
 
-            System.out.println("Connecting to a selected database.");
             conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-            System.out.println("Connected database successfully.");
-
-            System.out.println("Creating table in given database...");
             stmt = conn.createStatement();
 
             resultSet = stmt.executeQuery(sqlQuery);
 
-            System.out.println("Created table in given database...");
-        } catch (SQLException se) {
-            //Handle errors for JDBC
-            se.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         } catch (Exception e) {
-            //Handle errors for Class.forName
             e.printStackTrace();
         } finally {
 
@@ -107,7 +108,6 @@ public class Graph {
                 se.printStackTrace();
             }
         }
-        System.out.println("Goodbye!");
 
     return resultSet;
     }
@@ -116,9 +116,18 @@ public class Graph {
 
     public void loadGraph() {
 
-        ResultSet nodes = executeSQLQuery("SELECT * FROM graph.node");
-
+        ResultSet nodes = executeSQLQuery("SELECT * FROM graph.nodes WHERE nodes.graph_id=" + graphId);
         loadNodes(nodes);
+
+    }
+
+    public void printGraph() {
+
+        System.out.println("Graphid: " + graphId + ".");
+
+        for (Node node : nodes) {
+            node.print();
+        }
 
     }
 }
