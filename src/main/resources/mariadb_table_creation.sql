@@ -11,6 +11,7 @@ CREATE TABLE graph.edges (
 	edge_id INT,
 	from_node_id INT,
 	to_node_id INT,
+	edge_content JSON,
 	graph_id INT,
     PRIMARY KEY (edge_id)
 )COLLATE='utf8_bin';
