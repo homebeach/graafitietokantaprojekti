@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.sql.ResultSet;
 
 public class LoadGraph {
 
@@ -84,7 +87,7 @@ public class LoadGraph {
 
         try {
 
-            Class.forName(JDBC_DRIVER );
+            Class.forName(JDBC_DRIVER);
 
             conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
             stmt = conn.createStatement();
@@ -122,16 +125,6 @@ public class LoadGraph {
         Statement stmt = null;
         ResultSet resultSet = null;
 
-
-
-        /*Adding elements to HashMap*/
-        hmap.put(12, "Chaitanya");
-        hmap.put(2, "Rahul");
-        hmap.put(7, "Singh");
-        hmap.put(49, "Ajeet");
-        hmap.put(3, "Anuj");
-
-
         try {
 
             Class.forName(JDBC_DRIVER );
@@ -156,10 +149,7 @@ public class LoadGraph {
                     while (rs2.next())
 
                         primaryKeys.add(rs2.getString("COLUMN_NAME"));
-
                         primaryKeysOfTables.put(tableName,primaryKeys);
-
-                        System.out.println(rs2.getString("COLUMN_NAME"));
 
             }
 
@@ -190,8 +180,6 @@ public class LoadGraph {
         return resultSet;
     }
 
-
-
     public void loadGraph() {
 
         ResultSet nodes = executeSQLQuery("SELECT * FROM graph.nodes WHERE nodes.graph_id=" + graphId);
@@ -199,9 +187,56 @@ public class LoadGraph {
 
     }
 
+    public void printKeys() {
 
+        for (String table: primaryKeysOfTables.keySet()){
 
+            LinkedList<String> keys = primaryKeysOfTables.get(table);
 
+            System.out.println("Keys for the table: " + table);
+
+            for (String key : keys) {
+                System.out.println(key);
+            }
+
+        }
+
+    }
+
+    public JSONArray getNodes() throws Exception {
+
+        System.out.println("Graphid: " + graphId + ".");
+
+        for (String table: primaryKeysOfTables.keySet()) {
+
+            LinkedList<String> keys = primaryKeysOfTables.get(table);
+
+            System.out.println("Keys for the table: " + table);
+
+            if(keys.size() > 0) {
+
+                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + table + " WHERE nodes.graph_id=" + graphId);
+
+                JSONArray jsonArray = new JSONArray();
+                while (resultSet.next()) {
+                    int total_rows = resultSet.getMetaData().getColumnCount();
+                    for (int i = 0; i < total_rows; i++) {
+                        JSONObject obj = new JSONObject();
+                        obj.put(resultSet.getMetaData().getColumnLabel(i + 1)
+                                .toLowerCase(), resultSet.getObject(i + 1));
+                        jsonArray.put(obj);
+                    }
+
+                   // Edge edge = new Edge();
+
+                    Node node = new Node(0, 0, jsonArray);
+                }
+
+            }
+
+        }
+
+    }
 
     public void printGraph() {
 

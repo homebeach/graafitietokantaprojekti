@@ -13,6 +13,6 @@ public class Main {
 
         LoadGraph graph = new LoadGraph(1);
         graph.getTablesForSchema("imdb");
-
+        graph.printKeysOfTables();
     }
 }
