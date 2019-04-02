@@ -6,25 +6,27 @@ import java.util.List;
 
 public class Node {
 
-    public Node(int graphId, int nodeId, JSONArray jsonArray, List<Edge> connections) {
+    public Node(int graphId, int nodeId, List<Edge> connections) {
         this.graphId = graphId;
         this.nodeId = nodeId;
         this.jsonArray = jsonArray;
         this.connections = connections;
     }
 
-    public Node(int graphId, int nodeId, JSONArray jsonArray) {
+    public Node(int graphId, int nodeId, String tablename, JSONArray jsonArray) {
         this.graphId = graphId;
         this.nodeId = nodeId;
         this.jsonArray = jsonArray;
     }
 
 
-    int graphId;
+    private int graphId;
 
-    int nodeId;
+    private int nodeId;
 
-    JSONArray jsonArray;
+    private String tablename;
+
+    private JSONArray jsonArray;
 
     private List<Edge> connections;
 

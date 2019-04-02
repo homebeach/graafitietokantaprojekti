@@ -17,7 +17,7 @@ public class Graph {
     private LinkedList<Node> nodes;
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    static final String DB_URL = "jdbc:mariadb://127.0.0.1/graph";
+    static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
 
     //  Database credentials
     static final String USERNAME = "root";
@@ -60,9 +60,9 @@ public class Graph {
                 int node2Id = edges.getInt("to_node_id");
                 int graphId = edges.getInt("graph_id");
 
-                Edge edge = new Edge(edgeId, node1Id, node2Id, graphId);
+               // Edge edge = new Edge(edgeId, node1Id, node2Id, graphId);
 
-                connections.add(edge);
+                //connections.add(edge);
 
             }
 

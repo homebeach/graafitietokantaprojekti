@@ -118,8 +118,7 @@ public class LoadGraph {
     return resultSet;
     }
 
-
-    public ResultSet getTablesForSchema(String schema) {
+    public ResultSet getTablesAndKeysForSchema(String schema) {
 
         Connection conn = null;
         Statement stmt = null;
@@ -131,25 +130,50 @@ public class LoadGraph {
 
             conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
 
-            DatabaseMetaData dmd = conn.getMetaData();
+            DatabaseMetaData dbMetaData = conn.getMetaData();
 
             String[] types = {"TABLE"};
 
-            resultSet = dmd.getTables(schema, null, "%", types);
+            resultSet = dbMetaData.getTables(schema, null, "%", types);
 
             while (resultSet.next()) {
 
                     String tableName = resultSet.getString(3);
-                    ResultSet rs2 = dmd.getPrimaryKeys(schema, schema, tableName);
+                    ResultSet rs2 = dbMetaData.getPrimaryKeys(schema, schema, tableName);
 
-                    System.out.println("Table : " + tableName);
+
 
                     LinkedList<String> primaryKeys = new LinkedList<String>();
 
-                    while (rs2.next())
+                    ResultSet foreignKeys = dbMetaData.getImportedKeys("imdb", "imdb", tableName);
+
+
+                    System.out.println("Foreign key for Table : " + tableName);
+
+                    while (foreignKeys.next()) {
+
+                        System.out.println();
+
+                        String fkTableName = foreignKeys.getString("FKTABLE_NAME");
+                        String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
+                        String pkTableName = foreignKeys.getString("PKTABLE_NAME");
+                        String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
+
+                        System.out.println("pk table name: " + pkTableName);
+
+                        Edge edge = new Edge(0, fkColumnName, pkColumnName, 0);
+
+                        System.out.println(fkTableName + "." + fkColumnName + " -> " + pkTableName + "." + pkColumnName);
+                    }
+
+                    System.out.println();
+
+                    while (rs2.next()) {
 
                         primaryKeys.add(rs2.getString("COLUMN_NAME"));
-                        primaryKeysOfTables.put(tableName,primaryKeys);
+                        primaryKeysOfTables.put(tableName, primaryKeys);
+
+                    }
 
             }
 
@@ -203,7 +227,7 @@ public class LoadGraph {
 
     }
 
-    public JSONArray getNodes() throws Exception {
+    public void getNodes() throws Exception {
 
         System.out.println("Graphid: " + graphId + ".");
 
@@ -229,8 +253,9 @@ public class LoadGraph {
 
                    // Edge edge = new Edge();
 
-                    Node node = new Node(0, 0, jsonArray);
+                    //Node node = new Node(0, 0, jsonArray);
                 }
+
 
             }
 
