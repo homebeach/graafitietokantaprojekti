@@ -19,8 +19,9 @@ public class LoadGraph {
 
     private LinkedList<Node> nodes;
 
-    private HashMap<String, LinkedList<String>> primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
+    private LinkedList<Edge> edges = new LinkedList<Edge>();
 
+    private HashMap<String, LinkedList<String>> primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     static final String DB_URL = "jdbc:mariadb://127.0.0.1/graph";
@@ -29,55 +30,6 @@ public class LoadGraph {
     static final String USERNAME = "root";
     static final String PASSWORD = "root";
 
-    public void loadNodes(ResultSet rsNodes) {
-
-        nodes = new LinkedList<Node>();
-
-        try {
-
-            while (rsNodes.next()) {
-
-                int graphId = rsNodes.getInt("graph_id");
-                int nodeId = rsNodes.getInt("node_id");
-                ResultSet edges = executeSQLQuery("SELECT * FROM graph.edges WHERE edges.from_node_id=" + nodeId);
-                List<Edge> connections = loadEdges(edges);
-                Node node = new Node(graphId, nodeId, connections);
-                nodes.add(node);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public List<Edge> loadEdges(ResultSet edges) {
-
-        List<Edge> connections = null;
-
-        try {
-
-            connections = new LinkedList<Edge>();
-
-            while (edges.next()) {
-
-                int edgeId = edges.getInt("edge_id");
-                int node1Id = edges.getInt("from_node_id");
-                int node2Id = edges.getInt("to_node_id");
-                int graphId = edges.getInt("graph_id");
-
-                Edge edge = new Edge(edgeId, node1Id, node2Id, graphId);
-
-                connections.add(edge);
-
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-    return connections;
-    }
 
     public ResultSet executeSQLQuery(String sqlQuery) {
 
@@ -141,32 +93,9 @@ public class LoadGraph {
                     String tableName = resultSet.getString(3);
                     ResultSet rs2 = dbMetaData.getPrimaryKeys(schema, schema, tableName);
 
-
-
                     LinkedList<String> primaryKeys = new LinkedList<String>();
 
-                    ResultSet foreignKeys = dbMetaData.getImportedKeys("imdb", "imdb", tableName);
-
-
-                    System.out.println("Foreign key for Table : " + tableName);
-
-                    while (foreignKeys.next()) {
-
-                        System.out.println();
-
-                        String fkTableName = foreignKeys.getString("FKTABLE_NAME");
-                        String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
-                        String pkTableName = foreignKeys.getString("PKTABLE_NAME");
-                        String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
-
-                        System.out.println("pk table name: " + pkTableName);
-
-                        Edge edge = new Edge(0, fkColumnName, pkColumnName, 0);
-
-                        System.out.println(fkTableName + "." + fkColumnName + " -> " + pkTableName + "." + pkColumnName);
-                    }
-
-                    System.out.println();
+                    ResultSet foreignKeys = dbMetaData.getImportedKeys(schema, schema, tableName);
 
                     while (rs2.next()) {
 
@@ -174,6 +103,33 @@ public class LoadGraph {
                         primaryKeysOfTables.put(tableName, primaryKeys);
 
                     }
+
+                    while (foreignKeys.next()) {
+
+                        String fkTableName = foreignKeys.getString("FKTABLE_NAME");
+                        String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
+                        String pkTableName = foreignKeys.getString("PKTABLE_NAME");
+                        String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
+
+                        Edge edge = null;
+
+                        if(primaryKeys.size() > 1) {
+
+                            edge = new Edge(true, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+
+                        } else {
+
+                            edge = new Edge(false, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+
+                        }
+
+                        edges.add(edge);
+
+                    }
+
+                    System.out.println();
+
+
 
             }
 
@@ -206,8 +162,8 @@ public class LoadGraph {
 
     public void loadGraph() {
 
-        ResultSet nodes = executeSQLQuery("SELECT * FROM graph.nodes WHERE nodes.graph_id=" + graphId);
-        loadNodes(nodes);
+        //ResultSet nodes = executeSQLQuery("SELECT * FROM graph.nodes WHERE nodes.graph_id=" + graphId);
+        //loadNodes(nodes);
 
     }
 
