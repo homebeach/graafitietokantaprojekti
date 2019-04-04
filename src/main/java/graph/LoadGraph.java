@@ -17,11 +17,11 @@ public class LoadGraph {
 
     private int graphId;
 
-    private LinkedList<Node> nodes;
-
-    private LinkedList<Edge> edges = new LinkedList<Edge>();
+    private LinkedList<Node> nodes = new LinkedList<Node>();
 
     private HashMap<String, LinkedList<String>> primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
+
+    private HashMap<String, LinkedList<Edge>> edgesOfTable = new HashMap<String, LinkedList<Edge>>();
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     static final String DB_URL = "jdbc:mariadb://127.0.0.1/graph";
@@ -111,25 +111,33 @@ public class LoadGraph {
                         String pkTableName = foreignKeys.getString("PKTABLE_NAME");
                         String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
 
-                        Edge edge = null;
+                        ResultSet pkColumnValues = executeSQLQuery("SELECT " + pkColumnName + " FROM " + schema + "." + pkTableName);
 
-                        if(primaryKeys.size() > 1) {
+                        while (pkColumnValues.next()) {
 
-                            edge = new Edge(true, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+                            LinkedList<Edge> edges = new LinkedList<Edge>();
 
-                        } else {
+                            String fkColumnValue = pkColumnValues.getString(fkColumnName);
 
-                            edge = new Edge(false, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+                            Edge edge = null;
+
+                            if (primaryKeys.size() > 1) {
+
+                                edge = new Edge(true, fkColumnValue, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+
+                            } else {
+
+                                edge = new Edge(false, fkColumnValue, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+
+                            }
+
+                            edges.add(edge);
+
+                            edgesOfTable.put(tableName, edges);
 
                         }
 
-                        edges.add(edge);
-
                     }
-
-                    System.out.println();
-
-
 
             }
 
@@ -183,7 +191,7 @@ public class LoadGraph {
 
     }
 
-    public void getNodes() throws Exception {
+    public void getNodes(String schema) throws Exception {
 
         System.out.println("Graphid: " + graphId + ".");
 
@@ -193,9 +201,9 @@ public class LoadGraph {
 
             System.out.println("Keys for the table: " + table);
 
-            if(keys.size() > 0) {
+            if(keys.size() == 1) {
 
-                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + table + " WHERE nodes.graph_id=" + graphId);
+                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + table);
 
                 JSONArray jsonArray = new JSONArray();
                 while (resultSet.next()) {
@@ -207,11 +215,15 @@ public class LoadGraph {
                         jsonArray.put(obj);
                     }
 
-                   // Edge edge = new Edge();
+                    LinkedList<Edge> connections = edgesOfTable.get(table);
 
-                    //Node node = new Node(0, 0, jsonArray);
+                    String nodeId = resultSet.getString(keys.get(0));
+
+                    Node node = new Node(schema, nodeId, table, jsonArray, connections);
+
+                    nodes.add(node);
+                    
                 }
-
 
             }
 

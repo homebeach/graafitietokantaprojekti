@@ -2,9 +2,10 @@ package graph;
 
 public class Edge {
 
-    public Edge(boolean directed, String table1name, String column1name, String table2name, String column2name, String graphName) {
+    public Edge(boolean directed, String value, String table1name, String column1name, String table2name, String column2name, String graphName) {
 
         this.directed = directed;
+        this.value = value;
         this.table1name = table1name;
         this.column1name = column1name;
         this.table2name = table2name;
@@ -15,6 +16,7 @@ public class Edge {
 
 
     private boolean directed;
+    private String value;
     private String graphName;
     private String table1name;
     private String column1name;
