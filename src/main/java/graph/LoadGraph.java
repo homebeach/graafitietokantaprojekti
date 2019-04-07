@@ -70,11 +70,11 @@ public class LoadGraph {
     return resultSet;
     }
 
-    public ResultSet getTablesAndKeysForSchema(String schema) {
+    public void getOneToManyEdges(String schema) {
 
         Connection conn = null;
         Statement stmt = null;
-        ResultSet resultSet = null;
+        ResultSet resultSetTablesList = null;
 
         try {
 
@@ -86,23 +86,34 @@ public class LoadGraph {
 
             String[] types = {"TABLE"};
 
-            resultSet = dbMetaData.getTables(schema, null, "%", types);
+            resultSetTablesList = dbMetaData.getTables(schema, null, "%", types);
 
-            while (resultSet.next()) {
+            //Tutkitaan skeemassa olevien taulujen joukkoa
 
-                    String tableName = resultSet.getString(3);
-                    ResultSet rs2 = dbMetaData.getPrimaryKeys(schema, schema, tableName);
+            while (resultSetTablesList.next()) {
 
-                    LinkedList<String> primaryKeys = new LinkedList<String>();
+                String tableName = resultSetTablesList.getString(3);
+
+
+                //Haetaan käsiteltävän taulun pääavaimet
+
+                ResultSet resultSetPrimaryKeysList = dbMetaData.getPrimaryKeys(schema, schema, tableName);
+
+                LinkedList<String> primaryKeysOfTable = new LinkedList<String>();
+
+                while (resultSetPrimaryKeysList.next()) {
+
+                    primaryKeysOfTable.add(resultSetPrimaryKeysList.getString("COLUMN_NAME"));
+
+                }
+
+                //Jos pääavaimia on vain yksi, taulu on tavallinen taulu ja sille haetaan kaaret
+
+                if(primaryKeysOfTable.size() == 1) {
+
+                    //Haetaan taulun vierasavaimet ja käydään ne läpi
 
                     ResultSet foreignKeys = dbMetaData.getImportedKeys(schema, schema, tableName);
-
-                    while (rs2.next()) {
-
-                        primaryKeys.add(rs2.getString("COLUMN_NAME"));
-                        primaryKeysOfTables.put(tableName, primaryKeys);
-
-                    }
 
                     while (foreignKeys.next()) {
 
@@ -111,33 +122,47 @@ public class LoadGraph {
                         String pkTableName = foreignKeys.getString("PKTABLE_NAME");
                         String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
 
-                        ResultSet pkColumnValues = executeSQLQuery("SELECT " + pkColumnName + " FROM " + schema + "." + pkTableName);
 
-                        while (pkColumnValues.next()) {
+                        //Haetaan taulun pääavain-vierasavain -parit tietokannasta ja käydään ne läpi
 
-                            LinkedList<Edge> edges = new LinkedList<Edge>();
+                        ResultSet primayKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeysOfTable.get(0) + "," + pkColumnName + " FROM " + schema + "." + pkTableName);
 
-                            String fkColumnValue = pkColumnValues.getString(fkColumnName);
+                        while (primayKeyForeignKeyValues.next()) {
 
-                            Edge edge = null;
+                            //Haetaan vierasavaimen viitaaman taulun pääavaimet
 
-                            if (primaryKeys.size() > 1) {
+                            ResultSet primaryKeysOfForeignTable = dbMetaData.getPrimaryKeys(schema, schema, fkTableName);
+                            LinkedList<String> primaryKeysOfForeignTableList = new LinkedList<String>();
 
-                                edge = new Edge(true, fkColumnValue, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+                            while (primaryKeysOfForeignTable.next()) {
 
-                            } else {
-
-                                edge = new Edge(false, fkColumnValue, fkTableName, fkColumnName, pkTableName, pkColumnName, schema);
+                                primaryKeysOfForeignTableList.add(primaryKeysOfForeignTable.getString("COLUMN_NAME"));
 
                             }
 
-                            edges.add(edge);
+                            //Jos viitatun taulun pääavaimen koko on 1, lisätään kaari
 
-                            edgesOfTable.put(tableName, edges);
+                            if (primaryKeysOfForeignTableList.size() == 1) {
+
+                                //Kaareen lisätään käsitelävän taulun nimi, sen pääavain, vierastaulun nimi ja sen pääavain.
+
+                                String currentTablePrimaryKeyValue = primayKeyForeignKeyValues.getString(primaryKeysOfTable.get(0));
+                                String currentTableForeignColumnValue = primayKeyForeignKeyValues.getString(fkColumnName);
+
+                                LinkedList<Edge> edges = new LinkedList<Edge>();
+
+                                Edge edge = new Edge(false, tableName, currentTablePrimaryKeyValue, fkTableName, currentTableForeignColumnValue, schema);
+                                edges.add(edge);
+
+                                edgesOfTable.put(tableName, edges);
+
+                            }
 
                         }
 
                     }
+
+                }
 
             }
 
@@ -165,7 +190,6 @@ public class LoadGraph {
             }
         }
 
-        return resultSet;
     }
 
     public void loadGraph() {

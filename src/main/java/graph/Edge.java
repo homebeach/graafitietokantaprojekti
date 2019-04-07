@@ -2,26 +2,24 @@ package graph;
 
 public class Edge {
 
-    public Edge(boolean directed, String value, String table1name, String column1name, String table2name, String column2name, String graphName) {
+    public Edge(boolean directed, String primaryKeyTableName, String primaryKeyColumnValue, String foreignKeyTableName, String foreignKeyTableValue, String graphName) {
 
         this.directed = directed;
-        this.value = value;
-        this.table1name = table1name;
-        this.column1name = column1name;
-        this.table2name = table2name;
-        this.column2name = column2name;
+        this.primaryKeyTableName = primaryKeyTableName;
+        this.primaryKeyColumnValue = primaryKeyColumnValue;
+        this.foreignKeyTableName = foreignKeyTableName;
+        this.foreignKeyTableValue = foreignKeyTableValue;
         this.graphName = graphName;
 
     }
 
 
     private boolean directed;
-    private String value;
     private String graphName;
-    private String table1name;
-    private String column1name;
-    private String table2name;
-    private String column2name;
+    private String primaryKeyTableName;
+    private String primaryKeyColumnValue;
+    private String foreignKeyTableName;
+    private String foreignKeyTableValue;
 
 
     public void print() {

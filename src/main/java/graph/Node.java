@@ -10,7 +10,6 @@ public class Node {
         this.graphName = graphName;
         this.nodeId = nodeId;
         this.jsonArray = jsonArray;
-        this.jsonArray = jsonArray;
         this.connections = connections;
     }
 
