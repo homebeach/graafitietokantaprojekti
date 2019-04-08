@@ -70,7 +70,7 @@ public class LoadGraph {
     return resultSet;
     }
 
-    public void getOneToManyEdges(String schema) {
+    public void getEdges(String schema) {
 
         Connection conn = null;
         Statement stmt = null;
@@ -79,13 +79,9 @@ public class LoadGraph {
         try {
 
             Class.forName(JDBC_DRIVER );
-
             conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-
             DatabaseMetaData dbMetaData = conn.getMetaData();
-
             String[] types = {"TABLE"};
-
             resultSetTablesList = dbMetaData.getTables(schema, null, "%", types);
 
             //Tutkitaan skeemassa olevien taulujen joukkoa
@@ -98,7 +94,6 @@ public class LoadGraph {
                 //Haetaan käsiteltävän taulun pääavaimet
 
                 ResultSet resultSetPrimaryKeysList = dbMetaData.getPrimaryKeys(schema, schema, tableName);
-
                 LinkedList<String> primaryKeysOfTable = new LinkedList<String>();
 
                 while (resultSetPrimaryKeysList.next()) {
@@ -125,7 +120,7 @@ public class LoadGraph {
 
                         //Haetaan taulun pääavain-vierasavain -parit tietokannasta ja käydään ne läpi
 
-                        ResultSet primayKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeysOfTable.get(0) + "," + pkColumnName + " FROM " + schema + "." + pkTableName);
+                        ResultSet primayKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeysOfTable.get(0) + "," + pkColumnName + " FROM " + schema + "." + tableName);
 
                         while (primayKeyForeignKeyValues.next()) {
 
@@ -162,6 +157,52 @@ public class LoadGraph {
 
                     }
 
+                } else if (primaryKeysOfTable.size() == 2) {
+
+                    //Haetaan taulun vierasavaimet ja käydään ne läpi
+
+                    ResultSet foreignKeys = dbMetaData.getImportedKeys(schema, schema, tableName);
+                    HashMap<String, String>> referencedTables = new HashMap<String, String>();
+
+                    while (foreignKeys.next()) {
+
+                        String fkTableName = foreignKeys.getString("FKTABLE_NAME");
+                        String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
+                        String pkTableName = foreignKeys.getString("PKTABLE_NAME");
+                        String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
+
+                        referencedTables.add(fkColumnName, pkTableName);
+
+                    }
+
+
+                    if(foreignKeyColumns.size() == 2) {
+
+                        ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName);
+
+                        while (relationTableValues.next()) {
+
+                            String primaryKey1Value = relationTableValues.getString(primaryKeysOfTable.get(0));
+                            String primaryKey2Value = relationTableValues.getString(primaryKeysOfTable.get(1));
+
+                            int total_rows = relationTableValues.getMetaData().getColumnCount();
+                            for (int i = 0; i < total_rows; i++) {
+                                JSONObject obj = new JSONObject();
+                                obj.put(resultSet.getMetaData().getColumnLabel(i + 1)
+                                        .toLowerCase(), resultSet.getObject(i + 1));
+                                jsonArray.put(obj);
+                            }
+
+                            LinkedList<Edge> edges = new LinkedList<Edge>();
+                            Edge edge = new Edge(true, referencedTables.get(primaryKeysOfTable.get(0)), primaryKey1Value, referencedTables.get(primaryKeysOfTable.get(1)), primaryKey2Value, schema);
+                            edges.add(edge);
+
+                            edgesOfTable.put(tableName, edges);
+
+                        }
+
+                    }
+
                 }
 
             }
@@ -189,7 +230,6 @@ public class LoadGraph {
                 se.printStackTrace();
             }
         }
-
     }
 
     public void loadGraph() {

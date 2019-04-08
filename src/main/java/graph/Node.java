@@ -13,7 +13,6 @@ public class Node {
         this.connections = connections;
     }
 
-
     private String graphName;
 
     private String nodeId;
