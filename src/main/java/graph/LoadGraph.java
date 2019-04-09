@@ -8,6 +8,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.sql.ResultSet;
+import java.util.Set;
 
 public class LoadGraph {
 
@@ -17,11 +18,11 @@ public class LoadGraph {
 
     private int graphId;
 
-    private LinkedList<Node> nodes = new LinkedList<Node>();
+    private LinkedList<Node> nodes;
 
-    private HashMap<String, LinkedList<String>> primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
+    private HashMap<String, LinkedList<String>> primaryKeysOfTables;
 
-    private HashMap<String, LinkedList<Edge>> edgesOfTable = new HashMap<String, LinkedList<Edge>>();
+    private HashMap<String, LinkedList<Edge>> edgesOfTable;
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     static final String DB_URL = "jdbc:mariadb://127.0.0.1/graph";
@@ -29,6 +30,12 @@ public class LoadGraph {
     //  Database credentials
     static final String USERNAME = "root";
     static final String PASSWORD = "root";
+
+    public LoadGraph() {
+        this.nodes = new LinkedList<Node>();
+        this.primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
+        this.edgesOfTable = new HashMap<String, LinkedList<Edge>>();
+    }
 
 
     public ResultSet executeSQLQuery(String sqlQuery) {
@@ -86,10 +93,12 @@ public class LoadGraph {
 
             //Tutkitaan skeemassa olevien taulujen joukkoa
 
+            System.out.println(1);
             while (resultSetTablesList.next()) {
 
                 String tableName = resultSetTablesList.getString(3);
 
+                LinkedList<Edge> edges = new LinkedList<Edge>();
 
                 //Haetaan käsiteltävän taulun pääavaimet
 
@@ -102,54 +111,81 @@ public class LoadGraph {
 
                 }
 
+                ResultSet foreignKeys = dbMetaData.getImportedKeys(schema, schema, tableName);
+
+                HashMap<Integer, HashMap<String, String>> foreignKeysOfTable = new HashMap<Integer, HashMap<String, String>>();
+
+                int foreignKeysCounter = 0;
+                while (foreignKeys.next()) {
+
+                    String fkTableName = foreignKeys.getString("FKTABLE_NAME");
+                    String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
+                    String pkTableName = foreignKeys.getString("PKTABLE_NAME");
+                    String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
+
+                    HashMap<String, String> foreignKeysInformation = new HashMap<String, String>();
+
+                    foreignKeysInformation.put("fkTableName", fkTableName);
+                    foreignKeysInformation.put("fkColumnName", fkColumnName);
+                    foreignKeysInformation.put("pkTableName", pkTableName);
+                    foreignKeysInformation.put("pkColumnName", pkColumnName);
+
+                    foreignKeysOfTable.put(foreignKeysCounter, foreignKeysInformation);
+                    foreignKeysCounter++;
+                }
+
                 //Jos pääavaimia on vain yksi, taulu on tavallinen taulu ja sille haetaan kaaret
 
-                if(primaryKeysOfTable.size() == 1) {
+                if(foreignKeysOfTable.size() == 1) {
 
                     //Haetaan taulun vierasavaimet ja käydään ne läpi
 
-                    ResultSet foreignKeys = dbMetaData.getImportedKeys(schema, schema, tableName);
+                    for (int foreignKeyIndex : foreignKeysOfTable.keySet()) {
 
-                    while (foreignKeys.next()) {
+                        HashMap<String, String> foreignKeyInformation = foreignKeysOfTable.get(foreignKeyIndex);
 
-                        String fkTableName = foreignKeys.getString("FKTABLE_NAME");
-                        String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
-                        String pkTableName = foreignKeys.getString("PKTABLE_NAME");
-                        String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
-
+                        String fkTableName = foreignKeyInformation.get("fkTableName");
+                        String fkColumnName = foreignKeyInformation.get("fkColumnName");
+                        String pkTableName = foreignKeyInformation.get("pkTableName");
+                        String pkColumnName = foreignKeyInformation.get("pkColumnName");
 
                         //Haetaan taulun pääavain-vierasavain -parit tietokannasta ja käydään ne läpi
 
-                        ResultSet primayKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeysOfTable.get(0) + "," + pkColumnName + " FROM " + schema + "." + tableName);
+                        ResultSet primayKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeysOfTable.get(0) + "," + fkColumnName + " FROM " + schema + "." + tableName + " LIMIT 10");
 
                         while (primayKeyForeignKeyValues.next()) {
 
                             //Haetaan vierasavaimen viitaaman taulun pääavaimet
 
-                            ResultSet primaryKeysOfForeignTable = dbMetaData.getPrimaryKeys(schema, schema, fkTableName);
-                            LinkedList<String> primaryKeysOfForeignTableList = new LinkedList<String>();
+                            ResultSet foreignKeysOfForeignTable = dbMetaData.getImportedKeys(schema, schema, pkTableName);
+                            LinkedList<String> foreignKeysOfForeignTableList = new LinkedList<String>();
 
-                            while (primaryKeysOfForeignTable.next()) {
+                            while (foreignKeysOfForeignTable.next()) {
 
-                                primaryKeysOfForeignTableList.add(primaryKeysOfForeignTable.getString("COLUMN_NAME"));
+                                foreignKeysOfForeignTableList.add(foreignKeysOfForeignTable.getString("COLUMN_NAME"));
 
                             }
 
+                            System.out.println("tableName " + tableName);
+                            System.out.println("fkTableName " + fkTableName);
+                            System.out.println("fkColumnName " + fkColumnName);
+                            System.out.println("pkTableName " + pkTableName);
+                            System.out.println("pkColumnName " + pkColumnName);
+
+                            System.out.println("foreignKeysOfForeignTableList.size() " + foreignKeysOfForeignTableList.size());
                             //Jos viitatun taulun pääavaimen koko on 1, lisätään kaari
 
-                            if (primaryKeysOfForeignTableList.size() == 1) {
+                            if (foreignKeysOfForeignTableList.size() < 2) {
+
+                                System.out.println("PRIMARY KEYS");
 
                                 //Kaareen lisätään käsitelävän taulun nimi, sen pääavain, vierastaulun nimi ja sen pääavain.
 
                                 String currentTablePrimaryKeyValue = primayKeyForeignKeyValues.getString(primaryKeysOfTable.get(0));
                                 String currentTableForeignColumnValue = primayKeyForeignKeyValues.getString(fkColumnName);
 
-                                LinkedList<Edge> edges = new LinkedList<Edge>();
-
                                 Edge edge = new Edge(false, tableName, currentTablePrimaryKeyValue, fkTableName, currentTableForeignColumnValue, schema);
                                 edges.add(edge);
-
-                                edgesOfTable.put(tableName, edges);
 
                             }
 
@@ -157,47 +193,49 @@ public class LoadGraph {
 
                     }
 
-                } else if (primaryKeysOfTable.size() == 2) {
+                } else if (foreignKeysOfTable.size() > 1) {
 
                     //Haetaan taulun vierasavaimet ja käydään ne läpi
 
-                    ResultSet foreignKeys = dbMetaData.getImportedKeys(schema, schema, tableName);
-                    HashMap<String, String>> referencedTables = new HashMap<String, String>();
+                    HashMap<String, String> referencedTables = new HashMap<String, String>();
 
-                    while (foreignKeys.next()) {
+                    for (int foreignKeyIndex : foreignKeysOfTable.keySet()) {
 
-                        String fkTableName = foreignKeys.getString("FKTABLE_NAME");
-                        String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
-                        String pkTableName = foreignKeys.getString("PKTABLE_NAME");
-                        String pkColumnName = foreignKeys.getString("PKCOLUMN_NAME");
+                        HashMap<String, String> foreignKeyInformation = foreignKeysOfTable.get(foreignKeyIndex);
 
-                        referencedTables.add(fkColumnName, pkTableName);
+                        String fkTableName = foreignKeyInformation.get("fkTableName");
+                        String fkColumnName = foreignKeyInformation.get("fkColumnName");
+                        String pkTableName = foreignKeyInformation.get("pkTableName");
+                        String pkColumnName = foreignKeyInformation.get("pkColumnName");
+
+                        referencedTables.put(fkColumnName, pkTableName);
 
                     }
 
 
-                    if(foreignKeyColumns.size() == 2) {
+                    if(referencedTables.size() == 2) {
 
-                        ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName);
+                        Object[] keySet = referencedTables.keySet().toArray();
+                        ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " LIMIT 10");
 
                         while (relationTableValues.next()) {
 
-                            String primaryKey1Value = relationTableValues.getString(primaryKeysOfTable.get(0));
-                            String primaryKey2Value = relationTableValues.getString(primaryKeysOfTable.get(1));
+                            String primaryKey1Value = relationTableValues.getString(keySet[0].toString());
+                            String primaryKey2Value = relationTableValues.getString(keySet[1].toString());
 
                             int total_rows = relationTableValues.getMetaData().getColumnCount();
+
+                            JSONArray jsonArray = new JSONArray();
+
                             for (int i = 0; i < total_rows; i++) {
                                 JSONObject obj = new JSONObject();
-                                obj.put(resultSet.getMetaData().getColumnLabel(i + 1)
-                                        .toLowerCase(), resultSet.getObject(i + 1));
+                                obj.put(relationTableValues.getMetaData().getColumnLabel(i + 1)
+                                        .toLowerCase(), relationTableValues.getObject(i + 1));
                                 jsonArray.put(obj);
                             }
 
-                            LinkedList<Edge> edges = new LinkedList<Edge>();
-                            Edge edge = new Edge(true, referencedTables.get(primaryKeysOfTable.get(0)), primaryKey1Value, referencedTables.get(primaryKeysOfTable.get(1)), primaryKey2Value, schema);
+                            Edge edge = new Edge(true, tableName, referencedTables.get(primaryKeysOfTable.get(0)), primaryKey1Value, referencedTables.get(primaryKeysOfTable.get(1)), primaryKey2Value, jsonArray, schema);
                             edges.add(edge);
-
-                            edgesOfTable.put(tableName, edges);
 
                         }
 
@@ -205,6 +243,7 @@ public class LoadGraph {
 
                 }
 
+                edgesOfTable.put(tableName, edges);
             }
 
             conn.close();
@@ -267,11 +306,15 @@ public class LoadGraph {
 
             if(keys.size() == 1) {
 
-                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + table);
+                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + table + " LIMIT 10");
 
-                JSONArray jsonArray = new JSONArray();
+
                 while (resultSet.next()) {
+
                     int total_rows = resultSet.getMetaData().getColumnCount();
+
+                    JSONArray jsonArray = new JSONArray();
+
                     for (int i = 0; i < total_rows; i++) {
                         JSONObject obj = new JSONObject();
                         obj.put(resultSet.getMetaData().getColumnLabel(i + 1)
@@ -285,7 +328,7 @@ public class LoadGraph {
 
                     Node node = new Node(schema, nodeId, table, jsonArray, connections);
 
-                    nodes.add(node);
+                    //nodes.add(node);
                     
                 }
 
@@ -294,6 +337,21 @@ public class LoadGraph {
         }
 
     }
+
+    public void printEdges() {
+
+        for (String table: edgesOfTable.keySet()) {
+
+            LinkedList<Edge> edges = edgesOfTable.get(table);
+
+            for (Edge edge : edges) {
+                edge.print();
+            }
+
+        }
+
+    }
+
 
     public void printGraph() {
 
