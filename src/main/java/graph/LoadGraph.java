@@ -93,7 +93,6 @@ public class LoadGraph {
 
             //Tutkitaan skeemassa olevien taulujen joukkoa
 
-            System.out.println(1);
             while (resultSetTablesList.next()) {
 
                 String tableName = resultSetTablesList.getString(3);
@@ -134,8 +133,10 @@ public class LoadGraph {
                     foreignKeysCounter++;
                 }
 
-                //Jos pääavaimia on vain yksi, taulu on tavallinen taulu ja sille haetaan kaaret
 
+                String foreignTable = null;
+
+                //Jos pääavaimia on vain yksi, taulu on tavallinen taulu ja sille haetaan kaaret
                 if(foreignKeysOfTable.size() == 1) {
 
                     //Haetaan taulun vierasavaimet ja käydään ne läpi
@@ -144,16 +145,18 @@ public class LoadGraph {
 
                         HashMap<String, String> foreignKeyInformation = foreignKeysOfTable.get(foreignKeyIndex);
 
-                        String fkTableName = foreignKeyInformation.get("fkTableName");
+                        foreignTable = foreignKeyInformation.get("fkTableName");
                         String fkColumnName = foreignKeyInformation.get("fkColumnName");
                         String pkTableName = foreignKeyInformation.get("pkTableName");
                         String pkColumnName = foreignKeyInformation.get("pkColumnName");
 
                         //Haetaan taulun pääavain-vierasavain -parit tietokannasta ja käydään ne läpi
 
-                        ResultSet primayKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeysOfTable.get(0) + "," + fkColumnName + " FROM " + schema + "." + tableName + " LIMIT 10");
+                        String primaryKeys = String.join(",", primaryKeysOfTable);
 
-                        while (primayKeyForeignKeyValues.next()) {
+                        ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " LIMIT 10");
+
+                        while (primaryKeyForeignKeyValues.next()) {
 
                             //Haetaan vierasavaimen viitaaman taulun pääavaimet
 
@@ -166,25 +169,22 @@ public class LoadGraph {
 
                             }
 
-                            System.out.println("tableName " + tableName);
-                            System.out.println("fkTableName " + fkTableName);
-                            System.out.println("fkColumnName " + fkColumnName);
-                            System.out.println("pkTableName " + pkTableName);
-                            System.out.println("pkColumnName " + pkColumnName);
-
-                            System.out.println("foreignKeysOfForeignTableList.size() " + foreignKeysOfForeignTableList.size());
                             //Jos viitatun taulun pääavaimen koko on 1, lisätään kaari
 
                             if (foreignKeysOfForeignTableList.size() < 2) {
 
-                                System.out.println("PRIMARY KEYS");
-
                                 //Kaareen lisätään käsitelävän taulun nimi, sen pääavain, vierastaulun nimi ja sen pääavain.
 
-                                String currentTablePrimaryKeyValue = primayKeyForeignKeyValues.getString(primaryKeysOfTable.get(0));
-                                String currentTableForeignColumnValue = primayKeyForeignKeyValues.getString(fkColumnName);
+                                LinkedList<String> primaryKeysOfTableValues = new LinkedList<String>();
+                                for (int i=0; i<primaryKeysOfTable.size(); i++) {
+                                    primaryKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(primaryKeysOfTable.get(i)));
+                                }
 
-                                Edge edge = new Edge(false, tableName, currentTablePrimaryKeyValue, fkTableName, currentTableForeignColumnValue, schema);
+                                LinkedList<String> foreignKeysOfTableValues = new LinkedList<String>();
+                                foreignKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(fkColumnName));
+
+                                Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTable, foreignKeysOfTableValues, schema);
+
                                 edges.add(edge);
 
                             }
@@ -220,8 +220,14 @@ public class LoadGraph {
 
                         while (relationTableValues.next()) {
 
-                            String primaryKey1Value = relationTableValues.getString(keySet[0].toString());
-                            String primaryKey2Value = relationTableValues.getString(keySet[1].toString());
+                            String table1Value = relationTableValues.getString(keySet[0].toString());
+                            String table2Value = relationTableValues.getString(keySet[1].toString());
+
+                            LinkedList<String> table1Values = new LinkedList<String>();
+                            table1Values.add(table1Value);
+
+                            LinkedList<String> table2Values = new LinkedList<String>();
+                            table2Values.add(table2Value);
 
                             int total_rows = relationTableValues.getMetaData().getColumnCount();
 
@@ -234,7 +240,9 @@ public class LoadGraph {
                                 jsonArray.put(obj);
                             }
 
-                            Edge edge = new Edge(true, tableName, referencedTables.get(primaryKeysOfTable.get(0)), primaryKey1Value, referencedTables.get(primaryKeysOfTable.get(1)), primaryKey2Value, jsonArray, schema);
+                            foreignTable = referencedTables.get(primaryKeysOfTable.get(1));
+
+                            Edge edge = new Edge(true, tableName, referencedTables.get(primaryKeysOfTable.get(0)), table1Values, foreignTable, table2Values, jsonArray, schema);
                             edges.add(edge);
 
                         }
@@ -244,6 +252,7 @@ public class LoadGraph {
                 }
 
                 edgesOfTable.put(tableName, edges);
+                edgesOfTable.put(foreignTable, edges);
             }
 
             conn.close();
@@ -294,7 +303,7 @@ public class LoadGraph {
 
     }
 
-    public void getNodes(String schema) throws Exception {
+    public void getNodes(String schema) {
 
         System.out.println("Graphid: " + graphId + ".");
 
@@ -304,10 +313,9 @@ public class LoadGraph {
 
             System.out.println("Keys for the table: " + table);
 
-            if(keys.size() == 1) {
+            ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + table + " LIMIT 10");
 
-                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + table + " LIMIT 10");
-
+            try {
 
                 while (resultSet.next()) {
 
@@ -322,32 +330,26 @@ public class LoadGraph {
                         jsonArray.put(obj);
                     }
 
-                    LinkedList<Edge> connections = edgesOfTable.get(table);
+                    Node node = new Node(schema, keys, table, jsonArray);
+                    nodes.add(node);
 
-                    String nodeId = resultSet.getString(keys.get(0));
-
-                    Node node = new Node(schema, nodeId, table, jsonArray, connections);
-
-                    //nodes.add(node);
-                    
                 }
 
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
 
         }
 
     }
 
-    public void printEdges() {
+    public void getEdgesForNodes(String schema) {
 
-        for (String table: edgesOfTable.keySet()) {
+        for (Node node : nodes) {
 
-            LinkedList<Edge> edges = edgesOfTable.get(table);
-
-            for (Edge edge : edges) {
-                edge.print();
-            }
-
+            String table = node.getTablename();
+            LinkedList<Edge> connections = edgesOfTable.get(table);
+            node.setConnections(connections);
         }
 
     }

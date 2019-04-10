@@ -7,8 +7,9 @@ public class Main
         LoadGraph loadGraph = new LoadGraph();
 
         loadGraph.getEdges("imdb");
-
-        loadGraph.printEdges();
+        loadGraph.getNodes("imdb");
+        loadGraph.getEdgesForNodes("imdb");
+        loadGraph.printGraph();
 
     }
 }
