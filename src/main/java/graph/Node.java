@@ -7,30 +7,33 @@ import java.util.List;
 
 public class Node {
 
-    public Node(String graphName, LinkedList<String> primaryKeys, String tablename, JSONArray jsonArray) {
+    public Node(String graphName, String tablename, LinkedList<String> primaryKeyValues, JSONArray jsonArray) {
+
         this.graphName = graphName;
-        this.primaryKeys = primaryKeys;
+        this.tablename = tablename;
+        this.primaryKeyValues = primaryKeyValues;
         this.jsonArray = jsonArray;
-        this.connections = connections;
+        this.connections = new LinkedList<Edge>();
+
     }
 
     private String graphName;
 
-    public LinkedList<String> getPrimaryKeys() {
-        return primaryKeys;
+    public LinkedList<String> getPrimaryKeyValues() {
+        return primaryKeyValues;
     }
 
-    public void setPrimaryKeys(LinkedList<String> primaryKeys) {
-        this.primaryKeys = primaryKeys;
+    public void setPrimaryKeyValues(LinkedList<String> primaryKeyValues) {
+        this.primaryKeyValues = primaryKeyValues;
     }
 
-    private LinkedList<String> primaryKeys;
+    private LinkedList<String> primaryKeyValues;
 
-    public String getTablename() {
+    public String getTableName() {
         return tablename;
     }
 
-    public void setTablename(String tablename) {
+    public void setTableName(String tablename) {
         this.tablename = tablename;
     }
 
@@ -50,13 +53,15 @@ public class Node {
 
     public void print() {
 
-        System.out.println("Node " + primaryKeys.toString() + " connections:");
+        System.out.println("Node table " + tablename + " with values " + primaryKeyValues.toString() + " connections:");
 
         for (Edge edge : connections) {
 
             edge.print();
 
         }
+
+        System.out.println();
 
     }
 

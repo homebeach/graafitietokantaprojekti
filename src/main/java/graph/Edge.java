@@ -34,8 +34,27 @@ public class Edge {
     private boolean directed;
     private String relation;
     private String table1Name;
+
+    public LinkedList<String> getTable1PrimaryKeyValues() {
+        return table1PrimaryKeyValues;
+    }
+
+    public void setTable1PrimaryKeyValues(LinkedList<String> table1PrimaryKeyValues) {
+        this.table1PrimaryKeyValues = table1PrimaryKeyValues;
+    }
+
     private LinkedList<String> table1PrimaryKeyValues;
+
     private String table2Name;
+
+    public LinkedList<String> getTable2PrimaryKeyValues() {
+        return table2PrimaryKeyValues;
+    }
+
+    public void setTable2PrimaryKeyValues(LinkedList<String> table2PrimaryKeyValues) {
+        this.table2PrimaryKeyValues = table2PrimaryKeyValues;
+    }
+
     private LinkedList<String> table2PrimaryKeyValues;
     private JSONArray jsonArray;
     private String graphName;
