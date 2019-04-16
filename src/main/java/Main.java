@@ -1,19 +1,20 @@
-import graph.LoadGraph;
+import graph.Graph;
 
 public class Main
 {
     public static void main(String[] args)
     {
-        LoadGraph loadGraph = new LoadGraph();
+        Graph graph = new Graph();
 
-        loadGraph.getEdges("imdb");
+        graph.getEdges("imdb");
 
-        loadGraph.getNodes("imdb");
+       // graph.printEdges();
 
-        //loadGraph.printNodes();
+        //graph.getNodes("imdb");
 
-        loadGraph.getEdgesForNodes("imdb");
-        loadGraph.printGraph();
+        //graph.getEdgesForNodes("imdb");
+
+        //graph.printGraph();
 
     }
 }

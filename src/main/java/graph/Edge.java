@@ -33,6 +33,23 @@ public class Edge {
 
     private boolean directed;
     private String relation;
+
+    public String getTable1Name() {
+        return table1Name;
+    }
+
+    public void setTable1Name(String table1Name) {
+        this.table1Name = table1Name;
+    }
+
+    public String getTable2Name() {
+        return table2Name;
+    }
+
+    public void setTable2Name(String table2Name) {
+        this.table2Name = table2Name;
+    }
+
     private String table1Name;
 
     public LinkedList<String> getTable1PrimaryKeyValues() {
@@ -61,7 +78,11 @@ public class Edge {
 
     public void print() {
 
-        System.out.println("Relation: " + relation + "  Table1_name: " + table1Name + " values: " + table1PrimaryKeyValues.toString() + "  Table2_name: " + table2Name + " values: " + table2PrimaryKeyValues.toString());
+        if(jsonArray != null) {
+            System.out.println("Relation: " + relation + "  Table1_name: " + table1Name + " primary key values: " + table1PrimaryKeyValues.toString() + "  Table2_name: " + table2Name + " primary key values: " + table2PrimaryKeyValues.toString() + " and content: " + jsonArray.toString());
+        } else {
+            System.out.println("Relation: " + relation + "  Table1_name: " + table1Name + " primary key values: " + table1PrimaryKeyValues.toString() + "  Table2_name: " + table2Name + " primary key values: " + table2PrimaryKeyValues.toString());
+        }
 
     }
 

@@ -37,6 +37,14 @@ public class Node {
         this.tablename = tablename;
     }
 
+    public String getTablename() {
+        return tablename;
+    }
+
+    public void setTablename(String tablename) {
+        this.tablename = tablename;
+    }
+
     private String tablename;
 
     private JSONArray jsonArray;
@@ -53,7 +61,7 @@ public class Node {
 
     public void print() {
 
-        System.out.println("Node table " + tablename + " with values " + primaryKeyValues.toString() + " connections:");
+        System.out.println("Node table " + tablename + " with primary key values: " + primaryKeyValues.toString() + " and content: " + jsonArray.toString() + "  connections:");
 
         for (Edge edge : connections) {
 
