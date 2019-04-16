@@ -174,9 +174,7 @@ public class Graph {
                         String pkColumnName = foreignKeyInformation.get("pkColumnName");
 
                         //Haetaan taulun pääavain-vierasavain -parit tietokannasta ja käydään ne läpi
-
-                        System.out.println(1);
-
+                        
                         String primaryKeys = String.join(",", primaryKeysOfTable);
 
                         ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
@@ -190,8 +188,6 @@ public class Graph {
                             ResultSet foreignKeysOfForeignTable = dbMetaData.getImportedKeys(schema, schema, foreignTableName);
                             LinkedList<String> foreignKeysOfForeignTableList = new LinkedList<String>();
 
-                            System.out.println(2);
-
                             while (foreignKeysOfForeignTable.next()) {
 
                                 foreignKeysOfForeignTableList.add(foreignKeysOfForeignTable.getString("COLUMN_NAME"));
@@ -204,14 +200,11 @@ public class Graph {
 
                                 //Kaareen lisätään käsitelävän taulun nimi, sen pääavain, vierastaulun nimi ja sen pääavain.
 
-                                System.out.println(3);
-
                                 LinkedList<String> primaryKeysOfTableValues = new LinkedList<String>();
                                 for (int i=0; i<primaryKeysOfTable.size(); i++) {
                                     primaryKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(primaryKeysOfTable.get(i)));
                                 }
 
-                                LinkedList<String> foreignKeysOfTableValues = new LinkedList<String>();
                                 foreignKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(fkColumnName));
 
                                 Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
