@@ -8,13 +8,13 @@ public class Main
 
         graph.getEdges("imdb");
 
-       // graph.printEdges();
+        //graph.printEdges();
 
-        //graph.getNodes("imdb");
+        graph.getNodes("imdb");
 
-        //graph.getEdgesForNodes("imdb");
+        graph.getEdgesForNodes("imdb");
 
-        //graph.printGraph();
+        graph.printGraph();
 
     }
 }

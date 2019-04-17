@@ -82,8 +82,6 @@ public class Graph {
         Statement stmt = null;
         ResultSet resultSetTablesList = null;
 
-
-
         try {
 
             Class.forName(JDBC_DRIVER );
@@ -113,6 +111,8 @@ public class Graph {
 
                 HashMap<Integer, HashMap<String, String>> foreignKeysOfTable = new HashMap<Integer, HashMap<String, String>>();
 
+                boolean foreignKeysArePrimaryKeys = true;
+
                 int foreignKeysCounter = 0;
                 while (foreignKeys.next()) {
 
@@ -130,40 +130,26 @@ public class Graph {
 
                     foreignKeysOfTable.put(foreignKeysCounter, foreignKeysInformation);
                     foreignKeysCounter++;
-                }
 
-                boolean foreignKeysArePrimaryKeys = false;
+                    /*
+                    System.out.println("Column contains");
+                    System.out.println(fkColumnName);
+                    System.out.println(primaryKeysOfTable.toString());
+                    System.out.println(primaryKeysOfTable.contains(fkColumnName));
+                    System.out.println();
+*/
+                    if(!primaryKeysOfTable.contains(fkColumnName)) {
+                        foreignKeysArePrimaryKeys = false;
+                    }
+
+                }
 
                 LinkedList<String> foreignKeysOfTableValues = new LinkedList<String>();
 
 
-                for (int foreignKeyIndex : foreignKeysOfTable.keySet()) {
-
-                    HashMap<String, String> foreignKeyInformation = foreignKeysOfTable.get(foreignKeyIndex);
-                    String fkColumnName = foreignKeyInformation.get("fkColumnName");
-
-                    for (String primaryKey : primaryKeysOfTable) {
-
-                        if(primaryKey.equals(fkColumnName)) {
-                            foreignKeysArePrimaryKeys = true;
-                        }
-
-                    }
-
-                    if(!foreignKeysArePrimaryKeys) {
-                        break;
-                    }
-
-                }
-
-                System.out.println("tableName: " + tableName + " foreignKeysArePrimaryKeys: " + foreignKeysArePrimaryKeys);
-
-
-                if(!foreignKeysArePrimaryKeys) {
+                if(foreignKeysCounter < 2 || !foreignKeysArePrimaryKeys) {
 
                     //Haetaan taulun vierasavaimet ja käydään ne läpi
-
-                    System.out.println("foreignkeys");
 
                     for (int foreignKeyIndex : foreignKeysOfTable.keySet()) {
 
@@ -174,7 +160,7 @@ public class Graph {
                         String pkColumnName = foreignKeyInformation.get("pkColumnName");
 
                         //Haetaan taulun pääavain-vierasavain -parit tietokannasta ja käydään ne läpi
-                        
+
                         String primaryKeys = String.join(",", primaryKeysOfTable);
 
                         ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
@@ -208,8 +194,6 @@ public class Graph {
                                 foreignKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(fkColumnName));
 
                                 Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
-
-                                edge.print();
 
                                 edges.add(edge);
 
@@ -273,8 +257,6 @@ public class Graph {
 
                             Edge edge = new Edge(true, tableName, referencedTables.get(primaryKeysOfTable.get(0)), table1Values, referencedTables.get(primaryKeysOfTable.get(1)), table2Values, jsonArray, schema);
 
-                            edge.print();
-
                             edges.add(edge);
                         }
 
@@ -329,11 +311,11 @@ public class Graph {
 
     public void getNodes(String schema) {
 
+        System.out.println("Loading nodes");
+
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSetTablesList = null;
-
-        System.out.println("Loading nodes");
 
         try {
 
@@ -415,20 +397,24 @@ public class Graph {
 
                 LinkedList<Edge> edges = edgesOfTable.get(node.getTableName());
 
-                for (Edge edge : edges) {
+                if(edges != null) {
 
-                    LinkedList<String> primaryKeyValues = node.getPrimaryKeyValues();
-                    Collections.sort(primaryKeyValues);
+                    for (Edge edge : edges) {
 
-                    LinkedList<String> table1PrimaryKeyValues = edge.getTable1PrimaryKeyValues();
-                    Collections.sort(table1PrimaryKeyValues);
+                        LinkedList<String> primaryKeyValues = node.getPrimaryKeyValues();
+                        Collections.sort(primaryKeyValues);
 
-                    LinkedList<String> table2PrimaryKeyValues = edge.getTable2PrimaryKeyValues();
-                    Collections.sort(table2PrimaryKeyValues);
+                        LinkedList<String> table1PrimaryKeyValues = edge.getTable1PrimaryKeyValues();
+                        Collections.sort(table1PrimaryKeyValues);
 
-                    if (primaryKeyValues.equals(table1PrimaryKeyValues) || primaryKeyValues.equals(table2PrimaryKeyValues)) {
+                        LinkedList<String> table2PrimaryKeyValues = edge.getTable2PrimaryKeyValues();
+                        Collections.sort(table2PrimaryKeyValues);
 
-                        node.getConnections().add(edge);
+                        if (primaryKeyValues.equals(table1PrimaryKeyValues) || primaryKeyValues.equals(table2PrimaryKeyValues)) {
+
+                            node.getConnections().add(edge);
+
+                        }
 
                     }
 
@@ -446,15 +432,11 @@ public class Graph {
 
         for (String table: edgesOfTable.keySet()){
 
-            System.out.println(table);
-
             LinkedList<Edge> edges = edgesOfTable.get(table);
 
             for (Edge edge : edges) {
                 edge.print();
             }
-
-            System.out.println();
 
         }
 
