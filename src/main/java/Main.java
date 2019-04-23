@@ -6,13 +6,17 @@ public class Main
     {
         Graph graph = new Graph();
 
-        graph.getEdges("imdb");
+        graph.getEdges("varasto");
 
         //graph.printEdges();
 
-        graph.getNodes("imdb");
+        graph.getNodes("varasto");
 
-        graph.getEdgesForNodes("imdb");
+        //graph.printEdges();
+
+        //graph.printNodes();
+
+        graph.getEdgesForNodes("varasto");
 
         graph.printGraph();
 

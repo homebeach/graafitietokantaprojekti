@@ -22,7 +22,7 @@ public class Graph {
     private HashMap<String, LinkedList<Edge>> edgesOfTable;
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    static final String DB_URL = "jdbc:mariadb://127.0.0.1/graph";
+    static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
 
     //  Database credentials
     static final String USERNAME = "root";
@@ -176,7 +176,7 @@ public class Graph {
 
                             while (foreignKeysOfForeignTable.next()) {
 
-                                foreignKeysOfForeignTableList.add(foreignKeysOfForeignTable.getString("COLUMN_NAME"));
+                                foreignKeysOfForeignTableList.add(foreignKeysOfForeignTable.getString("FKCOLUMN_NAME"));
 
                             }
 
