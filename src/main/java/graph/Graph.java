@@ -338,7 +338,9 @@ public class Graph {
 
                 String primaryKeys = String.join(",", primaryKeysOfTable);
 
-                ResultSet resultSet = executeSQLQuery("SELECT " + primaryKeys + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
+                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
+
+
 
                 while (resultSet.next()) {
 
@@ -355,8 +357,8 @@ public class Graph {
 
                     LinkedList<String> primaryKeysOfTableValues = new LinkedList<String>();
 
-                    for(int i=1; i<=primaryKeysOfTable.size(); i++) {
-                        primaryKeysOfTableValues.add(resultSet.getString(i));
+                    for (String primaryKeyColumn : primaryKeysOfTable) {
+                        primaryKeysOfTableValues.add(resultSet.getString(primaryKeyColumn));
                     }
 
                     Node node = new Node(schema, tableName, primaryKeysOfTableValues, jsonArray);
