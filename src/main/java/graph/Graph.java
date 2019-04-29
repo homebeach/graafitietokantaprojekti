@@ -131,13 +131,6 @@ public class Graph {
                     foreignKeysOfTable.put(foreignKeysCounter, foreignKeysInformation);
                     foreignKeysCounter++;
 
-                    /*
-                    System.out.println("Column contains");
-                    System.out.println(fkColumnName);
-                    System.out.println(primaryKeysOfTable.toString());
-                    System.out.println(primaryKeysOfTable.contains(fkColumnName));
-                    System.out.println();
-*/
                     if(!primaryKeysOfTable.contains(fkColumnName)) {
                         foreignKeysArePrimaryKeys = false;
                     }
@@ -147,7 +140,7 @@ public class Graph {
                 LinkedList<String> foreignKeysOfTableValues = new LinkedList<String>();
 
 
-                if(foreignKeysCounter < 2 || !foreignKeysArePrimaryKeys) {
+                if(!foreignKeysArePrimaryKeys) {
 
                     //Haetaan taulun vierasavaimet ja käydään ne läpi
 
@@ -336,33 +329,55 @@ public class Graph {
                     primaryKeysOfTable.add(resultSetPrimaryKeysList.getString("COLUMN_NAME"));
                 }
 
-                String primaryKeys = String.join(",", primaryKeysOfTable);
+                ResultSet foreignKeysOfForeignTable = dbMetaData.getImportedKeys(schema, schema, tableName);
+                LinkedList<String> foreignKeysOfForeignTableList = new LinkedList<String>();
 
-                ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
+                while (foreignKeysOfForeignTable.next()) {
 
+                    foreignKeysOfForeignTableList.add(foreignKeysOfForeignTable.getString("FKCOLUMN_NAME"));
 
+                }
 
-                while (resultSet.next()) {
+                boolean foreignKeysArePrimaryKeys = true;
 
-                    int total_rows = resultSet.getMetaData().getColumnCount();
+                for(String fkColumnName : foreignKeysOfForeignTableList) {
 
-                    JSONArray jsonArray = new JSONArray();
-
-                    for (int i = 0; i < total_rows; i++) {
-                        JSONObject obj = new JSONObject();
-                        obj.put(resultSet.getMetaData().getColumnLabel(i + 1)
-                                .toLowerCase(), resultSet.getObject(i + 1));
-                        jsonArray.put(obj);
+                    if(!primaryKeysOfTable.contains(fkColumnName)) {
+                        foreignKeysArePrimaryKeys = false;
                     }
 
-                    LinkedList<String> primaryKeysOfTableValues = new LinkedList<String>();
+                }
 
-                    for (String primaryKeyColumn : primaryKeysOfTable) {
-                        primaryKeysOfTableValues.add(resultSet.getString(primaryKeyColumn));
+
+                if(!foreignKeysArePrimaryKeys) {
+
+                    String primaryKeys = String.join(",", primaryKeysOfTable);
+
+                    ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
+
+                    while (resultSet.next()) {
+
+                        int total_rows = resultSet.getMetaData().getColumnCount();
+
+                        JSONArray jsonArray = new JSONArray();
+
+                        for (int i = 0; i < total_rows; i++) {
+                            JSONObject obj = new JSONObject();
+                            obj.put(resultSet.getMetaData().getColumnLabel(i + 1)
+                                    .toLowerCase(), resultSet.getObject(i + 1));
+                            jsonArray.put(obj);
+                        }
+
+                        LinkedList<String> primaryKeysOfTableValues = new LinkedList<String>();
+
+                        for (String primaryKeyColumn : primaryKeysOfTable) {
+                            primaryKeysOfTableValues.add(resultSet.getString(primaryKeyColumn));
+                        }
+
+                        Node node = new Node(schema, tableName, primaryKeysOfTableValues, jsonArray);
+                        nodes.add(node);
+
                     }
-
-                    Node node = new Node(schema, tableName, primaryKeysOfTableValues, jsonArray);
-                    nodes.add(node);
 
                 }
 
