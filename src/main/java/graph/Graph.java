@@ -156,7 +156,8 @@ public class Graph {
 
                         String primaryKeys = String.join(",", primaryKeysOfTable);
 
-                        ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
+                        //ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
+                        ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys);
 
                         LinkedList<Edge> edges = new LinkedList<Edge>();
 
@@ -188,16 +189,33 @@ public class Graph {
 
                                 Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
 
+                                //edge.print();
+
                                 edges.add(edge);
 
                             }
 
-
-
                         }
 
-                        edgesOfTable.put(tableName, edges);
-                        edgesOfTable.put(foreignTableName, edges);
+                        LinkedList<Edge> edgesForTable1 = edgesOfTable.get(tableName);
+
+                        if(edgesForTable1 == null) {
+                            edgesOfTable.put(tableName, edges);
+
+                        } else {
+                            edgesForTable1.addAll(edges);
+                            edgesOfTable.put(tableName, edgesForTable1);
+                        }
+
+                        LinkedList<Edge> edgesForTable2 = edgesOfTable.get(foreignTableName);
+
+                        if(edgesForTable2 == null) {
+                            edgesOfTable.put(foreignTableName, edges);
+
+                        } else {
+                            edgesForTable2.addAll(edges);
+                            edgesOfTable.put(foreignTableName, edgesForTable2);
+                        }
 
                     }
 
@@ -222,7 +240,8 @@ public class Graph {
                     if(referencedTables.size() == 2) {
 
                         Object[] keySet = referencedTables.keySet().toArray();
-                        ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " LIMIT 20");
+                        //ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " LIMIT 20");
+                        ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName);
 
                         LinkedList<Edge> edges = new LinkedList<Edge>();
 
@@ -253,8 +272,26 @@ public class Graph {
                             edges.add(edge);
                         }
 
-                        edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(0)), edges);
-                        edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(1)), edges);
+                        LinkedList<Edge> edgesForTable1 = edgesOfTable.get(referencedTables.get(primaryKeysOfTable.get(0)));
+
+                        if(edgesForTable1 == null) {
+                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(0)), edges);
+
+                        } else {
+                            edgesForTable1.addAll(edges);
+                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(0)), edgesForTable1);
+                        }
+
+                        LinkedList<Edge> edgesForTable2 = edgesOfTable.get(referencedTables.get(primaryKeysOfTable.get(1)));
+
+                        if(edgesForTable2 == null) {
+                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(1)), edges);
+
+                        } else {
+                            edgesForTable2.addAll(edges);
+                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(1)), edgesForTable2);
+                        }
+
                     }
 
                 }
@@ -340,20 +377,27 @@ public class Graph {
 
                 boolean foreignKeysArePrimaryKeys = true;
 
-                for(String fkColumnName : foreignKeysOfForeignTableList) {
+                if(foreignKeysOfForeignTableList.size() > 0) {
 
-                    if(!primaryKeysOfTable.contains(fkColumnName)) {
-                        foreignKeysArePrimaryKeys = false;
+                    for (String fkColumnName : foreignKeysOfForeignTableList) {
+
+                        if (!primaryKeysOfTable.contains(fkColumnName)) {
+                            foreignKeysArePrimaryKeys = false;
+                        }
+
                     }
 
-                }
+                } else {
 
+                    foreignKeysArePrimaryKeys = false;
+
+                }
 
                 if(!foreignKeysArePrimaryKeys) {
 
                     String primaryKeys = String.join(",", primaryKeysOfTable);
 
-                    ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
+                    ResultSet resultSet = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys);
 
                     while (resultSet.next()) {
 
@@ -448,6 +492,8 @@ public class Graph {
     public void printEdges() {
 
         for (String table: edgesOfTable.keySet()){
+
+            System.out.println("Table: " + table);
 
             LinkedList<Edge> edges = edgesOfTable.get(table);
 
