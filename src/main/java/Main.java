@@ -8,8 +8,6 @@ public class Main
 
         graph.getEdges("varasto");
 
-        //graph.printEdges();
-
         graph.getNodes("varasto");
 
         //graph.printEdges();
