@@ -4,6 +4,7 @@ import graph.Graph;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class DataGenerator
@@ -95,6 +96,24 @@ public class DataGenerator
 
         return resultSet;
     }
+
+    enum TyoTyyppi {
+        työ, suunnittelu, aputyö
+    }
+
+    class RandomEnum<E extends Enum<TyoTyyppi>> {
+        Random r = new Random();
+        E[] values;
+
+        public RandomEnum(Class<E> token) {
+            values = token.getEnumConstants();
+        }
+
+        public E random() {
+            return values[r.nextInt(values.length)];
+        }
+    }
+
 
 
 
@@ -190,11 +209,56 @@ public class DataGenerator
 
         int sisaanOstoHinta = faker.random().nextInt(1,100);
 
-        sqlInsert = "INSERT INTO varasto.varasto (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES('" + pituus + " m KAAPELI', " + varastoSaldo + ", 'm'," + sisaanOstoHinta + ", 24, false)";
+        sqlInsert = "INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES('" + pituus + " m KAAPELI', " + varastoSaldo + ", 'm'," + sisaanOstoHinta + ", 24, false)";
 
         executeSQLInsert(sqlInsert);
 
-        sqlInsert = "INSERT INTO varasto.tarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(1, 0," + suoritusId + ", 1)";
+        resultSet = executeSQLQuery("SELECT id FROM varasto.varastotarvike WHERE nimi=" + pituus + " m KAAPELI AND varastosaldo=" + varastoSaldo + " AND sisaanostohinta=" + sisaanOstoHinta);
+
+        int varastoTarvikeId = 0;
+
+        try {
+
+            varastoTarvikeId = resultSet.getInt("id");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        int lukumaara = faker.random().nextInt(1,100);
+
+        int alennusprosentti = faker.random().nextInt(1,100);
+
+        double alennus = (0.01 * alennusprosentti);
+
+        sqlInsert = "INSERT INTO varasto.kaytettytarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(" + lukumaara + "," + alennus + "," + suoritusId + "," + varastoTarvikeId + ")";
+
+        executeSQLInsert(sqlInsert);
+
+        hinta = faker.random().nextInt(10,10000);
+
+        RandomEnum<TyoTyyppi> randomTyotyyppi = new RandomEnum<TyoTyyppi>(TyoTyyppi.class);
+
+        String tyoTyyppi = String.valueOf(randomTyotyyppi.random());
+
+        sqlInsert = "INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES(" + tyoTyyppi + ", " + hinta + ")";
+
+        executeSQLInsert(sqlInsert);
+
+
+        resultSet = executeSQLQuery("SELECT id FROM varasto.tyotyyppi WHERE tyotyyppi=" + tyoTyyppi + " AND hinta=" + hinta);
+
+        int tyotyyppiId = 0;
+
+        try {
+
+            tyotyyppiId = resultSet.getInt("id");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + lukumaara + "," + alennus + "," + suoritusId + ")";
 
         executeSQLInsert(sqlInsert);
 
