@@ -115,9 +115,31 @@ public class DataGenerator
     }
 
 
+    public void insertData(int rowCount) {
+
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PISTORASIA KULMAMALLI 3-OSAINEN', 10, 'kpl', 14.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PEITELEVY 2-OS JUSSI', 20, 'kpl', 3.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PEITELEVY 1-OS JUSSI', 20, 'kpl', 2.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('KYTKIN 5-SRJ UPPO JUSSI', 25, 'kpl', 11.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('KYTKIN PINTA JUSSI 1/6', 10, 'kpl', 8.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
+
+        executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('suunnittelu', 55)");
+        executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('työ', 45)");
+        executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('aputyö', 35)");
+
+        for(int i=0; i < rowCount; i++) {
+            insertRow();
+        }
+
+    }
 
 
-    public void insertData()
+
+    public void insertRow()
     {
 
         Faker faker = new Faker();
@@ -125,41 +147,65 @@ public class DataGenerator
         String name = faker.name().fullName(); // Miss Samanta Schmidt
         String streetAddress = faker.address().streetAddress(); // 60018 Sawayn Brooks Suite 449
 
-        String sqlInsert = "INSERT INTO varasto.asiakas (nimi, osoite) VALUES (" + name + "," + streetAddress + ")";
+        String sqlInsert = "INSERT INTO varasto.asiakas (nimi, osoite) VALUES (\"" + name + "\",\"" + streetAddress + "\")";
+
+        System.out.println(sqlInsert);
 
         executeSQLInsert(sqlInsert);
 
-        ResultSet resultSet = executeSQLQuery("SELECT id FROM varasto.asiakas WHERE nimi=" + name + " AND osoite=" + streetAddress + ";");
+        String sqlQuery = "SELECT id FROM varasto.asiakas WHERE nimi=\"" + name + "\" AND osoite=\"" + streetAddress + "\";";
+
+        System.out.println(sqlQuery);
+
+        ResultSet resultSet = executeSQLQuery(sqlQuery);
 
         int asiakasId = 0;
 
         try {
 
-            asiakasId = resultSet.getInt("id");
+            while(resultSet.next()) {
 
+                asiakasId = resultSet.getInt("id");
+
+                System.out.println("asiakasId: " + asiakasId);
+
+                break;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        Date dueDate = (Date) faker.date().past(360, TimeUnit.DAYS);
+        java.util.Date dueDate = faker.date().past(360, TimeUnit.DAYS);
 
-        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
         String dueDateAsString = dateFormat.format(dueDate);
 
         sqlInsert = "INSERT INTO varasto.lasku (asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + asiakasId + ",1,STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y'),1,0)";
 
+        System.out.println(sqlInsert);
+
         executeSQLInsert(sqlInsert);
 
-        resultSet = executeSQLQuery("SELECT id FROM varasto.lasku WHERE asiakasId=" + asiakasId + " AND erapaiva=" + streetAddress + ";");
+        sqlQuery = "SELECT id FROM varasto.lasku WHERE asiakasId=" + asiakasId + " AND erapaiva=STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y');";
+
+        System.out.println(sqlQuery);
+
+        resultSet = executeSQLQuery(sqlQuery);
 
         int laskuId = 0;
 
         try {
 
-            laskuId = resultSet.getInt("id");
+            while(resultSet.next()) {
 
+                laskuId = resultSet.getInt("id");
+
+                System.out.println("laskuId: " + laskuId);
+
+            break;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -169,57 +215,85 @@ public class DataGenerator
         name = faker.name().fullName();
         streetAddress = faker.address().streetAddress();
 
-        sqlInsert = "INSERT INTO varasto.tyokohde (nimi, osoite, asiakasid) VALUES (" + name + ",1,STR_TO_DATE('" + dateFormat.format(dueDate) + "','%d-%m-%Y'),1,0)";
+        sqlInsert = "INSERT INTO varasto.tyokohde (nimi, osoite, asiakasid) VALUES (\"" + name + "\",\"" + streetAddress + "\"," + asiakasId + ")";
+
+        System.out.println(sqlInsert);
 
         executeSQLInsert(sqlInsert);
 
-        resultSet = executeSQLQuery("SELECT id FROM varasto.tyokohde WHERE asiakasId=" + asiakasId + " AND erapaiva=" + streetAddress + ";");
+        sqlQuery = "SELECT id FROM varasto.tyokohde WHERE asiakasId=" + asiakasId + " AND nimi=\"" + name + "\" AND osoite='" + streetAddress + "';";
+
+        System.out.println(sqlQuery);
+
+        resultSet = executeSQLQuery(sqlQuery);
 
         int tyokohdeId = 0;
 
         try {
 
-            tyokohdeId = resultSet.getInt("id");
+            while(resultSet.next()) {
+
+                tyokohdeId = resultSet.getInt("id");
+
+                System.out.println("tyokohdeId: " + tyokohdeId);
+
+            break;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        int hinta = faker.random().nextInt(10,10000);
+        int hinta = faker.random().nextInt(1,1000);
 
         sqlInsert = "INSERT INTO varasto.suoritus (tyyppi, urakkahinta, laskuId, kohdeId) VALUES (2," + hinta + "," + laskuId + "," + tyokohdeId + ")";
 
+        System.out.println(sqlInsert);
+
         executeSQLInsert(sqlInsert);
 
-        resultSet = executeSQLQuery("SELECT id FROM varasto.suoritus WHERE laskuId=" + laskuId + " AND tyokohdeId=" + tyokohdeId + ";");
+        sqlQuery = "SELECT id FROM varasto.suoritus WHERE laskuId=" + laskuId + " AND kohdeId=" + tyokohdeId + ";";
+
+        resultSet = executeSQLQuery(sqlQuery);
 
         int suoritusId = 0;
 
         try {
 
-            suoritusId = resultSet.getInt("id");
+            while(resultSet.next()) {
+
+                suoritusId = resultSet.getInt("id");
+
+                System.out.println("suoritusId: " + suoritusId);
+
+            break;
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        int pituus = faker.random().nextInt(1,100);
 
-        int varastoSaldo = faker.random().nextInt(10,10000);
+        sqlQuery = "SELECT id FROM varasto.varastotarvike ORDER BY RAND() LIMIT 1";
 
-        int sisaanOstoHinta = faker.random().nextInt(1,100);
+        System.out.println(sqlQuery);
 
-        sqlInsert = "INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES('" + pituus + " m KAAPELI', " + varastoSaldo + ", 'm'," + sisaanOstoHinta + ", 24, false)";
-
-        executeSQLInsert(sqlInsert);
-
-        resultSet = executeSQLQuery("SELECT id FROM varasto.varastotarvike WHERE nimi=" + pituus + " m KAAPELI AND varastosaldo=" + varastoSaldo + " AND sisaanostohinta=" + sisaanOstoHinta);
+        resultSet = executeSQLQuery(sqlQuery);
 
         int varastoTarvikeId = 0;
 
         try {
 
-            varastoTarvikeId = resultSet.getInt("id");
+            while(resultSet.next()) {
+
+                varastoTarvikeId = resultSet.getInt("id");
+
+                System.out.println("varastoTarvikeId: " + varastoTarvikeId);
+
+            break;
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -233,32 +307,36 @@ public class DataGenerator
 
         sqlInsert = "INSERT INTO varasto.kaytettytarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(" + lukumaara + "," + alennus + "," + suoritusId + "," + varastoTarvikeId + ")";
 
-        executeSQLInsert(sqlInsert);
-
-        hinta = faker.random().nextInt(10,10000);
-
-        RandomEnum<TyoTyyppi> randomTyotyyppi = new RandomEnum<TyoTyyppi>(TyoTyyppi.class);
-
-        String tyoTyyppi = String.valueOf(randomTyotyyppi.random());
-
-        sqlInsert = "INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES(" + tyoTyyppi + ", " + hinta + ")";
+        System.out.println(sqlInsert);
 
         executeSQLInsert(sqlInsert);
 
+        sqlQuery = "SELECT id FROM varasto.tyotyyppi ORDER BY RAND() LIMIT 1";
 
-        resultSet = executeSQLQuery("SELECT id FROM varasto.tyotyyppi WHERE tyotyyppi=" + tyoTyyppi + " AND hinta=" + hinta);
+        System.out.println(sqlQuery);
+
+        resultSet = executeSQLQuery(sqlQuery);
 
         int tyotyyppiId = 0;
 
         try {
 
-            tyotyyppiId = resultSet.getInt("id");
+            while(resultSet.next()) {
+
+                tyotyyppiId = resultSet.getInt("id");
+
+                System.out.println("tyotyyppiId: " + tyotyyppiId);
+
+            break;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + lukumaara + "," + alennus + "," + suoritusId + ")";
+
+        System.out.println(sqlInsert);
 
         executeSQLInsert(sqlInsert);
 

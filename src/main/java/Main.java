@@ -4,19 +4,24 @@ public class Main
 {
     public static void main(String[] args)
     {
-        Graph graph = new Graph();
 
-        graph.getEdges("varasto");
+        DataGenerator dataGenerator = new DataGenerator();
 
-        graph.getNodes("varasto");
+        dataGenerator.insertData(1000);
+
+        //Graph graph = new Graph();
+
+        //graph.getEdges("varasto");
+
+        //graph.getNodes("varasto");
 
         //graph.printEdges();
 
         //graph.printNodes();
 
-        graph.getEdgesForNodes("varasto");
+        //graph.getEdgesForNodes("varasto");
 
-        graph.printGraph();
+        //graph.printGraph();
 
     }
 }
