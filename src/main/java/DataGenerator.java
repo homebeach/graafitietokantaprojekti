@@ -1,5 +1,8 @@
 import com.github.javafaker.Faker;
 import graph.Graph;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Session;
 
 import java.sql.*;
 import java.text.DateFormat;
@@ -117,6 +120,10 @@ public class DataGenerator
 
     public void insertData(int rowCount) {
 
+        org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+
+        Session session = driver.session();
+
         executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
         executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
         executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PISTORASIA KULMAMALLI 3-OSAINEN', 10, 'kpl', 14.90, 24, false)");
@@ -132,14 +139,16 @@ public class DataGenerator
         executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('aputyö', 35)");
 
         for(int i=0; i < rowCount; i++) {
-            insertRow();
+            insertRow(session);
         }
 
+        session.close();
+        driver.close();
     }
 
 
 
-    public void insertRow()
+    public void insertRow(Session session)
     {
 
         Faker faker = new Faker();
@@ -152,6 +161,8 @@ public class DataGenerator
         System.out.println(sqlInsert);
 
         executeSQLInsert(sqlInsert);
+
+        session.run("CREATE (table:asiakas {name:" + name + ",osoite:" + streetAddress + "}");
 
         String sqlQuery = "SELECT id FROM varasto.asiakas WHERE nimi=\"" + name + "\" AND osoite=\"" + streetAddress + "\";";
 
@@ -188,6 +199,8 @@ public class DataGenerator
 
         executeSQLInsert(sqlInsert);
 
+        session.run("CREATE (table:lasku {asiakasId:" + asiakasId + ",tila: 1, erapaiva: STR_TO_DATE('\" + dueDateAsString + \"','%d-%m-%Y'),1,0}");
+
         sqlQuery = "SELECT id FROM varasto.lasku WHERE asiakasId=" + asiakasId + " AND erapaiva=STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y');";
 
         System.out.println(sqlQuery);
@@ -221,6 +234,8 @@ public class DataGenerator
 
         executeSQLInsert(sqlInsert);
 
+        session.run("CREATE (table:tyokohde {asiakasId:" + asiakasId + ",tila: 1, erapaiva: STR_TO_DATE('\" + dueDateAsString + \"','%d-%m-%Y'),1,0}");
+
         sqlQuery = "SELECT id FROM varasto.tyokohde WHERE asiakasId=" + asiakasId + " AND nimi=\"" + name + "\" AND osoite='" + streetAddress + "';";
 
         System.out.println(sqlQuery);
@@ -244,13 +259,15 @@ public class DataGenerator
             e.printStackTrace();
         }
 
-        int hinta = faker.random().nextInt(1,1000);
+        int urakkahinta = faker.random().nextInt(1,1000);
 
-        sqlInsert = "INSERT INTO varasto.suoritus (tyyppi, urakkahinta, laskuId, kohdeId) VALUES (2," + hinta + "," + laskuId + "," + tyokohdeId + ")";
+        sqlInsert = "INSERT INTO varasto.suoritus (tyyppi, urakkahinta, laskuId, kohdeId) VALUES (2," + urakkahinta + "," + laskuId + "," + tyokohdeId + ")";
 
         System.out.println(sqlInsert);
 
         executeSQLInsert(sqlInsert);
+
+        session.run("CREATE (table:suoritus {tyyppi: 2, urakkahinta: " + urakkahinta + ", laskuId: " + laskuId + ", tyokohdeId: " + tyokohdeId + "}");
 
         sqlQuery = "SELECT id FROM varasto.suoritus WHERE laskuId=" + laskuId + " AND kohdeId=" + tyokohdeId + ";";
 
@@ -311,6 +328,8 @@ public class DataGenerator
 
         executeSQLInsert(sqlInsert);
 
+        session.run("CREATE (table:kaytettytarvike {lukumaara: " + lukumaara + ", alennus: " + alennus + ", suoritusId: " + suoritusId + ", varastotarvikeId: " + varastoTarvikeId + "}");
+
         sqlQuery = "SELECT id FROM varasto.tyotyyppi ORDER BY RAND() LIMIT 1";
 
         System.out.println(sqlQuery);
@@ -339,6 +358,8 @@ public class DataGenerator
         System.out.println(sqlInsert);
 
         executeSQLInsert(sqlInsert);
+
+        session.run("CREATE (table:tyotunnit {tyotyyppiId: " + tyotyyppiId + ", tuntimaara: " + lukumaara + ", alennus: " + alennus + ", suoritusId: " + suoritusId + "}");
 
 
     }
