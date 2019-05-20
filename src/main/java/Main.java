@@ -7,7 +7,7 @@ public class Main
 
         DataGenerator dataGenerator = new DataGenerator();
 
-        dataGenerator.insertData(1000);
+        dataGenerator.insertData(1);
 
         //Graph graph = new Graph();
 
