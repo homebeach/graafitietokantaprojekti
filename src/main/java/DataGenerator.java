@@ -1,5 +1,4 @@
 import com.github.javafaker.Faker;
-import graph.Graph;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Session;
@@ -124,33 +123,33 @@ public class DataGenerator
 
         Session session = driver.session();
 
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PISTORASIA KULMAMALLI 3-OSAINEN', 10, 'kpl', 14.90, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PEITELEVY 2-OS JUSSI', 20, 'kpl', 3.90, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PEITELEVY 1-OS JUSSI', 20, 'kpl', 2.90, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('KYTKIN 5-SRJ UPPO JUSSI', 25, 'kpl', 11.90, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('KYTKIN PINTA JUSSI 1/6', 10, 'kpl', 8.90, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
-        executeSQLInsert("INSERT INTO varasto.varastotarvike (nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES ('SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (1, 'MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (2, 'PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (3, 'PISTORASIA KULMAMALLI 3-OSAINEN', 10, 'kpl', 14.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (4, 'PEITELEVY 2-OS JUSSI', 20, 'kpl', 3.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (5, 'PEITELEVY 1-OS JUSSI', 20, 'kpl', 2.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (6, 'KYTKIN 5-SRJ UPPO JUSSI', 25, 'kpl', 11.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (7, 'KYTKIN PINTA JUSSI 1/6', 10, 'kpl', 8.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (8, 'PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
+        executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (9, 'SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
 
-        session.run("CREATE (table:varastotarvike {nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"PISTORASIA 2-MAA OL JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"17.90\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"PISTORASIA KULMAMALLI 3-OSAINEN\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"14.90\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"PEITELEVY 2-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"PEITELEVY 1-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"2.90\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"KYTKIN 5-SRJ UPPO JUSSI\", varastosaldo:\"25\", yksikko:\"kpl\", sisaanostohinta:\"11.90\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"KYTKIN PINTA JUSSI 1/6\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"8.90\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"PINNALLINEN RVP 5-KYTKIN\", varastosaldo:\"5\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
-        session.run("CREATE (table:varastotarvike {nimi:\"SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.09\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 1, nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 2, nimi:\"PISTORASIA 2-MAA OL JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"17.90\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 3, nimi:\"PISTORASIA KULMAMALLI 3-OSAINEN\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"14.90\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 4, nimi:\"PEITELEVY 2-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 5, nimi:\"PEITELEVY 1-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"2.90\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 6, nimi:\"KYTKIN 5-SRJ UPPO JUSSI\", varastosaldo:\"25\", yksikko:\"kpl\", sisaanostohinta:\"11.90\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 7, nimi:\"KYTKIN PINTA JUSSI 1/6\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"8.90\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 8, nimi:\"PINNALLINEN RVP 5-KYTKIN\", varastosaldo:\"5\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeid: 9, nimi:\"SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.09\", alv:\"24\", poistettu:\"false\"})");
 
         executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('suunnittelu', 55)");
         executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('työ', 45)");
         executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('aputyö', 35)");
 
-        session.run("CREATE (table:tyotyyppi {nimi:\"suunnittelu\", hinta:\"55\"})");
-        session.run("CREATE (table:tyotyyppi {nimi:\"työ\", hinta:\"46\"})");
-        session.run("CREATE (table:tyotyyppi {nimi:\"aputyö\", hinta:\"35\"})");
+        session.run("CREATE (tt:tyotyyppi {nimi:\"suunnittelu\", hinta:\"55\"})");
+        session.run("CREATE (tt:tyotyyppi {nimi:\"työ\", hinta:\"46\"})");
+        session.run("CREATE (tt:tyotyyppi {nimi:\"aputyö\", hinta:\"35\"})");
 
         for(int i=0; i < rowCount; i++) {
             insertRow(session);
@@ -328,6 +327,10 @@ public class DataGenerator
 
         session.run(cypherCreate);
 
+        cypherCreate = "MATCH (s:suoritus),(l:lasku) WHERE s.laskuId = \"" + laskuId + "\" AND l.laskuId = " + laskuId + " CREATE (s)-[m:SUORITUKSEN_LASKU]->(l)";
+        System.out.println(cypherCreate);
+        session.run(cypherCreate);
+
         sqlQuery = "SELECT id FROM varasto.varastotarvike ORDER BY RAND() LIMIT 1";
 
         System.out.println(sqlQuery);
@@ -370,6 +373,12 @@ public class DataGenerator
 
         session.run(cypherCreate);
 
+        cypherCreate = "MATCH (s:suoritus),(v:varastotarvike) WHERE s.suoritusId=" + suoritusId + " AND v.varastotarvikeid=" + varastoTarvikeId +
+                " CREATE (s)-[m:SUORITUKSEN_TARVIKE {lukumaara:" + lukumaara + ", alennus:" + alennus + "}]->(v)" ;
+        System.out.println(cypherCreate);
+        session.run(cypherCreate);
+
+
         sqlQuery = "SELECT id FROM varasto.tyotyyppi ORDER BY RAND() LIMIT 1";
 
         System.out.println(sqlQuery);
@@ -393,16 +402,17 @@ public class DataGenerator
             e.printStackTrace();
         }
 
-        sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + lukumaara + "," + alennus + "," + suoritusId + ")";
+        int tuntimaara = faker.random().nextInt(1,100);
+
+        sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + tuntimaara + "," + alennus + "," + suoritusId + ")";
 
         //System.out.println(sqlInsert);
 
         //executeSQLInsert(sqlInsert);
-
-        cypherCreate = "CREATE (h:tyotunnit {tyotyyppiId: " + tyotyyppiId + ", tuntimaara: " + lukumaara + ", alennus: " + alennus + ", suoritusId: " + suoritusId + "})";
-
+        
+        cypherCreate = "MATCH (s:suoritus),(tt:tyotyyppi) WHERE s.suoritusId=" + suoritusId + " AND tt:tyotyyppi=" + tyotyyppiId +
+                " CREATE (s)-[m:TYOTUNNIT {tuntimaara:" + tuntimaara + ", alennus:" + alennus + "}]->(tt)" ;
         System.out.println(cypherCreate);
-
         session.run(cypherCreate);
 
     }
