@@ -135,7 +135,7 @@ public class DataGenerator
         executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (8, 'PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
         executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (9, 'SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
 */
-        session.run("CREATE (v:varastotarvike {varastotarvikeid: 0, nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
+        session.run("CREATE (v:varastotarvike {varastotarvikeId: 0, nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
 /*        session.run("CREATE (v:varastotarvike {varastotarvikeid: 1, nimi:\"PISTORASIA 2-MAA OL JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"17.90\", alv:\"24\", poistettu:\"false\"})");
         session.run("CREATE (v:varastotarvike {varastotarvikeid: 2, nimi:\"PISTORASIA KULMAMALLI 3-OSAINEN\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"14.90\", alv:\"24\", poistettu:\"false\"})");
         session.run("CREATE (v:varastotarvike {varastotarvikeid: 3, nimi:\"PEITELEVY 2-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
@@ -149,9 +149,9 @@ public class DataGenerator
         executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('työ', 45)");
         executeSQLInsert("INSERT INTO varasto.tyotyyppi (nimi, hinta) VALUES ('aputyö', 35)");
 */
-        session.run("CREATE (tt:tyotyyppi {nimi:\"suunnittelu\", hinta:\"55\"})");
-        //session.run("CREATE (tt:tyotyyppi {nimi:\"työ\", hinta:\"46\"})");
-       // session.run("CREATE (tt:tyotyyppi {nimi:\"aputyö\", hinta:\"35\"})");
+        session.run("CREATE (tt:tyotyyppi {tyotyyppiId: 0, nimi:\"suunnittelu\", hinta:\"55\"})");
+        //session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 1, nimi:\"työ\", hinta:\"46\"})");
+       // session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 2, nimi:\"aputyö\", hinta:\"35\"})");
 
         for(int i=0; i < rowCount; i++) {
             insertRow(session);
@@ -337,15 +337,16 @@ public class DataGenerator
         */
 
         cypherCreate = "CREATE (s:suoritus {suoritusId: " + suoritusId + ", tyyppi: " + tyyppi + ", urakkahinta: " + urakkahinta + ", laskuId: " + laskuId + ", tyokohdeId: " + tyokohdeId + "})";
-
         System.out.println(cypherCreate);
-
         session.run(cypherCreate);
 
         cypherCreate = "MATCH (s:suoritus),(l:lasku) WHERE s.laskuId = " + laskuId + " AND l.laskuId = " + laskuId + " CREATE (s)-[m:SUORITUKSEN_LASKU]->(l)";
         System.out.println(cypherCreate);
         session.run(cypherCreate);
 
+        cypherCreate = "MATCH (s:suoritus),(t:tyokohde) WHERE s.suoritusId = " + suoritusId + " AND t.tyokohdeId = " + tyokohdeId + " CREATE (s)-[m:SUORITUKSEN_TYOKOHDE]->(t)";
+        System.out.println(cypherCreate);
+        session.run(cypherCreate);
 
         sqlQuery = "SELECT id FROM varasto.varastotarvike ORDER BY RAND() LIMIT 1";
 
@@ -393,8 +394,8 @@ public class DataGenerator
 
        // session.run(cypherCreate);
 
-        cypherCreate = "MATCH (s:suoritus),(v:varastotarvike) WHERE s.suoritusId=" + suoritusId + " AND v.varastotarvikeid=" + varastoTarvikeId +
-                " CREATE (s)-[m:SUORITUKSEN_TARVIKE {lukumaara:" + lukumaara + ", alennus:" + alennus + "}]->(v)" ;
+        cypherCreate = "MATCH (s:suoritus),(v:varastotarvike) WHERE s.suoritusId=" + suoritusId + " AND v.varastotarvikeId=" + varastoTarvikeId +
+                " CREATE (s)-[m:KAYTETTY_TARVIKE {lukumaara:" + lukumaara + ", alennus:" + alennus + "}]->(v)" ;
         System.out.println(cypherCreate);
         session.run(cypherCreate);
 
@@ -433,7 +434,7 @@ public class DataGenerator
 
         //executeSQLInsert(sqlInsert);
         
-        cypherCreate = "MATCH (s:suoritus),(tt:tyotyyppi) WHERE s.suoritusId=" + suoritusId + " AND tt:tyotyyppi=" + tyotyyppiId +
+        cypherCreate = "MATCH (s:suoritus),(tt:tyotyyppi) WHERE s.suoritusId=" + suoritusId + " AND tt.tyotyyppiId=" + tyotyyppiId +
                 " CREATE (s)-[m:TYOTUNNIT {tuntimaara:" + tuntimaara + ", alennus:" + alennus + "}]->(tt)";
         System.out.println(cypherCreate);
         session.run(cypherCreate);
