@@ -206,77 +206,21 @@ public class DataGenerator
         String sqlInsert = "INSERT INTO varasto.asiakas (id, nimi, osoite) VALUES (\"" + index + "\",\"" + name + "\",\"" + streetAddress + "\")";
         executeSQLInsert(sqlInsert);
 
-        String sqlQuery = "SELECT id FROM varasto.asiakas WHERE nimi=\"" + name + "\" AND osoite=\"" + streetAddress + "\";";
-
-       // System.out.println(sqlQuery);
-
-        ResultSet resultSet = executeSQLQuery(sqlQuery);
-
-        int asiakasId = 0;
-
-        /*
-
-        try {
-
-            while(resultSet.next()) {
-
-                asiakasId = resultSet.getInt("id");
-
-                System.out.println("asiakasId: " + asiakasId);
-
-                break;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        */
 
         String cypherCreate = "CREATE (a:asiakas {asiakasId: \"" + index + "\", nimi:\"" + name + "\",osoite:\"" + streetAddress + "\"})";
-
         System.out.println(cypherCreate);
-
         session.run(cypherCreate);
 
 
         //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
         int tila = faker.random().nextInt(1,3);
-
         java.util.Date dueDate = faker.date().past(360, TimeUnit.DAYS);
-
         DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-
         String dueDateAsString = dateFormat.format(dueDate);
-
         sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + index + "," + index + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y'),0,0)";
         executeSQLInsert(sqlInsert);
 
 
-        //sqlQuery = "SELECT id FROM varasto.lasku WHERE asiakasId=" + asiakasId + " AND erapaiva=STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y');";
-
-        //System.out.println(sqlQuery);
-
-        //resultSet = executeSQLQuery(sqlQuery);
-
-        int laskuId = 0;
-
-                        /*
-        try {
-
-            while(resultSet.next()) {
-
-                laskuId = resultSet.getInt("id");
-
-                System.out.println("laskuId: " + laskuId);
-
-            break;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-                */
         LocalDate localDate = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         int year  = localDate.getYear();
         int month = localDate.getMonthValue();
@@ -293,35 +237,11 @@ public class DataGenerator
         name = faker.name().fullName();
         streetAddress = faker.address().streetAddress();
 
-        sqlInsert = "INSERT INTO varasto.tyokohde (id, nimi, osoite, asiakasid) VALUES (\"" + index + "\",\"" + name + "\",\"" + streetAddress + "\"," + asiakasId + ")";
+        sqlInsert = "INSERT INTO varasto.tyokohde (id, nimi, osoite, asiakasid) VALUES (\"" + index + "\",\"" + name + "\",\"" + streetAddress + "\"," + index + ")";
         System.out.println(sqlInsert);
         executeSQLInsert(sqlInsert);
 
-        sqlQuery = "SELECT id FROM varasto.tyokohde WHERE asiakasId=" + asiakasId + " AND nimi=\"" + name + "\" AND osoite=\"" + streetAddress + "\";";
-
-        //System.out.println(sqlQuery);
-
-        //resultSet = executeSQLQuery(sqlQuery);
-
-        int tyokohdeId = 0;
-
-                        /*
-        try {
-
-            while(resultSet.next()) {
-
-                tyokohdeId = resultSet.getInt("id");
-
-                System.out.println("tyokohdeId: " + tyokohdeId);
-
-            break;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-                */
-        cypherCreate = "CREATE (t:tyokohde {tyokohdeId: " + index + ", nimi: \"" + name + "\", osoite: \"" + streetAddress + "\", asiakasid: " + asiakasId + " })";
+        cypherCreate = "CREATE (t:tyokohde {tyokohdeId: " + index + ", nimi: \"" + name + "\", osoite: \"" + streetAddress + "\", asiakasid: " + index + " })";
         System.out.println(cypherCreate);
         session.run(cypherCreate);
 
@@ -334,35 +254,12 @@ public class DataGenerator
         //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
         int tyyppi = faker.random().nextInt(1,100);
 
-        sqlInsert = "INSERT INTO varasto.suoritus (id, tyyppi, urakkahinta, laskuId, kohdeId) VALUES (" + index + "," + tyyppi + "," + urakkahinta + "," + laskuId + "," + tyokohdeId + ")";
+        sqlInsert = "INSERT INTO varasto.suoritus (id, tyyppi, urakkahinta, laskuId, kohdeId) VALUES (" + index + "," + tyyppi + "," + urakkahinta + "," + index + "," + index + ")";
         System.out.println(sqlInsert);
         executeSQLInsert(sqlInsert);
 
-        sqlQuery = "SELECT id FROM varasto.suoritus WHERE laskuId=" + laskuId + " AND kohdeId=" + tyokohdeId + ";";
 
-        resultSet = executeSQLQuery(sqlQuery);
-
-        int suoritusId = 0;
-
-                /*
-        try {
-
-            while(resultSet.next()) {
-
-                suoritusId = resultSet.getInt("id");
-
-                System.out.println("suoritusId: " + suoritusId);
-
-            break;
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        */
-
-        cypherCreate = "CREATE (s:suoritus {suoritusId: " + index + ", tyyppi: " + tyyppi + ", urakkahinta: " + urakkahinta + ", laskuId: " + laskuId + ", tyokohdeId: " + index + "})";
+        cypherCreate = "CREATE (s:suoritus {suoritusId: " + index + ", tyyppi: " + tyyppi + ", urakkahinta: " + urakkahinta + ", laskuId: " + index + ", tyokohdeId: " + index + "})";
         System.out.println(cypherCreate);
         session.run(cypherCreate);
 
@@ -374,34 +271,6 @@ public class DataGenerator
         System.out.println(cypherCreate);
         session.run(cypherCreate);
 
-        sqlQuery = "SELECT id FROM varasto.varastotarvike ORDER BY RAND() LIMIT 1";
-
-        System.out.println(sqlQuery);
-
-        resultSet = executeSQLQuery(sqlQuery);
-
-        /*
-        int varastoTarvikeId = 0;
-
-
-
-        try {
-
-            while(resultSet.next()) {
-
-                varastoTarvikeId = resultSet.getInt("id");
-
-                System.out.println("varastoTarvikeId: " + varastoTarvikeId);
-
-            break;
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        */
 
         int lukumaara = faker.random().nextInt(1,100);
 
@@ -420,34 +289,6 @@ public class DataGenerator
                 " CREATE (s)-[m:KAYTETTY_TARVIKE {lukumaara:" + lukumaara + ", alennus:" + alennus + "}]->(v)" ;
         System.out.println(cypherCreate);
         session.run(cypherCreate);
-                /*
-        sqlQuery = "SELECT id FROM varasto.tyotyyppi ORDER BY RAND() LIMIT 1";
-
-        System.out.println(sqlQuery);
-
-        resultSet = executeSQLQuery(sqlQuery);
-
-
-
-
-        int tyotyyppiId = 0;
-
-
-        try {
-
-            while(resultSet.next()) {
-
-                tyotyyppiId = resultSet.getInt("id");
-
-                System.out.println("tyotyyppiId: " + tyotyyppiId);
-
-            break;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        */
 
 
         int tuntimaara = faker.random().nextInt(1,100);
