@@ -101,6 +101,56 @@ public class DataGenerator
         return resultSet;
     }
 
+    public ResultSet truncateDatabase() {
+
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet resultSet = null;
+
+        try {
+
+            Class.forName(JDBC_DRIVER);
+
+            conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+            stmt = conn.createStatement();
+
+            stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
+            stmt.addBatch("TRUNCATE TABLE varasto.asiakas;");
+            stmt.addBatch("TRUNCATE TABLE varasto.lasku;");
+            stmt.addBatch("TRUNCATE TABLE varasto.tyokohde;");
+            stmt.addBatch("TRUNCATE TABLE varasto.suoritus;");
+            stmt.addBatch("TRUNCATE TABLE varasto.varastotarvike;");
+            stmt.addBatch("TRUNCATE TABLE varasto.kaytettytarvike;");
+            stmt.addBatch("TRUNCATE TABLE varasto.tyotyyppi;");
+            stmt.addBatch("TRUNCATE TABLE varasto.tyotunnit;");
+            stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
+            stmt.executeBatch();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            try {
+                if (stmt != null) {
+                    conn.close();
+                }
+            } catch (SQLException se) {
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+
+        return resultSet;
+    }
+
+
     enum TyoTyyppi {
         työ, suunnittelu, aputyö
     }
@@ -127,59 +177,38 @@ public class DataGenerator
 
             Session session = driver.session();
 
-            String sqlQuery = "SELECT count(*) FROM varasto.varastotarvike;";
-
-            ResultSet resultSet = executeSQLQuery(sqlQuery);
-
-            resultSet = executeSQLQuery(sqlQuery);
-
-            resultSet.next();
-            int tableSize = resultSet.getInt(1);
+            truncateDatabase();
 
             session.run("MATCH (n) DETACH DELETE n");
 
-            if(tableSize == 0) {
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (0, 'MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (1, 'PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (2, 'PISTORASIA KULMAMALLI 3-OSAINEN', 10, 'kpl', 14.90, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (3, 'PEITELEVY 2-OS JUSSI', 20, 'kpl', 3.90, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (4, 'PEITELEVY 1-OS JUSSI', 20, 'kpl', 2.90, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (5, 'KYTKIN 5-SRJ UPPO JUSSI', 25, 'kpl', 11.90, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (6, 'KYTKIN PINTA JUSSI 1/6', 10, 'kpl', 8.90, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (7, 'PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
+            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (8, 'SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
 
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (0, 'MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (1, 'PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (2, 'PISTORASIA KULMAMALLI 3-OSAINEN', 10, 'kpl', 14.90, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (3, 'PEITELEVY 2-OS JUSSI', 20, 'kpl', 3.90, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (4, 'PEITELEVY 1-OS JUSSI', 20, 'kpl', 2.90, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (5, 'KYTKIN 5-SRJ UPPO JUSSI', 25, 'kpl', 11.90, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (6, 'KYTKIN PINTA JUSSI 1/6', 10, 'kpl', 8.90, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (7, 'PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
-                executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (8, 'SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
+            session.run("CREATE (v:varastotarvike {varastotarvikeId: 0, nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 1, nimi:\"PISTORASIA 2-MAA OL JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"17.90\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 2, nimi:\"PISTORASIA KULMAMALLI 3-OSAINEN\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"14.90\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 3, nimi:\"PEITELEVY 2-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 4, nimi:\"PEITELEVY 1-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"2.90\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 5, nimi:\"KYTKIN 5-SRJ UPPO JUSSI\", varastosaldo:\"25\", yksikko:\"kpl\", sisaanostohinta:\"11.90\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 6, nimi:\"KYTKIN PINTA JUSSI 1/6\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"8.90\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 7, nimi:\"PINNALLINEN RVP 5-KYTKIN\", varastosaldo:\"5\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
+            session.run("CREATE (v:varastotarvike {varastotarvikeid: 8, nimi:\"SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.09\", alv:\"24\", poistettu:\"false\"})");
 
-                session.run("CREATE (v:varastotarvike {varastotarvikeId: 0, nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 1, nimi:\"PISTORASIA 2-MAA OL JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"17.90\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 2, nimi:\"PISTORASIA KULMAMALLI 3-OSAINEN\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"14.90\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 3, nimi:\"PEITELEVY 2-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 4, nimi:\"PEITELEVY 1-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"2.90\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 5, nimi:\"KYTKIN 5-SRJ UPPO JUSSI\", varastosaldo:\"25\", yksikko:\"kpl\", sisaanostohinta:\"11.90\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 6, nimi:\"KYTKIN PINTA JUSSI 1/6\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"8.90\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 7, nimi:\"PINNALLINEN RVP 5-KYTKIN\", varastosaldo:\"5\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
-                session.run("CREATE (v:varastotarvike {varastotarvikeid: 8, nimi:\"SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.09\", alv:\"24\", poistettu:\"false\"})");
+            executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (0, 'suunnittelu', 55)");
+            executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (1, 'työ', 45)");
+            executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (2, 'aputyö', 35)");
 
-            }
+            session.run("CREATE (tt:tyotyyppi {tyotyyppiId: 0, nimi:\"suunnittelu\", hinta:\"55\"})");
+            session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 1, nimi:\"työ\", hinta:\"46\"})");
+            session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 2, nimi:\"aputyö\", hinta:\"35\"})");
 
-            sqlQuery = "SELECT count(*) FROM varasto.tyotyyppi;";
-
-            resultSet = executeSQLQuery(sqlQuery);
-
-            resultSet.next();
-            tableSize = resultSet.getInt(1);
-
-            if(tableSize == 0) {
-
-                executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (0, 'suunnittelu', 55)");
-                executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (1, 'työ', 45)");
-                executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (2, 'aputyö', 35)");
-
-                session.run("CREATE (tt:tyotyyppi {tyotyyppiId: 0, nimi:\"suunnittelu\", hinta:\"55\"})");
-                session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 1, nimi:\"työ\", hinta:\"46\"})");
-                session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 2, nimi:\"aputyö\", hinta:\"35\"})");
-
-            }
 
             for(int i=0; i < rowCount; i++) {
                 insertRow(session, i);
@@ -250,7 +279,6 @@ public class DataGenerator
         session.run(cypherCreate);
 
         int urakkahinta = faker.random().nextInt(1,1000);
-
         //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
         int tyyppi = faker.random().nextInt(1,100);
 
@@ -273,11 +301,8 @@ public class DataGenerator
 
 
         int lukumaara = faker.random().nextInt(1,100);
-
         int alennusprosentti = faker.random().nextInt(1,100);
-
         int varastotarvikeId = faker.random().nextInt(0,8);
-
         double alennus = (0.01 * alennusprosentti);
 
         sqlInsert = "INSERT INTO varasto.kaytettytarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(" + lukumaara + "," + alennus + "," + index + "," + varastotarvikeId + ")";
@@ -292,7 +317,6 @@ public class DataGenerator
 
 
         int tuntimaara = faker.random().nextInt(1,100);
-
         int tyotyyppiId = faker.random().nextInt(0,2);
 
         sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + tuntimaara + "," + alennus + "," + index + ")";
