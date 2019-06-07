@@ -1,3 +1,5 @@
+import graph.Graph;
+
 public class Main
 {
     public static void main(String[] args)
@@ -5,21 +7,21 @@ public class Main
 
         DataGenerator dataGenerator = new DataGenerator();
 
-        dataGenerator.insertData(1000);
+        dataGenerator.insertData(10);
 
-        //Graph graph = new Graph();
+        Graph graph = new Graph();
 
-        //graph.getEdges("varasto");
+        graph.getEdges("varasto");
 
-        //graph.getNodes("varasto");
+        graph.getNodes("varasto");
 
-        //graph.printEdges();
+        graph.printEdges();
 
-        //graph.printNodes();
+        graph.printNodes();
 
-        //graph.getEdgesForNodes("varasto");
+        graph.getEdgesForNodes("varasto");
 
-        //graph.printGraph();
+        graph.printGraph();
 
     }
 }

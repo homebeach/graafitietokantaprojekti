@@ -28,6 +28,10 @@
         </repository>
     </repositories>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <tinkerpop.version>3.1.0-incubating</tinkerpop.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -49,6 +53,11 @@
             <groupId>org.neo4j.driver</groupId>
             <artifactId>neo4j-java-driver</artifactId>
             <version>1.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tinkerpop</groupId>
+            <artifactId>tinkergraph-gremlin</artifactId>
+            <version>${tinkerpop.version}</version>
         </dependency>
     </dependencies>
 
