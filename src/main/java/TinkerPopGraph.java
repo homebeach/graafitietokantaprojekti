@@ -19,11 +19,9 @@ public class TinkerPopGraph {
 
     private int graphId;
 
-    private LinkedList<Node> nodes;
-
     private HashMap<String, LinkedList<String>> primaryKeysOfTables;
 
-    private HashMap<String, LinkedList<Edge>> edgesOfTable;
+    private LinkedList<Vertex> vertexes;
 
     private TinkerGraph tinkerGraph;
 
@@ -35,12 +33,9 @@ public class TinkerPopGraph {
     static final String PASSWORD = "root";
 
     public TinkerPopGraph() {
-        this.nodes = new LinkedList<Node>();
+        this.vertexes = new LinkedList<Vertex>();
         this.primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
-        this.edgesOfTable = new HashMap<String, LinkedList<Edge>>();
-
         this.tinkerGraph = TinkerGraph.open();
-
     }
 
 
@@ -198,6 +193,20 @@ public class TinkerPopGraph {
 
                                 Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
 
+                                for (Vertex vertex : vertexes) {
+
+                                    String tableNameInVertex = vertex.property("tableName");
+
+                                    LinkedList<String> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
+
+                                    if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertex.contains(primaryKeysOfTableValuesInVertex)) {
+
+                                    }
+
+                                }
+
+                                Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
+                                vertexes.add(vertex);
                                 //edge.print();
 
                                 edges.add(edge);
@@ -356,10 +365,6 @@ public class TinkerPopGraph {
         Statement stmt = null;
         ResultSet resultSetTablesList = null;
 
-       // Vertex marko = g.addV("name", "marko", "age", 29).next();
-
-      //  tinkerGraph.
-
         try {
 
             Class.forName(JDBC_DRIVER );
@@ -432,7 +437,9 @@ public class TinkerPopGraph {
                         }
 
                         Node node = new Node(schema, tableName, primaryKeysOfTableValues, jsonArray);
-                        nodes.add(node);
+
+                        Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
+                        vertexes.add(vertex);
 
                     }
 
