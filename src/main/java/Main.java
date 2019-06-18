@@ -5,23 +5,29 @@ public class Main
     public static void main(String[] args)
     {
 
-        DataGenerator dataGenerator = new DataGenerator();
+        DataGeneratorSQL dataGeneratorSQL = new DataGeneratorSQL();
 
-        dataGenerator.insertData(10);
+        dataGeneratorSQL.insertData(100);
 
-        Graph graph = new Graph();
+        TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 
-        graph.getEdges("varasto");
+        tinkerPopGraph.getVertexes("varasto");
 
-        graph.getNodes("varasto");
+        System.out.println("tinkerPopGraph vertexes length: " + tinkerPopGraph.getVertexes().size());
 
-        graph.printEdges();
+        tinkerPopGraph.getEdges("varasto");
 
-        graph.printNodes();
 
-        graph.getEdgesForNodes("varasto");
+        /*
 
-        graph.printGraph();
+        tinkerPopGraph.printEdges();
 
+        tinkerPopGraph.printNodes();
+
+        tinkerPopGraph.getEdgesForNodes("varasto");
+
+        tinkerPopGraph.printGraph();
+
+        */
     }
 }

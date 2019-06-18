@@ -1,6 +1,7 @@
 import graph.Edge;
 import graph.Node;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -20,6 +21,14 @@ public class TinkerPopGraph {
     private int graphId;
 
     private HashMap<String, LinkedList<String>> primaryKeysOfTables;
+
+    public LinkedList<Vertex> getVertexes() {
+        return vertexes;
+    }
+
+    public void setVertexes(LinkedList<Vertex> vertexes) {
+        this.vertexes = vertexes;
+    }
 
     private LinkedList<Vertex> vertexes;
 
@@ -191,29 +200,35 @@ public class TinkerPopGraph {
 
                                 foreignKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(fkColumnName));
 
-                                Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
+                                //Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
+
+                                System.out.println("looping through vertexes case1");
 
                                 for (Vertex vertex : vertexes) {
 
-                                    String tableNameInVertex = vertex.property("tableName");
+                                    VertexProperty<String> tableNameInVertex = vertex.property("tableName");
 
-                                    LinkedList<String> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
+                                    //System.out.println(tableNameInVertex.value());
 
-                                    if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertex.contains(primaryKeysOfTableValuesInVertex)) {
+                                    VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
 
-                                    }
+                                    //if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertex.contains(primaryKeysOfTableValuesInVertex)) {
+
+                                    //}
 
                                 }
 
-                                Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
+                                Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues);
                                 vertexes.add(vertex);
                                 //edge.print();
 
-                                edges.add(edge);
+                                //edges.add(edge);
 
                             }
 
                         }
+
+                        /*
 
                         LinkedList<Edge> edgesForTable1 = edgesOfTable.get(tableName);
 
@@ -235,6 +250,8 @@ public class TinkerPopGraph {
                             edgesOfTable.put(foreignTableName, edgesForTable2);
                         }
 
+
+                         */
                     }
 
                 } else {
@@ -285,10 +302,29 @@ public class TinkerPopGraph {
                                 jsonArray.put(obj);
                             }
 
-                            Edge edge = new Edge(true, tableName, referencedTables.get(primaryKeysOfTable.get(0)), table1Values, referencedTables.get(primaryKeysOfTable.get(1)), table2Values, jsonArray, schema);
+                            System.out.println("looping through vertexes case2");
 
-                            edges.add(edge);
+                            for (Vertex vertex : vertexes) {
+
+                                VertexProperty<String> tableNameInVertex = vertex.property("tableName");
+
+                                System.out.println("tableName: " + tableNameInVertex.value());
+
+                                VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
+
+                                //if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertex.contains(primaryKeysOfTableValuesInVertex)) {
+
+                                //}
+
+                            }
+
+
+                            //Edge edge = new Edge(true, tableName, referencedTables.get(primaryKeysOfTable.get(0)), table1Values, referencedTables.get(primaryKeysOfTable.get(1)), table2Values, jsonArray, schema);
+
+                            //edges.add(edge);
                         }
+
+                        /*
 
                         LinkedList<Edge> edgesForTable1 = edgesOfTable.get(referencedTables.get(primaryKeysOfTable.get(0)));
 
@@ -310,6 +346,7 @@ public class TinkerPopGraph {
                             edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(1)), edgesForTable2);
                         }
 
+                         */
                     }
 
                 }
@@ -357,7 +394,7 @@ public class TinkerPopGraph {
 
     }
 
-    public void getNodes(String schema) {
+    public void getVertexes(String schema) {
 
         System.out.println("Loading nodes");
 
@@ -436,7 +473,7 @@ public class TinkerPopGraph {
                             primaryKeysOfTableValues.add(resultSet.getString(primaryKeyColumn));
                         }
 
-                        Node node = new Node(schema, tableName, primaryKeysOfTableValues, jsonArray);
+                        //Node node = new Node(schema, tableName, primaryKeysOfTableValues, jsonArray);
 
                         Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
                         vertexes.add(vertex);
@@ -471,7 +508,7 @@ public class TinkerPopGraph {
     }
 
     public void getEdgesForNodes(String schema) {
-
+        /*
         if (nodes != null) {
 
             for (Node node : nodes) {
@@ -506,11 +543,12 @@ public class TinkerPopGraph {
         } else {
             System.out.println("You must load edges and nodes first!");
         }
-
+        */
     }
 
     public void printEdges() {
 
+        /*
         for (String table: edgesOfTable.keySet()){
 
             System.out.println("Table: " + table);
@@ -522,8 +560,10 @@ public class TinkerPopGraph {
             }
 
         }
-
+        */
     }
+
+    /*
 
     public void printNodes() {
 
@@ -540,4 +580,5 @@ public class TinkerPopGraph {
         }
 
     }
+     */
 }
