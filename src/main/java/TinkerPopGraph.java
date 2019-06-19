@@ -312,10 +312,23 @@ public class TinkerPopGraph {
 
                                 VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
 
-                                //if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertex.contains(primaryKeysOfTableValuesInVertex)) {
+                                LinkedList<String> primaryKeysOfTableValues = primaryKeysOfTableValuesInVertex.value();
 
-                                //}
+                                for (String primaryKey : primaryKeysOfTableValues) {
+                                    System.out.println(primaryKey);
 
+                                }
+
+                                /*
+
+                                marko.addEdge("knows", vadas, "weight", 0.5f);
+
+                                if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValues.contains(table1Values)) {
+
+                                    vertex.addEdge(tableName, referencedTables.get(primaryKeysOfTable.get(0)), ) addEdge()
+
+                                }
+                                */
                             }
 
 
