@@ -202,21 +202,39 @@ public class TinkerPopGraph {
 
                                 //Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
 
+                                Vertex firstVertex = null;
+
                                 System.out.println("looping through vertexes case1");
+
 
                                 for (Vertex vertex : vertexes) {
 
                                     VertexProperty<String> tableNameInVertex = vertex.property("tableName");
 
-                                    //System.out.println(tableNameInVertex.value());
+                                    System.out.println("tableNameInVertex: " + tableNameInVertex.toString());
 
                                     VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
 
-                                    //if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertex.contains(primaryKeysOfTableValuesInVertex)) {
+                                    LinkedList<String> primaryKeysOfTableValuesInVertexList = primaryKeysOfTableValuesInVertex.value();
 
-                                    //}
+                                    if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertexList.contains(primaryKeysOfTableValues)) {
+                                        firstVertex = vertex;
+
+                                        System.out.println("tableNameInVertex");
+                                        System.out.println(tableNameInVertex.toString());
+
+                                        System.out.println("tableName");
+                                        System.out.println(tableName);
+
+                                        System.out.println();
+                                        System.out.println();
+
+                                        System.out.println("Vertex toString");
+                                        System.out.println(vertex.toString());
+                                    }
 
                                 }
+
 
                                 Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues);
                                 vertexes.add(vertex);
@@ -308,16 +326,9 @@ public class TinkerPopGraph {
 
                                 VertexProperty<String> tableNameInVertex = vertex.property("tableName");
 
-                                System.out.println("tableName: " + tableNameInVertex.value());
-
                                 VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
 
                                 LinkedList<String> primaryKeysOfTableValues = primaryKeysOfTableValuesInVertex.value();
-
-                                for (String primaryKey : primaryKeysOfTableValues) {
-                                    System.out.println(primaryKey);
-
-                                }
 
                                 /*
 
