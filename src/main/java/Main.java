@@ -13,10 +13,15 @@ public class Main
 
         tinkerPopGraph.getVertexes("varasto");
 
-        System.out.println("tinkerPopGraph vertexes length: " + tinkerPopGraph.getVertexes().size());
+        //tinkerPopGraph.printVertexKeys();
+
+        //tinkerPopGraph.printPrimaryKeysValues();
+
+        //System.out.println("tinkerPopGraph vertexes length: " + tinkerPopGraph.getVertexes().size());
 
         tinkerPopGraph.getEdges("varasto");
 
+        //tinkerPopGraph.printRealPrimaryKeysValues();
 
         /*
 

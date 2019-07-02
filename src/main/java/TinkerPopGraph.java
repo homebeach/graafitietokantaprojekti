@@ -20,17 +20,21 @@ public class TinkerPopGraph {
 
     private int graphId;
 
-    private HashMap<String, LinkedList<String>> primaryKeysOfTables;
+    private LinkedList<String> primaryKeysOfTableValues;
 
-    public LinkedList<Vertex> getVertexes() {
+    private HashMap<String, LinkedList<String>> primaryKeysOfTables;
+    private HashMap<String, LinkedList<String>> allThePrimaryKeysOfTables;
+    private HashMap<String, LinkedList<String>> allTheRealPrimaryKeyValuesOfTables;
+
+    public HashMap<HashMap<String, LinkedList<String>>, Vertex> getVertexes() {
         return vertexes;
     }
 
-    public void setVertexes(LinkedList<Vertex> vertexes) {
+    public void setVertexes(HashMap<HashMap<String, LinkedList<String>>, Vertex> vertexes) {
         this.vertexes = vertexes;
     }
 
-    private LinkedList<Vertex> vertexes;
+    private HashMap<HashMap<String, LinkedList<String>>, Vertex> vertexes;
 
     private TinkerGraph tinkerGraph;
 
@@ -42,8 +46,10 @@ public class TinkerPopGraph {
     static final String PASSWORD = "root";
 
     public TinkerPopGraph() {
-        this.vertexes = new LinkedList<Vertex>();
+        this.vertexes = new HashMap<HashMap<String, LinkedList<String>>, Vertex>();
         this.primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
+        this.allThePrimaryKeysOfTables = new HashMap<String, LinkedList<String>>();
+        this.allTheRealPrimaryKeyValuesOfTables = new HashMap<String, LinkedList<String>>();
         this.tinkerGraph = TinkerGraph.open();
     }
 
@@ -109,6 +115,8 @@ public class TinkerPopGraph {
 
                 String tableName = resultSetTablesList.getString(3);
 
+                LinkedList<String> realPrimaryKeysOfTableValues = new LinkedList<String>();
+
                 //Haetaan käsiteltävän taulun pääavaimet
 
                 ResultSet resultSetPrimaryKeysList = dbMetaData.getPrimaryKeys(schema, schema, tableName);
@@ -121,7 +129,6 @@ public class TinkerPopGraph {
                 }
 
                 ResultSet foreignKeys = dbMetaData.getImportedKeys(schema, schema, tableName);
-
                 HashMap<Integer, HashMap<String, String>> foreignKeysOfTable = new HashMap<Integer, HashMap<String, String>>();
 
                 boolean foreignKeysArePrimaryKeys = true;
@@ -152,7 +159,6 @@ public class TinkerPopGraph {
 
                 LinkedList<String> foreignKeysOfTableValues = new LinkedList<String>();
 
-
                 if(!foreignKeysArePrimaryKeys) {
 
                     //Haetaan taulun vierasavaimet ja käydään ne läpi
@@ -169,7 +175,6 @@ public class TinkerPopGraph {
 
                         String primaryKeys = String.join(",", primaryKeysOfTable);
 
-                        //ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys + " LIMIT 10");
                         ResultSet primaryKeyForeignKeyValues = executeSQLQuery("SELECT " + primaryKeys + "," + fkColumnName + " FROM " + schema + "." + tableName + " ORDER BY " + primaryKeys);
 
                         LinkedList<Edge> edges = new LinkedList<Edge>();
@@ -182,9 +187,7 @@ public class TinkerPopGraph {
                             LinkedList<String> foreignKeysOfForeignTableList = new LinkedList<String>();
 
                             while (foreignKeysOfForeignTable.next()) {
-
                                 foreignKeysOfForeignTableList.add(foreignKeysOfForeignTable.getString("FKCOLUMN_NAME"));
-
                             }
 
                             //Jos viitatun taulun pääavaimen koko on 1, lisätään kaari
@@ -198,78 +201,42 @@ public class TinkerPopGraph {
                                     primaryKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(primaryKeysOfTable.get(i)));
                                 }
 
+                                realPrimaryKeysOfTableValues.addAll(primaryKeysOfTableValues);
                                 foreignKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(fkColumnName));
-
-                                //Edge edge = new Edge(false,"1toN", tableName, primaryKeysOfTableValues, foreignTableName, foreignKeysOfTableValues, schema);
 
                                 Vertex firstVertex = null;
 
-                                System.out.println("looping through vertexes case1");
+                                for (HashMap<String, LinkedList<String>> vertexKeys : vertexes.keySet()) {
 
+                                    String key = (String) vertexKeys.keySet().toArray()[0];
+                                    LinkedList<String> listOfKeys = vertexKeys.get(key);
 
-                                for (Vertex vertex : vertexes) {
+                                    if(key.equals(tableName) && listOfKeys.equals(primaryKeysOfTableValues)) {
 
-                                    VertexProperty<String> tableNameInVertex = vertex.property("tableName");
+                                        Vertex vertex1 = vertexes.get(vertexKeys);
 
-                                    System.out.println("tableNameInVertex: " + tableNameInVertex.toString());
+                                        for (HashMap<String, LinkedList<String>> vertexKeys2 : vertexes.keySet()) {
 
-                                    VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
+                                            String key2 = (String) vertexKeys2.keySet().toArray()[0];
+                                            LinkedList<String> listOfKeys2 = vertexKeys2.get(key2);
 
-                                    LinkedList<String> primaryKeysOfTableValuesInVertexList = primaryKeysOfTableValuesInVertex.value();
+                                            if (key2.equals(foreignTableName) && listOfKeys2.equals(foreignKeysOfTableValues)) {
 
-                                    if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValuesInVertexList.contains(primaryKeysOfTableValues)) {
-                                        firstVertex = vertex;
+                                                Vertex vertex2 = vertexes.get(vertexKeys2);
+                                                vertex1.addEdge("1toN",vertex2);
+                                                break;
+                                            }
 
-                                        System.out.println("tableNameInVertex");
-                                        System.out.println(tableNameInVertex.toString());
+                                        }
 
-                                        System.out.println("tableName");
-                                        System.out.println(tableName);
-
-                                        System.out.println();
-                                        System.out.println();
-
-                                        System.out.println("Vertex toString");
-                                        System.out.println(vertex.toString());
                                     }
 
                                 }
-
-
-                                Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues);
-                                vertexes.add(vertex);
-                                //edge.print();
-
-                                //edges.add(edge);
 
                             }
 
                         }
 
-                        /*
-
-                        LinkedList<Edge> edgesForTable1 = edgesOfTable.get(tableName);
-
-                        if(edgesForTable1 == null) {
-                            edgesOfTable.put(tableName, edges);
-
-                        } else {
-                            edgesForTable1.addAll(edges);
-                            edgesOfTable.put(tableName, edgesForTable1);
-                        }
-
-                        LinkedList<Edge> edgesForTable2 = edgesOfTable.get(foreignTableName);
-
-                        if(edgesForTable2 == null) {
-                            edgesOfTable.put(foreignTableName, edges);
-
-                        } else {
-                            edgesForTable2.addAll(edges);
-                            edgesOfTable.put(foreignTableName, edgesForTable2);
-                        }
-
-
-                         */
                     }
 
                 } else {
@@ -278,12 +245,14 @@ public class TinkerPopGraph {
 
                     HashMap<String, String> referencedTables = new HashMap<String, String>();
 
+                    String foreignTableName = null;
+
                     for (int foreignKeyIndex : foreignKeysOfTable.keySet()) {
 
                         HashMap<String, String> foreignKeyInformation = foreignKeysOfTable.get(foreignKeyIndex);
 
                         String fkColumnName = foreignKeyInformation.get("fkColumnName");
-                        String foreignTableName = foreignKeyInformation.get("pkTableName");
+                        foreignTableName = foreignKeyInformation.get("pkTableName");
 
                         referencedTables.put(fkColumnName, foreignTableName);
 
@@ -293,7 +262,6 @@ public class TinkerPopGraph {
                     if(referencedTables.size() == 2) {
 
                         Object[] keySet = referencedTables.keySet().toArray();
-                        //ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName + " LIMIT 20");
                         ResultSet relationTableValues = executeSQLQuery("SELECT * FROM " + schema + "." + tableName);
 
                         LinkedList<Edge> edges = new LinkedList<Edge>();
@@ -320,60 +288,41 @@ public class TinkerPopGraph {
                                 jsonArray.put(obj);
                             }
 
-                            System.out.println("looping through vertexes case2");
+                            Vertex firstVertex = null;
 
-                            for (Vertex vertex : vertexes) {
+                            for (HashMap<String, LinkedList<String>> vertexKeys : vertexes.keySet()) {
 
-                                VertexProperty<String> tableNameInVertex = vertex.property("tableName");
+                                String key = (String) vertexKeys.keySet().toArray()[0];
+                                LinkedList<String> listOfKeys = vertexKeys.get(key);
 
-                                VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
+                                if(key.equals(tableName) && listOfKeys.equals(table1Values)) {
 
-                                LinkedList<String> primaryKeysOfTableValues = primaryKeysOfTableValuesInVertex.value();
+                                    Vertex vertex1 = vertexes.get(vertexKeys);
 
-                                /*
+                                    for (HashMap<String, LinkedList<String>> vertexKeys2 : vertexes.keySet()) {
 
-                                marko.addEdge("knows", vadas, "weight", 0.5f);
+                                        String key2 = (String) vertexKeys2.keySet().toArray()[0];
+                                        LinkedList<String> listOfKeys2 = vertexKeys2.get(key2);
 
-                                if(tableNameInVertex.equals(tableName) && primaryKeysOfTableValues.contains(table1Values)) {
+                                        if (key2.equals(foreignTableName) && listOfKeys2.equals(table2Values)) {
 
-                                    vertex.addEdge(tableName, referencedTables.get(primaryKeysOfTable.get(0)), ) addEdge()
+                                            Vertex vertex2 = vertexes.get(vertexKeys2);
+                                            vertex1.addEdge(tableName,vertex2, "jsonArray",jsonArray).bothVertices();
+                                        }
+
+                                    }
 
                                 }
-                                */
+
                             }
 
-
-                            //Edge edge = new Edge(true, tableName, referencedTables.get(primaryKeysOfTable.get(0)), table1Values, referencedTables.get(primaryKeysOfTable.get(1)), table2Values, jsonArray, schema);
-
-                            //edges.add(edge);
                         }
 
-                        /*
-
-                        LinkedList<Edge> edgesForTable1 = edgesOfTable.get(referencedTables.get(primaryKeysOfTable.get(0)));
-
-                        if(edgesForTable1 == null) {
-                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(0)), edges);
-
-                        } else {
-                            edgesForTable1.addAll(edges);
-                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(0)), edgesForTable1);
-                        }
-
-                        LinkedList<Edge> edgesForTable2 = edgesOfTable.get(referencedTables.get(primaryKeysOfTable.get(1)));
-
-                        if(edgesForTable2 == null) {
-                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(1)), edges);
-
-                        } else {
-                            edgesForTable2.addAll(edges);
-                            edgesOfTable.put(referencedTables.get(primaryKeysOfTable.get(1)), edgesForTable2);
-                        }
-
-                         */
                     }
 
                 }
+
+                allTheRealPrimaryKeyValuesOfTables.put(tableName,realPrimaryKeysOfTableValues);
 
             }
 
@@ -418,6 +367,64 @@ public class TinkerPopGraph {
 
     }
 
+    public void printPrimaryKeysValues() {
+
+        for (String table: allThePrimaryKeysOfTables.keySet()){
+
+            LinkedList<String> keys = allThePrimaryKeysOfTables.get(table);
+
+            System.out.println("Keys for the table: " + table);
+
+            for (String key : keys) {
+                System.out.println(key);
+            }
+
+        }
+
+    }
+
+
+    public void printVertexKeys() {
+
+        for (HashMap<String, LinkedList<String>> vertexKeys : vertexes.keySet()) {
+
+            String key = (String) vertexKeys.keySet().toArray()[0];
+            LinkedList<String> listOfKeys = vertexKeys.get(key);
+
+            System.out.println("Table: " + key + ", " + listOfKeys.toString());
+
+            //System.out.println("    list of keys: ");
+            //System.out.println("    " + listOfKeys.toString());
+
+        }
+    }
+
+    public void printRealPrimaryKeysValues() {
+
+        for (String table: allTheRealPrimaryKeyValuesOfTables.keySet()){
+
+            LinkedList<String> keys = allTheRealPrimaryKeyValuesOfTables.get(table);
+
+            System.out.println("Real Keys for the table: " + table);
+
+            for (String key : keys) {
+                System.out.println(key);
+            }
+
+        }
+
+    }
+
+    /*
+
+    VertexProperty<String> tableNameInVertex = vertex.property("tableName");
+
+    VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
+
+    LinkedList<String> primaryKeysOfTableValues = primaryKeysOfTableValuesInVertex.value();
+
+     */
+
     public void getVertexes(String schema) {
 
         System.out.println("Loading nodes");
@@ -437,6 +444,8 @@ public class TinkerPopGraph {
             while (resultSetTablesList.next()) {
 
                 String tableName = resultSetTablesList.getString(3);
+
+                LinkedList<String> allThePrimaryKeysOfTableValues = new LinkedList<String>();
 
                 ResultSet resultSetPrimaryKeysList = dbMetaData.getPrimaryKeys(schema, schema, tableName);
                 LinkedList<String> primaryKeysOfTable = new LinkedList<String>();
@@ -497,14 +506,20 @@ public class TinkerPopGraph {
                             primaryKeysOfTableValues.add(resultSet.getString(primaryKeyColumn));
                         }
 
-                        //Node node = new Node(schema, tableName, primaryKeysOfTableValues, jsonArray);
+                        allThePrimaryKeysOfTableValues.addAll(primaryKeysOfTableValues);
 
+                        HashMap<HashMap<String, LinkedList<String>>, LinkedList<String>> vertexes;
+                        HashMap<String, LinkedList<String>> keyMap = new HashMap<String, LinkedList<String>>();
+
+                        keyMap.put(tableName, primaryKeysOfTableValues);
                         Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
-                        vertexes.add(vertex);
+                        this.vertexes.put(keyMap,vertex);
 
                     }
 
                 }
+
+                allThePrimaryKeysOfTables.put(tableName,allThePrimaryKeysOfTableValues);
 
             }
 
@@ -527,82 +542,9 @@ public class TinkerPopGraph {
             } catch (SQLException se) {
                 se.printStackTrace();
             }
+
         }
 
     }
 
-    public void getEdgesForNodes(String schema) {
-        /*
-        if (nodes != null) {
-
-            for (Node node : nodes) {
-
-                LinkedList<Edge> edges = edgesOfTable.get(node.getTableName());
-
-                if(edges != null) {
-
-                    for (Edge edge : edges) {
-
-                        LinkedList<String> primaryKeyValues = node.getPrimaryKeyValues();
-                        Collections.sort(primaryKeyValues);
-
-                        LinkedList<String> table1PrimaryKeyValues = edge.getTable1PrimaryKeyValues();
-                        Collections.sort(table1PrimaryKeyValues);
-
-                        LinkedList<String> table2PrimaryKeyValues = edge.getTable2PrimaryKeyValues();
-                        Collections.sort(table2PrimaryKeyValues);
-
-                        if (primaryKeyValues.equals(table1PrimaryKeyValues) || primaryKeyValues.equals(table2PrimaryKeyValues)) {
-
-                            node.getConnections().add(edge);
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        } else {
-            System.out.println("You must load edges and nodes first!");
-        }
-        */
-    }
-
-    public void printEdges() {
-
-        /*
-        for (String table: edgesOfTable.keySet()){
-
-            System.out.println("Table: " + table);
-
-            LinkedList<Edge> edges = edgesOfTable.get(table);
-
-            for (Edge edge : edges) {
-                edge.print();
-            }
-
-        }
-        */
-    }
-
-    /*
-
-    public void printNodes() {
-
-        for (Node node : nodes) {
-            node.print();
-        }
-
-    }
-
-    public void printGraph() {
-
-        for (Node node : nodes) {
-            node.print();
-        }
-
-    }
-     */
 }
