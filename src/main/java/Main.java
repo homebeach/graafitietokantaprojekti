@@ -21,6 +21,8 @@ public class Main
 
         tinkerPopGraph.getEdges("varasto");
 
+        tinkerPopGraph.printVertexes();
+
         //tinkerPopGraph.printRealPrimaryKeysValues();
 
         /*

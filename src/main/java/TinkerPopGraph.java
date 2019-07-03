@@ -1,7 +1,8 @@
-import graph.Edge;
-import graph.Node;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -36,7 +37,7 @@ public class TinkerPopGraph {
 
     private HashMap<HashMap<String, LinkedList<String>>, Vertex> vertexes;
 
-    private TinkerGraph tinkerGraph;
+    private Graph graph;
 
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
@@ -50,7 +51,7 @@ public class TinkerPopGraph {
         this.primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
         this.allThePrimaryKeysOfTables = new HashMap<String, LinkedList<String>>();
         this.allTheRealPrimaryKeyValuesOfTables = new HashMap<String, LinkedList<String>>();
-        this.tinkerGraph = TinkerGraph.open();
+        this.graph = TinkerGraph.open();
     }
 
 
@@ -307,7 +308,9 @@ public class TinkerPopGraph {
                                         if (key2.equals(foreignTableName) && listOfKeys2.equals(table2Values)) {
 
                                             Vertex vertex2 = vertexes.get(vertexKeys2);
-                                            vertex1.addEdge(tableName,vertex2, "jsonArray",jsonArray).bothVertices();
+                                            vertex1.addEdge(tableName, vertex2, "jsonArray",jsonArray).bothVertices();
+                                            break;
+
                                         }
 
                                     }
@@ -383,7 +386,6 @@ public class TinkerPopGraph {
 
     }
 
-
     public void printVertexKeys() {
 
         for (HashMap<String, LinkedList<String>> vertexKeys : vertexes.keySet()) {
@@ -398,6 +400,23 @@ public class TinkerPopGraph {
 
         }
     }
+
+    public void printVertexes() {
+
+        for (HashMap<String, LinkedList<String>> vertexKeys : vertexes.keySet()) {
+
+            Vertex vertex = vertexes.get(vertexKeys);
+
+            VertexProperty<String> tableNameInVertex = vertex.property("tableName");
+            VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = vertex.property("primaryKeysOfTableValues");
+            VertexProperty<JSONArray> jsonArrayInVertex = vertex.property("jsonArray");
+
+            System.out.println("Table: " + tableNameInVertex.value().toString() + ", keys: " + primaryKeysOfTableValuesInVertex.value().toString() + ", jsonArray: " + jsonArrayInVertex.value().toString());
+
+        }
+
+    }
+
 
     public void printRealPrimaryKeysValues() {
 
@@ -512,7 +531,7 @@ public class TinkerPopGraph {
                         HashMap<String, LinkedList<String>> keyMap = new HashMap<String, LinkedList<String>>();
 
                         keyMap.put(tableName, primaryKeysOfTableValues);
-                        Vertex vertex = tinkerGraph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
+                        Vertex vertex = graph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
                         this.vertexes.put(keyMap,vertex);
 
                     }
