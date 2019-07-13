@@ -30,7 +30,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <tinkerpop.version>3.1.0-incubating</tinkerpop.version>
+        <tinkerpop.version>3.4.2</tinkerpop.version>
     </properties>
 
     <dependencies>
@@ -54,11 +54,32 @@
             <artifactId>neo4j-java-driver</artifactId>
             <version>1.7.2</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.tinkerpop</groupId>
-            <artifactId>tinkergraph-gremlin</artifactId>
+            <artifactId>gremlin-core</artifactId>
             <version>${tinkerpop.version}</version>
         </dependency>
+
+        <!-- when using Gremlin Server or Remote Gremlin Provider a driver is required -->
+        <dependency>
+            <groupId>org.apache.tinkerpop</groupId>
+            <artifactId>gremlin-driver</artifactId>
+            <version>${tinkerpop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

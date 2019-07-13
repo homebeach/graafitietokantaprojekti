@@ -1,17 +1,25 @@
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.tinkerpop.gremlin.driver.Client;
+import org.apache.tinkerpop.gremlin.driver.Cluster;
+import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.net.URI;
 import java.sql.*;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
+import static org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource.traversal;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TinkerPopGraph {
 
@@ -39,6 +47,8 @@ public class TinkerPopGraph {
 
     private Graph graph;
 
+    private GraphTraversalSource graphTraversalSource;
+
     static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
 
@@ -46,12 +56,15 @@ public class TinkerPopGraph {
     static final String USERNAME = "root";
     static final String PASSWORD = "root";
 
+    private Cluster cluster = null;
+    private Client client = null;
+
     public TinkerPopGraph() {
         this.vertexes = new HashMap<HashMap<String, LinkedList<String>>, Vertex>();
         this.primaryKeysOfTables = new HashMap<String, LinkedList<String>>();
         this.allThePrimaryKeysOfTables = new HashMap<String, LinkedList<String>>();
         this.allTheRealPrimaryKeyValuesOfTables = new HashMap<String, LinkedList<String>>();
-        this.graph = TinkerGraph.open();
+        this.graphTraversalSource = traversal().withRemote(DriverRemoteConnection.using("localhost",8182,"g"));
     }
 
 
@@ -109,6 +122,9 @@ public class TinkerPopGraph {
             DatabaseMetaData dbMetaData = conn.getMetaData();
             String[] types = {"TABLE"};
             resultSetTablesList = dbMetaData.getTables(schema, null, "%", types);
+
+            this.cluster = Cluster.build().addContactPoint("localhost").reconnectInterval(500).create();
+            this.client = cluster.connect();
 
             //Tutkitaan skeemassa olevien taulujen joukkoa
 
@@ -205,6 +221,42 @@ public class TinkerPopGraph {
                                 realPrimaryKeysOfTableValues.addAll(primaryKeysOfTableValues);
                                 foreignKeysOfTableValues.add(primaryKeyForeignKeyValues.getString(fkColumnName));
 
+                                String primaryKeysOfTableValuesAsString = primaryKeysOfTableValues.toString().replace("[", "").replace("]", "");
+                                String foreignKeysOfTableValuesAsString = foreignKeysOfTableValues.toString().replace("[", "").replace("]", "");
+
+                                String script = "v1=g.V().has('tableName', '" + tableName  + "').has('primaryKeysOfTableValues', '" + primaryKeysOfTableValuesAsString  + "');\n" +
+                                                "v2=g.V().has('tableName', '" + foreignTableName  + "').has('primaryKeysOfTableValues', '" + foreignKeysOfTableValuesAsString  + "');\n" +
+                                                 "g.addE(\"1toN\").from(v1).to(v2)";
+
+                                /*
+                                final String script = "g.V().drop().iterate();\n" +
+                                        "\n" +
+                                        "List ids = new ArrayList();\n" +
+                                        "\n" +
+                                        "int ii = 0;\n" +
+                                        "Vertex v = graph.addVertex();\n" +
+                                        "v.property(\"ii\", ii);\n" +
+                                        "v.property(\"sin\", Math.sin(ii));\n" +
+                                        "ids.add(v.id());\n" +
+                                        "\n" +
+                                        "Random rand = new Random();\n" +
+                                        "for (; ii < size; ii++) {\n" +
+                                        "    v = graph.addVertex();\n" +
+                                        "    v.property(\"ii\", ii);\n" +
+                                        "    v.property(\"sin\", Math.sin(ii/5.0));\n" +
+                                        "    Vertex u = g.V(ids.get(rand.nextInt(ids.size()))).next();\n" +
+                                        "    v.addEdge(\"linked\", u);\n" +
+                                        "    ids.add(u.id());\n" +
+                                        "    ids.add(v.id());\n" +
+                                        "}\n" +
+                                        "g.V()";
+
+                                */
+
+                                client.submit(script);
+
+
+                                /*
                                 Vertex firstVertex = null;
 
                                 for (HashMap<String, LinkedList<String>> vertexKeys : vertexes.keySet()) {
@@ -225,6 +277,11 @@ public class TinkerPopGraph {
 
                                                 Vertex vertex2 = vertexes.get(vertexKeys2);
                                                 vertex1.addEdge("1toN",vertex2);
+
+                                                client.submit("v=graph.addVertex('tableName','" + tableName  + "','primaryKeysOfTableValues'," + primaryKeysOfTableValuesAsString + ",'jsonArray','" + jsonArray + "');");
+
+:> g.V().has("name", "neptune")
+
                                                 break;
                                             }
 
@@ -232,7 +289,7 @@ public class TinkerPopGraph {
 
                                     }
 
-                                }
+                                }*/
 
                             }
 
@@ -289,6 +346,16 @@ public class TinkerPopGraph {
                                 jsonArray.put(obj);
                             }
 
+                            String primaryKeysOfTableValuesAsString = primaryKeysOfTableValues.toString().replace("[", "").replace("]", "");
+                            String foreignKeysOfTableValuesAsString = foreignKeysOfTableValues.toString().replace("[", "").replace("]", "");
+
+                            String script = "v1=g.V().has('tableName', '" + tableName  + "').has('primaryKeysOfTableValues', '" + primaryKeysOfTableValuesAsString  + "');\n" +
+                                    "v2=g.V().has('tableName', '" + foreignTableName  + "').has('primaryKeysOfTableValues', '" + foreignKeysOfTableValuesAsString  + "');\n" +
+                                    "g.addE('" + tableName + "').from(v1).to(v2).property('jsonArray','" + jsonArray + "')";
+
+                            client.submit(script);
+                            /*
+
                             Vertex firstVertex = null;
 
                             for (HashMap<String, LinkedList<String>> vertexKeys : vertexes.keySet()) {
@@ -318,7 +385,7 @@ public class TinkerPopGraph {
                                 }
 
                             }
-
+                            */
                         }
 
                     }
@@ -331,6 +398,7 @@ public class TinkerPopGraph {
 
             conn.close();
 
+            cluster.close();
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -460,6 +528,9 @@ public class TinkerPopGraph {
             String[] types = {"TABLE"};
             resultSetTablesList = dbMetaData.getTables(schema, null, "%", types);
 
+            this.cluster = Cluster.build().addContactPoint("localhost").reconnectInterval(500).create();
+            this.client = cluster.connect();
+
             while (resultSetTablesList.next()) {
 
                 String tableName = resultSetTablesList.getString(3);
@@ -531,9 +602,30 @@ public class TinkerPopGraph {
                         HashMap<String, LinkedList<String>> keyMap = new HashMap<String, LinkedList<String>>();
 
                         keyMap.put(tableName, primaryKeysOfTableValues);
-                        Vertex vertex = graph.addVertex("schema",schema,"tableName",tableName,"primaryKeysOfTableValues", primaryKeysOfTableValues, "jsonArray", jsonArray);
-                        this.vertexes.put(keyMap,vertex);
 
+                        String jsonArrayAsString = jsonArray.toString().replace("\"", "");
+
+                        String primaryKeysOfTableValuesAsString = primaryKeysOfTableValues.toString().replace("[", "").replace("]", "");
+
+                        String gremlinScript = "v=graph.addVertex(\"name\",\"stephen\")";
+
+                        String gremlinScript2 = "v=graph.addVertex(\"name\",\"" + tableName + primaryKeysOfTableValuesAsString + "\")";
+
+                        //client.submit("v=graph.addVertex('name','" + tableName + primaryKeysOfTableValuesAsString + " ');").all().get().get(0).getVertex();
+
+                        client.submit("v=graph.addVertex('tableName','" + tableName  + "','primaryKeysOfTableValues'," + primaryKeysOfTableValuesAsString + ",'jsonArray','" + jsonArray + "');");
+
+                        /*
+                        Vertex addedVertex = client.submit(gremlinScript).all().get().get(0).getVertex();
+
+                        VertexProperty<String> tableNameInVertex = addedVertex.property("tableName");
+                        VertexProperty<LinkedList<String>> primaryKeysOfTableValuesInVertex = addedVertex.property("primaryKeysOfTableValues");
+                        VertexProperty<JSONArray> jsonArrayInVertex = addedVertex.property("jsonArray");
+
+                        System.out.println("Table: " + tableNameInVertex.value().toString() + ", keys: " + primaryKeysOfTableValuesInVertex.value().toString() + ", jsonArray: " + jsonArrayInVertex.value().toString());
+
+                        this.vertexes.put(keyMap,addedVertex);
+                        */
                     }
 
                 }
@@ -541,6 +633,8 @@ public class TinkerPopGraph {
                 allThePrimaryKeysOfTables.put(tableName,allThePrimaryKeysOfTableValues);
 
             }
+
+            cluster.close();
 
         } catch (SQLException e) {
             e.printStackTrace();

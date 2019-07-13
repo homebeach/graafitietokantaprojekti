@@ -1,7 +1,7 @@
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
 
 import java.util.ArrayList;
-
+/*
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -40,4 +40,6 @@ public class JavaExample {
         LOGGER.info(list.toString());
         System.exit(0);
     }
+
 }
+ */
