@@ -19,7 +19,7 @@ public class Main
 
         //System.out.println("tinkerPopGraph vertexes length: " + tinkerPopGraph.getVertexes().size());
 
-        //tinkerPopGraph.getEdges("varasto");
+        tinkerPopGraph.getEdges("varasto");
 
         //tinkerPopGraph.printVertexes();
 
