@@ -14,12 +14,17 @@ import java.util.concurrent.TimeUnit;
 public class DataGeneratorSQL
 {
 
-    static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
+    private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
+    private static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
 
     //  Database credentials
-    static final String USERNAME = "root";
-    static final String PASSWORD = "root";
+    private static final String USERNAME = "root";
+    private static final String PASSWORD = "root";
+
+    private int asiakaskerroin = 0;
+    private int laskukerroin = 0;
+    private int tyokohdekerroin = 0;
+    private int suorituskerroin = 0;
 
     public ResultSet executeSQLInsert(String sqlQuery) {
 
@@ -169,7 +174,13 @@ public class DataGeneratorSQL
     }
 
 
-    public void insertData(int rowCount) {
+    public void insertData(int rowCount, int asiakaskerroin, int laskukerroin, int tyokohdekerroin, int suorituskerroin) {
+
+        this.asiakaskerroin = asiakaskerroin;
+        this.laskukerroin = laskukerroin;
+        this.tyokohdekerroin = tyokohdekerroin;
+        this.suorituskerroin = suorituskerroin;
+
 
         try {
 
@@ -226,18 +237,35 @@ public class DataGeneratorSQL
         }
     }
 
+    int asiakasindex = 0;
+    int laskuindex = 0;
+    int tyokohdeindex = 0;
+    int suoritusindex = 0;
+    int index = 0;
 
+    public void insertRow(int index) {
 
-    public void insertRow(int index)
-    {
+        this.index = this.index + index;
 
         Faker faker = new Faker();
 
         String name = faker.name().fullName(); // Miss Samanta Schmidt
         String streetAddress = faker.address().streetAddress(); // 60018 Sawayn Brooks Suite 449
 
-        String sqlInsert = "INSERT INTO varasto.asiakas (id, nimi, osoite) VALUES (\"" + index + "\",\"" + name + "\",\"" + streetAddress + "\")";
-        executeSQLInsert(sqlInsert);
+        System.out.println();
+        System.out.println();
+
+
+        int i = 0;
+
+        while(i < asiakaskerroin) {
+
+            int sum = asiakasindex + i;
+            String sqlInsert = "INSERT INTO varasto.asiakas (id, nimi, osoite) VALUES (" + sum + ",\"" + name + "\",\"" + streetAddress + "\")";
+            System.out.println(sqlInsert);
+            executeSQLInsert(sqlInsert);
+            i++;
+        }
 
         /*
         String cypherCreate = "CREATE (a:asiakas {asiakasId: \"" + index + "\", nimi:\"" + name + "\",osoite:\"" + streetAddress + "\"})";
@@ -245,21 +273,37 @@ public class DataGeneratorSQL
         session.run(cypherCreate);
          */
 
-        //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
-        int tila = faker.random().nextInt(1,3);
-        java.util.Date dueDate = faker.date().past(360, TimeUnit.DAYS);
-        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-        String dueDateAsString = dateFormat.format(dueDate);
-        sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + index + "," + index + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y'),0,0)";
-        executeSQLInsert(sqlInsert);
+        i=0;
+        int j = 0;
+        while(i < asiakaskerroin) {
 
+            while(j < laskukerroin) {
 
+                //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
+                int tila = faker.random().nextInt(1, 3);
+                java.util.Date dueDate = faker.date().past(360, TimeUnit.DAYS);
+                DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+                String dueDateAsString = dateFormat.format(dueDate);
+
+                int sum1 = laskuindex + j;
+                int sum2 = asiakasindex + i;
+
+                String sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + sum1 +"," + sum2 + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y'),0,0)";
+                System.out.println(sqlInsert);
+                executeSQLInsert(sqlInsert);
+                j++;
+            }
+
+            i++;
+        }
+
+        /*
         LocalDate localDate = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         int year  = localDate.getYear();
         int month = localDate.getMonthValue();
         int day   = localDate.getDayOfMonth();
 
-                /*
+
         cypherCreate = "CREATE (l:lasku {laskuId: " + index + ", tila: " + tila + ", erapaiva: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",ykkososa: 0, edellinenlasku: 0})";
         System.out.println(cypherCreate);
         session.run(cypherCreate);
@@ -269,11 +313,26 @@ public class DataGeneratorSQL
         session.run(cypherCreate);
         */
 
-        name = faker.name().fullName();
-        streetAddress = faker.address().streetAddress();
+        i=0;
+        j=0;
+        while (i < asiakaskerroin) {
 
-        sqlInsert = "INSERT INTO varasto.tyokohde (id, nimi, osoite, asiakasid) VALUES (\"" + index + "\",\"" + name + "\",\"" + streetAddress + "\"," + index + ")";
-        executeSQLInsert(sqlInsert);
+            while(j < tyokohdekerroin) {
+
+                name = faker.name().fullName();
+                streetAddress = faker.address().streetAddress();
+
+                int sum1 = tyokohdeindex + j;
+                int sum2 = asiakasindex + i;
+
+                String sqlInsert = "INSERT INTO varasto.tyokohde (id, nimi, osoite, asiakasid) VALUES (" + sum1 +  ",\"" + name + "\",\"" + streetAddress + "\"," + sum2 + ")";
+                System.out.println(sqlInsert);
+                executeSQLInsert(sqlInsert);
+                j++;
+            }
+
+            i++;
+        }
 
         /*
         cypherCreate = "CREATE (t:tyokohde {tyokohdeId: " + index + ", nimi: \"" + name + "\", osoite: \"" + streetAddress + "\", asiakasid: " + index + " })";
@@ -285,13 +344,30 @@ public class DataGeneratorSQL
         session.run(cypherCreate);
         */
 
-        int urakkahinta = faker.random().nextInt(1,1000);
-        //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
-        int tyyppi = faker.random().nextInt(1,100);
+        i=0;
+        j=0;
+        int k = suoritusindex;
+        while(i < laskukerroin) {
 
-        sqlInsert = "INSERT INTO varasto.suoritus (id, tyyppi, urakkahinta, laskuId, kohdeId) VALUES (" + index + "," + tyyppi + "," + urakkahinta + "," + index + "," + index + ")";
-        executeSQLInsert(sqlInsert);
+            while(j < tyokohdekerroin) {
 
+                int urakkahinta = faker.random().nextInt(1, 1000);
+                //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
+                int tyyppi = faker.random().nextInt(1, 100);
+
+                int sum1 = laskuindex + j;
+                int sum2 = tyokohdeindex + i;
+
+                String sqlInsert = "INSERT INTO varasto.suoritus (id, tyyppi, urakkahinta, laskuId, kohdeId) VALUES (" + k + "," + tyyppi + "," + urakkahinta + "," + sum1 + "," + sum2 + ")";
+                System.out.println(sqlInsert);
+                executeSQLInsert(sqlInsert);
+                j++;
+                k++;
+
+            }
+
+            i++;
+        }
         /*
         cypherCreate = "CREATE (s:suoritus {suoritusId: " + index + ", tyyppi: " + tyyppi + ", urakkahinta: " + urakkahinta + ", laskuId: " + index + ", tyokohdeId: " + index + "})";
         System.out.println(cypherCreate);
@@ -306,13 +382,23 @@ public class DataGeneratorSQL
         session.run(cypherCreate);
         */
 
-        int lukumaara = faker.random().nextInt(1,100);
-        int alennusprosentti = faker.random().nextInt(1,100);
-        int varastotarvikeId = faker.random().nextInt(0,8);
+        int alennusprosentti = faker.random().nextInt(1, 100);
         double alennus = (0.01 * alennusprosentti);
 
-        sqlInsert = "INSERT INTO varasto.kaytettytarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(" + lukumaara + "," + alennus + "," + index + "," + varastotarvikeId + ")";
-        executeSQLInsert(sqlInsert);
+        i=0;
+        while(i < suorituskerroin) {
+
+            int lukumaara = faker.random().nextInt(1, 100);
+
+            int varastotarvikeId = faker.random().nextInt(0, 8);
+
+            int sum = suoritusindex + i;
+
+            String sqlInsert = "INSERT INTO varasto.kaytettytarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(" + lukumaara + "," + alennus + "," + sum + "," + varastotarvikeId + ")";
+            System.out.println(sqlInsert);
+            executeSQLInsert(sqlInsert);
+            i++;
+        }
 
         /*
         cypherCreate = "MATCH (s:suoritus),(v:varastotarvike) WHERE s.suoritusId=" + index + " AND v.varastotarvikeId=" + varastotarvikeId +
@@ -321,11 +407,20 @@ public class DataGeneratorSQL
         session.run(cypherCreate);
         */
 
-        int tuntimaara = faker.random().nextInt(1,100);
-        int tyotyyppiId = faker.random().nextInt(0,2);
+        i=0;
+        while(i < suorituskerroin) {
 
-        sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + tuntimaara + "," + alennus + "," + index + ")";
-        executeSQLInsert(sqlInsert);
+            int tuntimaara = faker.random().nextInt(1, 100);
+            int tyotyyppiId = faker.random().nextInt(0, 2);
+
+            int sum = suoritusindex + i;
+
+            String sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + tuntimaara + "," + alennus + "," + sum + ")";
+            System.out.println(sqlInsert);
+            executeSQLInsert(sqlInsert);
+
+            i++;
+        }
 
         /*
         cypherCreate = "MATCH (s:suoritus),(tt:tyotyyppi) WHERE s.suoritusId=" + index + " AND tt.tyotyyppiId=" + tyotyyppiId +
@@ -333,6 +428,12 @@ public class DataGeneratorSQL
         System.out.println(cypherCreate);
         session.run(cypherCreate);
         */
+
+        asiakasindex = asiakasindex + asiakaskerroin;
+        laskuindex = laskuindex + laskukerroin;
+        tyokohdeindex = tyokohdeindex + tyokohdekerroin;
+        suoritusindex = suoritusindex + suorituskerroin;
+
     }
 
 }

@@ -7,11 +7,11 @@ public class Main
 
         DataGeneratorSQL dataGeneratorSQL = new DataGeneratorSQL();
 
-        dataGeneratorSQL.insertData(100);
+        dataGeneratorSQL.insertData(10, 4,3,2,1);
 
-        TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
+        //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 
-        tinkerPopGraph.getVertexes("varasto");
+        //tinkerPopGraph.getVertexes("varasto");
 
         //tinkerPopGraph.printVertexKeys();
 
@@ -19,7 +19,7 @@ public class Main
 
         //System.out.println("tinkerPopGraph vertexes length: " + tinkerPopGraph.getVertexes().size());
 
-        tinkerPopGraph.getEdges("varasto");
+        //tinkerPopGraph.getEdges("varasto");
 
         //tinkerPopGraph.printVertexes();
 
