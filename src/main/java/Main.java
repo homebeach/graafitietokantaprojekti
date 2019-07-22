@@ -7,7 +7,7 @@ public class Main
 
         DataGeneratorSQL dataGeneratorSQL = new DataGeneratorSQL();
 
-        dataGeneratorSQL.insertData(10, 4,3,2,1);
+        dataGeneratorSQL.insertData(10, 4,4,4,4);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 
