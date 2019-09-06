@@ -157,6 +157,17 @@ public class DataGeneratorSQL
         return resultSet;
     }
 
+    public void executeCypherQuery(String cypherQuery) {
+
+        org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+
+        Session session = driver.session();
+
+        session.run(cypherQuery);
+
+        session.close();
+        driver.close();
+    }
 
     enum TyoTyyppi {
         työ, suunnittelu, aputyö
@@ -186,13 +197,13 @@ public class DataGeneratorSQL
 
         try {
 
-            //org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
 
-            //Session session = driver.session();
+            Session session = driver.session();
 
             truncateDatabase();
 
-//            session.run("MATCH (n) DETACH DELETE n");
+            executeCypherQuery("MATCH (n) DETACH DELETE n");
 
             executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (0, 'MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
             executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (1, 'PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
@@ -204,7 +215,7 @@ public class DataGeneratorSQL
             executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (7, 'PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
             executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (8, 'SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
 
-            /*
+
             session.run("CREATE (v:varastotarvike {varastotarvikeId: 0, nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
             session.run("CREATE (v:varastotarvike {varastotarvikeid: 1, nimi:\"PISTORASIA 2-MAA OL JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"17.90\", alv:\"24\", poistettu:\"false\"})");
             session.run("CREATE (v:varastotarvike {varastotarvikeid: 2, nimi:\"PISTORASIA KULMAMALLI 3-OSAINEN\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"14.90\", alv:\"24\", poistettu:\"false\"})");
@@ -214,25 +225,26 @@ public class DataGeneratorSQL
             session.run("CREATE (v:varastotarvike {varastotarvikeid: 6, nimi:\"KYTKIN PINTA JUSSI 1/6\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"8.90\", alv:\"24\", poistettu:\"false\"})");
             session.run("CREATE (v:varastotarvike {varastotarvikeid: 7, nimi:\"PINNALLINEN RVP 5-KYTKIN\", varastosaldo:\"5\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
             session.run("CREATE (v:varastotarvike {varastotarvikeid: 8, nimi:\"SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.09\", alv:\"24\", poistettu:\"false\"})");
-            */
+
 
             executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (0, 'suunnittelu', 55)");
             executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (1, 'työ', 45)");
             executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (2, 'aputyö', 35)");
 
-            /*
+
             session.run("CREATE (tt:tyotyyppi {tyotyyppiId: 0, nimi:\"suunnittelu\", hinta:\"55\"})");
             session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 1, nimi:\"työ\", hinta:\"46\"})");
             session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 2, nimi:\"aputyö\", hinta:\"35\"})");
-            */
+
 
 
             for(int i=0; i < rowCount; i++) {
-                insertRow(i);
+                insertRow(i, session);
             }
 
-            //session.close();
-            //driver.close();
+            session.close();
+            driver.close();
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -245,7 +257,9 @@ public class DataGeneratorSQL
     int suoritusindex = 0;
     int k = 0;
 
-    public void insertRow(int index) {
+    public void insertRow(int index, Session session) {
+
+
 
         Faker faker = new Faker();
 
@@ -265,19 +279,20 @@ public class DataGeneratorSQL
             String sqlInsert = "INSERT INTO varasto.asiakas (id, nimi, osoite) VALUES (" + asiakasindex + ",\"" + name + "\",\"" + streetAddress + "\")";
             System.out.println(sqlInsert);
             executeSQLInsert(sqlInsert);
+
+            String cypherCreate = "CREATE (a:asiakas {asiakasId: \"" + asiakasindex + "\", nimi:\"" + name + "\",osoite:\"" + streetAddress + "\"})";
+            System.out.println(cypherCreate);
+            session.run(cypherCreate);
+
             i++;
             asiakasindex++;
         }
 
         asiakasindex=asiakasindexoriginal;
 
-        /*
-        String cypherCreate = "CREATE (a:asiakas {asiakasId: \"" + index + "\", nimi:\"" + name + "\",osoite:\"" + streetAddress + "\"})";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-         */
-
         int laskuindexoriginal=laskuindex;
+
+        String cypherCreate = null;
 
         i=0;
         int j = 0;
@@ -294,6 +309,20 @@ public class DataGeneratorSQL
                 String sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + laskuindex +"," + asiakasindex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y'),0,0)";
                 System.out.println(sqlInsert);
                 executeSQLInsert(sqlInsert);
+
+                LocalDate localDate = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                int year  = localDate.getYear();
+                int month = localDate.getMonthValue();
+                int day   = localDate.getDayOfMonth();
+
+                cypherCreate = "CREATE (l:lasku {laskuId: " + laskuindex + ", asiakasId: " + asiakasindex + ", tila: " + tila + ", erapaiva: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",ykkososa: 0, edellinenlasku: 0})";
+                System.out.println(cypherCreate);
+                session.run(cypherCreate);
+
+                cypherCreate = "MATCH (a:asiakas),(l:lasku) WHERE a.asiakasId = \"" + asiakasindex + "\" AND l.laskuId = " + laskuindex + " CREATE (a)-[m:MAKSAA]->(l)";
+                System.out.println(cypherCreate);
+                session.run(cypherCreate);
+
                 laskuindex++;
                 j++;
             }
@@ -304,23 +333,6 @@ public class DataGeneratorSQL
 
         asiakasindex=asiakasindexoriginal;
 
-
-
-        /*
-        LocalDate localDate = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        int year  = localDate.getYear();
-        int month = localDate.getMonthValue();
-        int day   = localDate.getDayOfMonth();
-
-
-        cypherCreate = "CREATE (l:lasku {laskuId: " + index + ", tila: " + tila + ", erapaiva: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",ykkososa: 0, edellinenlasku: 0})";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-
-        cypherCreate = "MATCH (a:asiakas),(l:lasku) WHERE a.asiakasId = \"" + index + "\" AND l.laskuId = " + index + " CREATE (a)-[m:MAKSAA]->(l)";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-        */
 
         int tyokohdeindexoriginal=tyokohdeindex;
 
@@ -335,22 +347,21 @@ public class DataGeneratorSQL
                 String sqlInsert = "INSERT INTO varasto.tyokohde (id, nimi, osoite, asiakasid) VALUES (" + tyokohdeindex +  ",\"" + name + "\",\"" + streetAddress + "\"," + asiakasindex + ")";
                 System.out.println(sqlInsert);
                 executeSQLInsert(sqlInsert);
+
+                cypherCreate = "CREATE (t:tyokohde {tyokohdeId: " + tyokohdeindex + ", nimi: \"" + name + "\", osoite: \"" + streetAddress + "\", asiakasid: " + asiakasindex + " })";
+                System.out.println(cypherCreate);
+                session.run(cypherCreate);
+
+                cypherCreate = "MATCH (a:asiakas),(t:tyokohde) WHERE a.asiakasId = \"" + asiakasindex + "\" AND t.tyokohdeid = " + tyokohdeindex + " CREATE (a)-[m:ASIAKKAAN_TYOKOHDE]->(t)";
+                System.out.println(cypherCreate);
+                session.run(cypherCreate);
+
                 tyokohdeindex++;
                 j++;
             }
             asiakasindex++;
             i++;
         }
-
-        /*
-        cypherCreate = "CREATE (t:tyokohde {tyokohdeId: " + index + ", nimi: \"" + name + "\", osoite: \"" + streetAddress + "\", asiakasid: " + index + " })";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-
-        cypherCreate = "MATCH (a:asiakas),(t:tyokohde) WHERE a.asiakasId = \"" + index + "\" AND t.asiakasid = " + index + " CREATE (a)-[m:ASIAKKAAN_TYOKOHDE]->(t)";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-        */
 
         int suoritusindexoriginal=suoritusindex;
 
@@ -368,26 +379,24 @@ public class DataGeneratorSQL
             System.out.println(sqlInsert);
             executeSQLInsert(sqlInsert);
 
+            cypherCreate = "CREATE (s:suoritus {suoritusId: " + suoritusindex + ", tyyppi: " + tyyppi + ", urakkahinta: " + urakkahinta + ", laskuId: " + randomlasku + ", tyokohdeId: " + randomtyokohde + "})";
+            System.out.println(cypherCreate);
+            session.run(cypherCreate);
+
+            cypherCreate = "MATCH (s:suoritus),(l:lasku) WHERE s.suoritusId = " + suoritusindex + " AND l.laskuId = " + randomlasku + " CREATE (s)-[m:SUORITUKSEN_LASKU]->(l)";
+            System.out.println(cypherCreate);
+            session.run(cypherCreate);
+
+            cypherCreate = "MATCH (s:suoritus),(t:tyokohde) WHERE s.suoritusId = " + suoritusindex + "  AND t.tyokohdeId = " + randomtyokohde + " CREATE (s)-[m:SUORITUKSEN_TYOKOHDE]->(t)";
+            System.out.println(cypherCreate);
+            session.run(cypherCreate);
+
             k++;
             i++;
             suoritusindex++;
         }
 
         suoritusindex=suoritusindexoriginal;
-
-        /*
-        cypherCreate = "CREATE (s:suoritus {suoritusId: " + index + ", tyyppi: " + tyyppi + ", urakkahinta: " + urakkahinta + ", laskuId: " + index + ", tyokohdeId: " + index + "})";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-
-        cypherCreate = "MATCH (s:suoritus),(l:lasku) WHERE s.laskuId = " + index + " AND l.laskuId = " + index + " CREATE (s)-[m:SUORITUKSEN_LASKU]->(l)";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-
-        cypherCreate = "MATCH (s:suoritus),(t:tyokohde) WHERE s.tyokohdeId = " + index + " AND t.tyokohdeId = " + index + " CREATE (s)-[m:SUORITUKSEN_TYOKOHDE]->(t)";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-        */
 
         int alennusprosentti = faker.random().nextInt(1, 100);
         double alennus = (0.01 * alennusprosentti);
@@ -402,18 +411,19 @@ public class DataGeneratorSQL
             String sqlInsert = "INSERT INTO varasto.kaytettytarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(" + lukumaara + "," + alennus + "," + suoritusindex + "," + varastotarvikeId + ")";
             System.out.println(sqlInsert);
             executeSQLInsert(sqlInsert);
+
+            cypherCreate = "MATCH (s:suoritus),(v:varastotarvike) WHERE s.suoritusId=" + suoritusindex + " AND v.varastotarvikeId=" + varastotarvikeId +
+                    " CREATE (s)-[m:KAYTETTY_TARVIKE {lukumaara:" + lukumaara + ", alennus:" + alennus + "}]->(v)" ;
+            System.out.println(cypherCreate);
+            session.run(cypherCreate);
+
             i++;
             suoritusindex++;
         }
 
         suoritusindex=suoritusindexoriginal;
 
-        /*
-        cypherCreate = "MATCH (s:suoritus),(v:varastotarvike) WHERE s.suoritusId=" + index + " AND v.varastotarvikeId=" + varastotarvikeId +
-                " CREATE (s)-[m:KAYTETTY_TARVIKE {lukumaara:" + lukumaara + ", alennus:" + alennus + "}]->(v)" ;
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-        */
+
 
         i=0;
         while(i < suorituskerroin) {
@@ -424,19 +434,15 @@ public class DataGeneratorSQL
             String sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + tuntimaara + "," + alennus + "," + suoritusindex + ")";
             System.out.println(sqlInsert);
             executeSQLInsert(sqlInsert);
+
+            cypherCreate = "MATCH (s:suoritus),(tt:tyotyyppi) WHERE s.suoritusId=" + suoritusindex + " AND tt.tyotyyppiId=" + tyotyyppiId +
+                    " CREATE (s)-[m:TYOTUNNIT {tuntimaara:" + tuntimaara + ", alennus:" + alennus + "}]->(tt)";
+            System.out.println(cypherCreate);
+            session.run(cypherCreate);
+
             i++;
             suoritusindex++;
         }
-
-
-
-
-        /*
-        cypherCreate = "MATCH (s:suoritus),(tt:tyotyyppi) WHERE s.suoritusId=" + index + " AND tt.tyotyyppiId=" + tyotyyppiId +
-                " CREATE (s)-[m:TYOTUNNIT {tuntimaara:" + tuntimaara + ", alennus:" + alennus + "}]->(tt)";
-        System.out.println(cypherCreate);
-        session.run(cypherCreate);
-        */
 
     }
 

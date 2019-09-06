@@ -10,12 +10,15 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.opencypher.gremlin.client.CypherGremlinClient;
+import org.opencypher.gremlin.client.CypherResultSet;
 
 import java.net.URI;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource.traversal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -399,6 +402,16 @@ public class TinkerPopGraph {
 
         }
 
+    }
+
+    public List<Map<String, Object>> executeCypherQuery(String cypherQuery) {
+
+        this.cluster = Cluster.build().addContactPoint("localhost").reconnectInterval(500).create();
+        this.client = cluster.connect();
+        CypherGremlinClient cypherGremlinClient = CypherGremlinClient.translating(client);
+        CypherResultSet resultSet = cypherGremlinClient.submit(cypherQuery);
+        List<Map<String, Object>> results = resultSet.all();
+        return results;
     }
 
     public void getVertexes(String schema) {

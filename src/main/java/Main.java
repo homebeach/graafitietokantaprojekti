@@ -1,4 +1,9 @@
+import XMLToCypher.Convert;
 import graph.Graph;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Main
 {
@@ -7,7 +12,7 @@ public class Main
 
         DataGeneratorSQL dataGeneratorSQL = new DataGeneratorSQL();
 
-        dataGeneratorSQL.insertData(10, 4,4,4,4);
+        dataGeneratorSQL.insertData(100, 1,1,1,1);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 
@@ -24,6 +29,36 @@ public class Main
         //tinkerPopGraph.printVertexes();
 
         //tinkerPopGraph.printRealPrimaryKeysValues();
+
+
+        //Convert convert = new Convert();
+
+        //String cypherQuery = convert.getCypher("*");
+
+        //System.out.println(cypherQuery);
+
+        //String matchAll = "MATCH (n) RETURN n;";
+
+        //List<Map<String, Object>> results = tinkerPopGraph.executeCypherQuery(cypherQuery);
+
+        //System.out.println(results.size());
+
+        /*
+
+        for (Map<String, Object> queryMember : results) {
+
+            Set<String> keys = queryMember.keySet();
+
+            for (String key : keys) {
+
+                Object member = queryMember.get(key);
+                System.out.println(member.toString());
+
+            }
+
+        }
+
+        */
 
         /*
 
