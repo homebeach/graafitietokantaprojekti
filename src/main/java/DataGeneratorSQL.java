@@ -8,6 +8,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +28,10 @@ public class DataGeneratorSQL
     private int laskukerroin = 0;
     private int tyokohdekerroin = 0;
     private int suorituskerroin = 0;
+
+    private List<String> firstnames;
+    private List<String> surnames;
+    private List<HashMap<String, String>> addresses;
 
     private Random random = new Random();
 
@@ -157,16 +164,54 @@ public class DataGeneratorSQL
         return resultSet;
     }
 
-    public void executeCypherQuery(String cypherQuery) {
+    public void getSampleData() {
 
-        org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+        try {
 
-        Session session = driver.session();
+            firstnames = new ArrayList<String>();
+            surnames = new ArrayList<String>();
+            addresses = new ArrayList<HashMap<String, String>>();
 
-        session.run(cypherQuery);
+            ResultSet rs = executeSQLQuery("SELECT name FROM testdata.firstnames;");
+            while (rs.next()) {
+                String firstName = rs.getString("name");
+                firstnames.add(firstName);
+            }
 
-        session.close();
-        driver.close();
+            System.out.println("Firstnames size");
+            System.out.println(firstnames.size());
+
+            rs = executeSQLQuery("SELECT name FROM testdata.surnames;");
+            while (rs.next()) {
+                String surName = rs.getString("name");
+                surnames.add(surName);
+            }
+
+            System.out.println("Surnames size");
+            System.out.println(surnames.size());
+
+            rs = executeSQLQuery("SELECT street, city, district, region, postcode FROM testdata.addresses;");
+            while (rs.next()) {
+
+                HashMap<String, String> address = new HashMap<String, String>();
+
+                address.put("street", rs.getString("street"));
+                address.put("city", rs.getString("city"));
+                address.put("district", rs.getString("district"));
+                address.put("region", rs.getString("region"));
+                address.put("postcode", rs.getString("postcode"));
+
+                addresses.add(address);
+            }
+
+            System.out.println("Addresses size");
+            System.out.println(surnames.size());
+
+        } catch (Exception e) {
+            System.err.println("Exception: "
+                    +e.getMessage());
+        }
+
     }
 
     enum TyoTyyppi {
@@ -203,7 +248,7 @@ public class DataGeneratorSQL
 
             truncateDatabase();
 
-            executeCypherQuery("MATCH (n) DETACH DELETE n");
+            session.run("MATCH (n) DETACH DELETE n");
 
             executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (0, 'MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
             executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (1, 'PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
@@ -251,21 +296,43 @@ public class DataGeneratorSQL
         }
     }
 
+
+
     int asiakasindex = 0;
     int laskuindex = 0;
     int tyokohdeindex = 0;
     int suoritusindex = 0;
     int k = 0;
 
+    int firstnameindex = 0;
+    int surnameindex = 0;
+    int addressindex = 0;
+    int tilaindex = 0;
+
+
+    public void resetIndexes() {
+
+        if (firstnameindex >= firstnames.size()) {
+            firstnameindex = 0;
+        }
+
+        if (surnameindex >= surnames.size()) {
+            surnameindex = 0;
+        }
+
+        if (addressindex >= addresses.size()) {
+            addressindex = 0;
+
+        }
+
+    }
+
     public void insertRow(int index, Session session) {
-
-
 
         Faker faker = new Faker();
 
         System.out.println();
         System.out.println();
-
 
         int i = 0;
 
@@ -273,8 +340,11 @@ public class DataGeneratorSQL
 
         while(i < asiakaskerroin) {
 
-            String name = faker.name().fullName(); // Miss Samanta Schmidt
-            String streetAddress = faker.address().streetAddress(); // 60018 Sawayn Brooks Suite 449
+            resetIndexes();
+
+            String name = firstnames.get(firstnameindex) + " " + surnames.get(surnameindex);
+
+            String streetAddress = addresses.get(addressindex).get("street") + " " + addresses.get(addressindex).get("city") + " " + addresses.get(addressindex).get("district") + " " + addresses.get(addressindex).get("region") + " " + addresses.get(addressindex).get("postcode");
 
             String sqlInsert = "INSERT INTO varasto.asiakas (id, nimi, osoite) VALUES (" + asiakasindex + ",\"" + name + "\",\"" + streetAddress + "\")";
             System.out.println(sqlInsert);
@@ -286,6 +356,10 @@ public class DataGeneratorSQL
 
             i++;
             asiakasindex++;
+            firstnameindex++;
+            surnameindex++;
+            addressindex++;
+
         }
 
         asiakasindex=asiakasindexoriginal;
@@ -341,8 +415,12 @@ public class DataGeneratorSQL
             j=0;
             while(j < tyokohdekerroin) {
 
-                String name = faker.name().name();
-                String streetAddress = faker.address().streetAddress();
+                resetIndexes();
+
+                String name = firstnames.get(firstnameindex) + " " + surnames.get(surnameindex);
+
+                String streetAddress = addresses.get(addressindex).get("street") + " " + addresses.get(addressindex).get("city") + " " + addresses.get(addressindex).get("district") + " " + addresses.get(addressindex).get("region") + " " + addresses.get(addressindex).get("postcode");
+
 
                 String sqlInsert = "INSERT INTO varasto.tyokohde (id, nimi, osoite, asiakasid) VALUES (" + tyokohdeindex +  ",\"" + name + "\",\"" + streetAddress + "\"," + asiakasindex + ")";
                 System.out.println(sqlInsert);
@@ -357,6 +435,9 @@ public class DataGeneratorSQL
                 session.run(cypherCreate);
 
                 tyokohdeindex++;
+                firstnameindex++;
+                surnameindex++;
+                addressindex++;
                 j++;
             }
             asiakasindex++;

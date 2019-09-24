@@ -12,6 +12,8 @@ public class Main
 
         DataGeneratorSQL dataGeneratorSQL = new DataGeneratorSQL();
 
+        dataGeneratorSQL.getSampleData();
+
         dataGeneratorSQL.insertData(100, 1,1,1,1);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
