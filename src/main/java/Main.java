@@ -1,20 +1,13 @@
-import XMLToCypher.Convert;
-import graph.Graph;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 public class Main
 {
     public static void main(String[] args)
     {
 
-        DataGeneratorSQL dataGeneratorSQL = new DataGeneratorSQL();
+        DataGenerator dataGenerator = new DataGenerator();
 
-        dataGeneratorSQL.getSampleData();
+        dataGenerator.getSampleData();
 
-        dataGeneratorSQL.insertData(100, 1,1,1,1);
+        dataGenerator.insertData(1, 1,1,1,1,1);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 
