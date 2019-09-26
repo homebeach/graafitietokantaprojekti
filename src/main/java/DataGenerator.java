@@ -457,7 +457,7 @@ public class DataGenerator
 
                     int urakkahinta = faker.random().nextInt(1, 1000);
                     //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
-                    int tyyppi = faker.random().nextInt(1, 100);
+                    int tyyppi = faker.random().nextInt(1, 3);
 
                     String sqlInsert = "INSERT INTO varasto.suoritus (id, tyyppi, urakkahinta, laskuId, kohdeId) VALUES (" + workIndex + "," + tyyppi + "," + urakkahinta + "," + invoiceIndex + "," + targetIndex + ")";
                     executeSQLInsert(sqlInsert);
