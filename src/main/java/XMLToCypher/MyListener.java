@@ -1,4 +1,4 @@
-package com.cypherTest.cypherTest;
+package XMLToCypher;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

@@ -1,4 +1,4 @@
-package com.cypherTest.cypherTest;
+package XMLToCypher;
 
 import java.util.*;
 
@@ -24,7 +24,7 @@ import static org.neo4j.driver.v1.Values.parameters;
  * Hello world!
  *
  */
-public class App 
+public class AppCopy
 {
     @SuppressWarnings("deprecation")
     public static void main( String[] args ) {
