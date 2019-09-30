@@ -29,12 +29,8 @@ public class DataGenerator
     private int targetFactor = 0;
     private int workFactor = 0;
     private int itemFactor = 0;
+    private int sequentialInvoices = 0;
 
-
-    boolean customersHaveSameInvoices = false;
-    boolean customersHaveSameTargets = false;
-    boolean invoicesHaveSameWork = false;
-    boolean targetHasSameWork = false;
 
     private List<String> firstnames;
     private List<String> surnames;
@@ -231,19 +227,14 @@ public class DataGenerator
     }
 
 
-    public void insertData(int rowCount, int customerFactor, int invoiceFactor, int targetFactor, int workFactor, int itemFactor) {
+    public void insertData(int rowCount, int customerFactor, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor) {
 
         this.customerFactor = customerFactor;
         this.invoiceFactor = invoiceFactor;
+        this.sequentialInvoices = sequentialInvoices;
         this.targetFactor = targetFactor;
         this.workFactor = workFactor;
         this.itemFactor = itemFactor;
-
-        this.customersHaveSameInvoices = customersHaveSameInvoices;
-        this.customersHaveSameTargets = customersHaveSameTargets;
-        this.invoicesHaveSameWork = invoicesHaveSameWork;
-
-
 
         try {
 
@@ -334,9 +325,6 @@ public class DataGenerator
 
         Faker faker = new Faker();
 
-        System.out.println();
-        System.out.println();
-
         int i = 0;
         int j = 0;
         int k = 0;
@@ -372,6 +360,7 @@ public class DataGenerator
 
         i = 0;
         while (i < customerFactor) {
+            int customerInvoiceIndexOriginal=invoiceIndex;
             j = 0;
             while (j < invoiceFactor) {
 
@@ -381,7 +370,25 @@ public class DataGenerator
                 DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
                 String dueDateAsString = dateFormat.format(dueDate);
 
-                String sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + invoiceIndex + "," + customerIndex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y'),0,0)";
+                String sqlInsert = "";
+
+                if(j < sequentialInvoices ) {
+
+                    if(invoiceIndex == customerInvoiceIndexOriginal) {
+                        sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + invoiceIndex + "," + customerIndex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + customerInvoiceIndexOriginal + "," + (invoiceIndex) + ")";
+
+                    }
+                    else {
+                        sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + invoiceIndex + "," + customerIndex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + customerInvoiceIndexOriginal + "," + (invoiceIndex-1) + ")";
+
+                    }
+
+                } else {
+
+                    sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + invoiceIndex + "," + customerIndex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + invoiceIndex + "," + invoiceIndex + ")";
+
+                }
+
                 executeSQLInsert(sqlInsert);
 
                 LocalDate localDate = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
