@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class Main
 {
     public static void main(String[] args)
@@ -7,7 +9,7 @@ public class Main
 
         dataGenerator.getSampleData();
 
-        dataGenerator.insertData(10, 5,5,4,5,5,5);
+        dataGenerator.insertData(1, 1,1,1,1,1,1);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

@@ -8,10 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class DataGenerator
@@ -35,8 +32,6 @@ public class DataGenerator
     private List<String> firstnames;
     private List<String> surnames;
     private List<HashMap<String, String>> addresses;
-
-    private Random random = new Random();
 
     public ResultSet executeSQLInsert(String sqlQuery) {
 
@@ -132,14 +127,16 @@ public class DataGenerator
             stmt = conn.createStatement();
 
             stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
-            stmt.addBatch("TRUNCATE TABLE varasto.asiakas;");
-            stmt.addBatch("TRUNCATE TABLE varasto.lasku;");
-            stmt.addBatch("TRUNCATE TABLE varasto.tyokohde;");
-            stmt.addBatch("TRUNCATE TABLE varasto.suoritus;");
-            stmt.addBatch("TRUNCATE TABLE varasto.varastotarvike;");
-            stmt.addBatch("TRUNCATE TABLE varasto.kaytettytarvike;");
-            stmt.addBatch("TRUNCATE TABLE varasto.tyotyyppi;");
-            stmt.addBatch("TRUNCATE TABLE varasto.tyotunnit;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.target;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.warehouseitem;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.work;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.workhours;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.workinvoice;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.worktarget;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.worktype;");
             stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
             stmt.executeBatch();
 
@@ -209,11 +206,11 @@ public class DataGenerator
 
     }
 
-    enum TyoTyyppi {
-        työ, suunnittelu, aputyö
+    enum worktype {
+        work, design, supporting_work
     }
 
-    class RandomEnum<E extends Enum<TyoTyyppi>> {
+    class RandomEnum<E extends Enum<worktype>> {
         Random r = new Random();
         E[] values;
 
@@ -227,7 +224,7 @@ public class DataGenerator
     }
 
 
-    public void insertData(int rowCount, int customerFactor, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor) {
+    public void insertData(int iterationCount, int customerFactor, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor) {
 
         this.customerFactor = customerFactor;
         this.invoiceFactor = invoiceFactor;
@@ -246,47 +243,41 @@ public class DataGenerator
 
             session.run("MATCH (n) DETACH DELETE n");
 
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (0, 'MMJ 3X2,5MM² KAAPELI', 100, 'm', 0.64, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (1, 'PISTORASIA 2-MAA OL JUSSI', 20, 'kpl', 17.90, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (2, 'PISTORASIA KULMAMALLI 3-OSAINEN', 10, 'kpl', 14.90, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (3, 'PEITELEVY 2-OS JUSSI', 20, 'kpl', 3.90, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (4, 'PEITELEVY 1-OS JUSSI', 20, 'kpl', 2.90, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (5, 'KYTKIN 5-SRJ UPPO JUSSI', 25, 'kpl', 11.90, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (6, 'KYTKIN PINTA JUSSI 1/6', 10, 'kpl', 8.90, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (7, 'PINNALLINEN RVP 5-KYTKIN', 5, 'kpl', 3.90, 24, false)");
-            executeSQLInsert("INSERT INTO varasto.varastotarvike (id, nimi, varastosaldo, yksikko, sisaanostohinta, alv, poistettu) VALUES (8, 'SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ', 100, 'm', 0.09, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (0, 'MMJ 3X2,5MM² CABLE', 100, 'm', 0.64, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (1, 'SOCKET 2-GROUND OL JUSSI', 20, 'pcs', 17.90, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (2, 'SOCKET CORNER MODEL 3-PARTS', 10, 'pcs', 14.90, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (3, 'COVER PLATE 2-OS JUSSI', 20, 'pcs', 3.90, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (4, 'COVER PLATE 1-OS JUSSI', 20, 'pcs', 2.90, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (5, 'SWITCH 5-SRJ SUBMERGED JUSSI', 25, 'pcs', 11.90, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (6, 'SWITCH SURFACE JUSSI 1/6', 10, 'pcs', 8.90, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (7, 'SHALLOW RVP 5-SWITCH', 5, 'pcs', 3.90, 24, false)");
+            executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (8, 'BINDING SPIRAL 7,5-60MM INVISIBLE', 100, 'm', 0.09, 24, false)");
 
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 0, name:\"MMJ 3X2,5MM² CABLE\", balance:100, unit:\"m\", purchaseprice:0.64, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 1, name:\"SOCKET 2-GROUND OL JUSSI\", balance:20, unit:\"pcs\", purchaseprice:17.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 2, name:\"SOCKET CORNER MODEL 3-PARTS\", balance:10, unit:\"pcs\", purchaseprice:14.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 3, name:\"COVER PLATE 2-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 4, name:\"COVER PLATE 1-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:2.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 5, name:\"SWITCH 5-SRJ SUBMERGED JUSSI\", balance:25, unit:\"pcs\", purchaseprice:11.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 6, name:\"SWITCH SURFACE JUSSI 1/6\", balance:10, unit:\"pcs\", purchaseprice:8.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 7, name:\"SHALLOW RVP 5-SWITCH\", balance:5, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemid: 8, name:\"BINDING SPIRAL 7,5-60MM INVISIBLE\", balance:100, unit:\"m\", purchaseprice:0.09, vat:24, removed:\"false\"})");
 
-            session.run("CREATE (v:varastotarvike {varastotarvikeId: 0, nimi:\"MMJ 3X2,5MM² KAAPELI\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.64\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 1, nimi:\"PISTORASIA 2-MAA OL JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"17.90\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 2, nimi:\"PISTORASIA KULMAMALLI 3-OSAINEN\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"14.90\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 3, nimi:\"PEITELEVY 2-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 4, nimi:\"PEITELEVY 1-OS JUSSI\", varastosaldo:\"20\", yksikko:\"kpl\", sisaanostohinta:\"2.90\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 5, nimi:\"KYTKIN 5-SRJ UPPO JUSSI\", varastosaldo:\"25\", yksikko:\"kpl\", sisaanostohinta:\"11.90\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 6, nimi:\"KYTKIN PINTA JUSSI 1/6\", varastosaldo:\"10\", yksikko:\"kpl\", sisaanostohinta:\"8.90\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 7, nimi:\"PINNALLINEN RVP 5-KYTKIN\", varastosaldo:\"5\", yksikko:\"kpl\", sisaanostohinta:\"3.90\", alv:\"24\", poistettu:\"false\"})");
-            session.run("CREATE (v:varastotarvike {varastotarvikeid: 8, nimi:\"SIDONTASPIRAALI 7,5-60MM LÄPINÄKYVÄ\", varastosaldo:\"100\", yksikko:\"m\", sisaanostohinta:\"0.09\", alv:\"24\", poistettu:\"false\"})");
+            executeSQLInsert("INSERT INTO warehouse.worktype (id, name, price) VALUES (0, 'design', 55)");
+            executeSQLInsert("INSERT INTO warehouse.worktype (id, name, price) VALUES (1, 'work', 45)");
+            executeSQLInsert("INSERT INTO warehouse.worktype (id, name, price) VALUES (2, 'supporting work', 35)");
 
+            session.run("CREATE (wt:worktype {worktypeId: 0, name:\"design\", price:55})");
+            session.run("CREATE (wt:worktype {worktypeId: 1, name:\"work\", price:46})");
+            session.run("CREATE (wt:worktype {worktypeId: 2, name:\"supporting work\", price:35})");
 
-            executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (0, 'suunnittelu', 55)");
-            executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (1, 'työ', 45)");
-            executeSQLInsert("INSERT INTO varasto.tyotyyppi (id, nimi, hinta) VALUES (2, 'aputyö', 35)");
-
-
-            session.run("CREATE (tt:tyotyyppi {tyotyyppiId: 0, nimi:\"suunnittelu\", hinta:\"55\"})");
-            session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 1, nimi:\"työ\", hinta:\"46\"})");
-            session.run("CREATE (tt:tyotyyppi {tyotyyppiid: 2, nimi:\"aputyö\", hinta:\"35\"})");
-
-
-
-            for(int i=0; i < rowCount; i++) {
+            for(int i=0; i < iterationCount; i++) {
                 insertRow(i, session);
             }
 
             session.close();
             driver.close();
-
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -339,10 +330,11 @@ public class DataGenerator
 
             String streetAddress = addresses.get(addressindex).get("street") + " " + addresses.get(addressindex).get("city") + " " + addresses.get(addressindex).get("district") + " " + addresses.get(addressindex).get("region") + " " + addresses.get(addressindex).get("postcode");
 
-            String sqlInsert = "INSERT INTO varasto.asiakas (id, nimi, osoite) VALUES (" + customerIndex + ",\"" + name + "\",\"" + streetAddress + "\")";
+            String sqlInsert = "INSERT INTO warehouse.customer (id, name, address) VALUES (" + customerIndex + ",\"" + name + "\",\"" + streetAddress + "\")";
+
             executeSQLInsert(sqlInsert);
 
-            String cypherCreate = "CREATE (a:asiakas {asiakasId: \"" + customerIndex + "\", nimi:\"" + name + "\",osoite:\"" + streetAddress + "\"})";
+            String cypherCreate = "CREATE (a:customer {customerId: " + customerIndex + ", name:\"" + name + "\",address:\"" + streetAddress + "\"})";
             session.run(cypherCreate);
 
             i++;
@@ -364,9 +356,22 @@ public class DataGenerator
             j = 0;
             while (j < invoiceFactor) {
 
-                //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
-                int tila = faker.random().nextInt(1, 3);
-                java.util.Date dueDate = faker.date().past(360, TimeUnit.DAYS);
+                Random r = new Random(index);
+                //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
+                int state = 1 + r.nextInt(3);
+
+                GregorianCalendar gregorianCalendar = new GregorianCalendar();
+
+                int year = Calendar.getInstance().get(Calendar.YEAR);
+
+
+                gregorianCalendar.set(gregorianCalendar.YEAR, year);
+
+                int dayOfYear = 1 + r.nextInt(gregorianCalendar.getActualMaximum(gregorianCalendar.DAY_OF_YEAR));
+
+                gregorianCalendar.set(gregorianCalendar.DAY_OF_YEAR, dayOfYear);
+
+                java.util.Date dueDate = gregorianCalendar.getTime();
                 DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
                 String dueDateAsString = dateFormat.format(dueDate);
 
@@ -375,32 +380,60 @@ public class DataGenerator
                 if(j < sequentialInvoices ) {
 
                     if(invoiceIndex == customerInvoiceIndexOriginal) {
-                        sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + invoiceIndex + "," + customerIndex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + customerInvoiceIndexOriginal + "," + (invoiceIndex) + ")";
+                        sqlInsert = "INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (" + invoiceIndex + "," + customerIndex + "," + state + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + invoiceIndex + ")";
 
                     }
                     else {
-                        sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + invoiceIndex + "," + customerIndex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + customerInvoiceIndexOriginal + "," + (invoiceIndex-1) + ")";
+                        sqlInsert = "INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (" + invoiceIndex + "," + customerIndex + "," + state + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + (invoiceIndex-1) + ")";
 
                     }
 
                 } else {
 
-                    sqlInsert = "INSERT INTO varasto.lasku (id, asiakasId, tila, erapaiva, ykkososa, edellinenlasku) VALUES (" + invoiceIndex + "," + customerIndex + "," + tila + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + invoiceIndex + "," + invoiceIndex + ")";
+                    sqlInsert = "INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (" + invoiceIndex + "," + customerIndex + "," + state + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + invoiceIndex + ")";
 
                 }
-
                 executeSQLInsert(sqlInsert);
 
+
                 LocalDate localDate = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                int year = localDate.getYear();
                 int month = localDate.getMonthValue();
                 int day = localDate.getDayOfMonth();
 
-                cypherCreate = "CREATE (l:lasku {laskuId: " + invoiceIndex + ", asiakasId: " + customerIndex + ", tila: " + tila + ", erapaiva: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",ykkososa: 0, edellinenlasku: 0})";
-                session.run(cypherCreate);
+                if(j < sequentialInvoices ) {
 
-                cypherCreate = "MATCH (a:asiakas),(l:lasku) WHERE a.asiakasId = \"" + customerIndex + "\" AND l.laskuId = " + invoiceIndex + " CREATE (a)-[m:MAKSAA]->(l)";
-                session.run(cypherCreate);
+                    if(invoiceIndex == customerInvoiceIndexOriginal) {
+
+                        cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + customerInvoiceIndexOriginal + ", previousinvoice: " + invoiceIndex + "})";
+                        session.run(cypherCreate);
+
+                        cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
+                        session.run(cypherCreate);
+
+                    }
+                    else {
+
+                        cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + customerInvoiceIndexOriginal + ", previousinvoice: " + (invoiceIndex-1) + "})";
+                        session.run(cypherCreate);
+
+                        cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
+                        session.run(cypherCreate);
+
+                        cypherCreate = "MATCH (a:invoice),(b:invoice) WHERE a.invoiceId = " + (invoiceIndex-1) + " AND b.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PREVIOUS_INVOICE]->(b)";
+                        session.run(cypherCreate);
+
+
+                    }
+
+                } else {
+
+                    cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + invoiceIndex + ", previousinvoice: " + invoiceIndex + "})";
+                    session.run(cypherCreate);
+
+                    cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
+                    session.run(cypherCreate);
+
+                }
 
                 invoiceIndex++;
                 j++;
@@ -409,7 +442,6 @@ public class DataGenerator
             customerIndex++;
             i++;
         }
-
 
 
         customerIndex=customerIndexOriginal;
@@ -426,13 +458,13 @@ public class DataGenerator
 
                 String streetAddress = addresses.get(addressindex).get("street") + " " + addresses.get(addressindex).get("city") + " " + addresses.get(addressindex).get("district") + " " + addresses.get(addressindex).get("region") + " " + addresses.get(addressindex).get("postcode");
 
-                String sqlInsert = "INSERT INTO varasto.tyokohde (id, nimi, osoite, asiakasid) VALUES (" + targetIndex +  ",\"" + name + "\",\"" + streetAddress + "\"," + customerIndex + ")";
+                String sqlInsert = "INSERT INTO warehouse.target (id, name, address, customerid) VALUES (" + targetIndex +  ",\"" + name + "\",\"" + streetAddress + "\"," + customerIndex + ")";
                 executeSQLInsert(sqlInsert);
 
-                cypherCreate = "CREATE (t:tyokohde {tyokohdeId: " + targetIndex + ", nimi: \"" + name + "\", osoite: \"" + streetAddress + "\", asiakasid: " + customerIndex + " })";
+                cypherCreate = "CREATE (t:target {tyotargetId: " + targetIndex + ", name: \"" + name + "\", address: \"" + streetAddress + "\", customerid: " + customerIndex + " })";
                 session.run(cypherCreate);
 
-                cypherCreate = "MATCH (a:asiakas),(t:tyokohde) WHERE a.asiakasId = \"" + customerIndex + "\" AND t.tyokohdeid = " + targetIndex + " CREATE (a)-[m:ASIAKKAAN_TYOKOHDE]->(t)";
+                cypherCreate = "MATCH (a:customer),(t:target) WHERE a.customerId = " + customerIndex + " AND t.tyotargetId = " + targetIndex + " CREATE (a)-[m:CUSTOMER_TARGET]->(t)";
                 session.run(cypherCreate);
 
                 targetIndex++;
@@ -447,70 +479,126 @@ public class DataGenerator
             i++;
         }
 
+
         int workIndexOriginal=workIndex;
         targetIndex=targetIndexOriginal;
         invoiceIndex=invoiceIndexOriginal;
 
-        i = 0;
-        while(i < targetFactor*customerFactor) {
+        j=0;
+        while(j < workFactor) {
 
-            j=0;
-            while(j < workFactor) {
+            Random r = new Random(index);
 
-                invoiceIndex=invoiceIndexOriginal;
+            int price = 1 + r.nextInt(1001);
+            //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
 
-                k=0;
-                while(k < invoiceFactor*customerFactor) {
+            String name = "Generic";
 
-                    int urakkahinta = faker.random().nextInt(1, 1000);
-                    //-- 0 = keskeneräinen, 1 = valmis, 2 = lähetetty, 3 = maksettu
-                    int tyyppi = faker.random().nextInt(1, 3);
+            String sqlInsert = "INSERT INTO warehouse.work (id, name) VALUES (" + workIndex + ",'" + name + "')";
+            executeSQLInsert(sqlInsert);
 
-                    String sqlInsert = "INSERT INTO varasto.suoritus (id, tyyppi, urakkahinta, laskuId, kohdeId) VALUES (" + workIndex + "," + tyyppi + "," + urakkahinta + "," + invoiceIndex + "," + targetIndex + ")";
-                    executeSQLInsert(sqlInsert);
+            cypherCreate = "CREATE (s:work {workId: " + workIndex + ", name: \"" + name + "\"})";
+            session.run(cypherCreate);
 
-                    cypherCreate = "CREATE (s:suoritus {suoritusId: " + workIndex + ", tyyppi: " + tyyppi + ", urakkahinta: " + urakkahinta + ", laskuId: " + invoiceIndex + ", tyokohdeId: " + targetIndex + "})";
-                    session.run(cypherCreate);
+            cypherCreate = "MATCH (s:work),(l:invoice) WHERE s.workId = " + workIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (s)-[m:WORK_INVOICE]->(l)";
+            session.run(cypherCreate);
 
-                    cypherCreate = "MATCH (s:suoritus),(l:lasku) WHERE s.suoritusId = " + workIndex + " AND l.laskuId = " + invoiceIndex + " CREATE (s)-[m:SUORITUKSEN_LASKU]->(l)";
-                    session.run(cypherCreate);
+            cypherCreate = "MATCH (s:work),(t:target) WHERE s.workId = " + workIndex + "  AND t.tyotargetId = " + targetIndex + " CREATE (s)-[m:WORK_INVOICE]->(t)";
+            session.run(cypherCreate);
 
-                    cypherCreate = "MATCH (s:suoritus),(t:tyokohde) WHERE s.suoritusId = " + workIndex + "  AND t.tyokohdeId = " + targetIndex + " CREATE (s)-[m:SUORITUKSEN_TYOKOHDE]->(t)";
-                    session.run(cypherCreate);
+            workIndex++;
+            j++;
+        }
 
-                    invoiceIndex++;
-                    k++;
+        workIndex=workIndexOriginal;
 
-                }
+        i=0;
+        while(i < workFactor) {
 
-                workIndex++;
+            targetIndex=targetIndexOriginal;
+
+            j = 0;
+            while(j < targetFactor*customerFactor) {
+
+                String sqlInsert = "INSERT INTO warehouse.worktarget (workId, targetId) VALUES (" + workIndex + "," + targetIndex + ")";
+                executeSQLInsert(sqlInsert);
+
+                cypherCreate = "MATCH (s:work),(t:target) WHERE s.workId = " + workIndex + "  AND t.tyotargetId = " + targetIndex + " CREATE (s)-[m:WORK_TARGET]->(t)";
+                session.run(cypherCreate);
+
+                targetIndex++;
                 j++;
+
             }
 
-            targetIndex++;
+            workIndex++;
+            i++;
+
+        }
+
+        workIndex=workIndexOriginal;
+
+
+        i=0;
+        while(i < workFactor) {
+
+            invoiceIndex=invoiceIndexOriginal;
+
+            j=0;
+            while(j < invoiceFactor*customerFactor) {
+
+                Random r = new Random(index);
+
+                int price = 1 + r.nextInt(1001);
+                //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
+
+                r = new Random(index);
+
+                int type = 1 + r.nextInt(4); // tämä on turha
+
+                String sqlInsert = "INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (" + workIndex + "," + invoiceIndex + ")";
+                executeSQLInsert(sqlInsert);
+
+                cypherCreate = "MATCH (s:work),(l:invoice) WHERE s.workId = " + workIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (s)-[m:WORK_INVOICE]->(l)";
+                session.run(cypherCreate);
+
+
+                invoiceIndex++;
+                j++;
+
+            }
+
+            workIndex++;
             i++;
         }
 
         workIndex=workIndexOriginal;
 
-        int alennusprosentti = faker.random().nextInt(1, 100);
-        double alennus = (0.01 * alennusprosentti);
+        Random r = new Random(index);
+
+        int discountpercent = 1 + r.nextInt(101);
+        double discount = (0.01 * discountpercent);
 
         i=0;
-        while(i < targetFactor*customerFactor*workFactor) {
+        while(i < workFactor) {
 
             j = 0;
             while (j <= itemFactor) {
 
-                int lukumaara = faker.random().nextInt(1, 100);
+                r = new Random(index);
 
-                int varastotarvikeId = j;
+                int amount = 1 + r.nextInt(101);
 
-                String sqlInsert = "INSERT INTO varasto.kaytettytarvike (lukumaara, alennus, suoritusId, varastotarvikeId) VALUES(" + lukumaara + "," + alennus + "," + workIndex + "," + varastotarvikeId + ")";
+                int warehouseitemId = j;
+
+                String sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + warehouseitemId + ")";
                 executeSQLInsert(sqlInsert);
 
-                cypherCreate = "MATCH (s:suoritus),(v:varastotarvike) WHERE s.suoritusId=" + workIndex + " AND v.varastotarvikeId=" + varastotarvikeId +
-                    " CREATE (s)-[m:KAYTETTY_TARVIKE {lukumaara:" + lukumaara + ", alennus:" + alennus + "}]->(v)";
+                cypherCreate = "MATCH (s:work),(v:warehouseitem) WHERE s.workId=" + workIndex + " AND v.warehouseitemId=" + warehouseitemId +
+                    " CREATE (s)-[i1:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v)" +
+                    " CREATE (v)-[i2:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
+
+                System.out.println(cypherCreate);
                 session.run(cypherCreate);
 
                 j++;
@@ -521,22 +609,27 @@ public class DataGenerator
             workIndex++;
         }
 
+
         workIndex=workIndexOriginal;
 
         i=0;
-        while(i < targetFactor*customerFactor*workFactor) {
+        while(i < workFactor) {
 
             j = 0;
             while (j < 3) {
 
-                int tuntimaara = faker.random().nextInt(0, 100);
-                int tyotyyppiId = j;
+                r = new Random(index);
 
-                String sqlInsert = "INSERT INTO varasto.tyotunnit (tyotyyppiId, tuntimaara, alennus, suoritusId) VALUES(" + tyotyyppiId + "," + tuntimaara + "," + alennus + "," + workIndex + ")";
+                int hours = r.nextInt(100);
+                int worktypeId = j;
+
+                String sqlInsert = "INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(" + worktypeId + "," + hours + "," + discount + "," + workIndex + ")";
                 executeSQLInsert(sqlInsert);
 
-                cypherCreate = "MATCH (s:suoritus),(tt:tyotyyppi) WHERE s.suoritusId=" + workIndex + " AND tt.tyotyyppiId=" + tyotyyppiId +
-                        " CREATE (s)-[m:TYOTUNNIT {tuntimaara:" + tuntimaara + ", alennus:" + alennus + "}]->(tt)";
+                cypherCreate = "MATCH (w:work),(wt:worktype) WHERE w.workId=" + workIndex + " AND wt.worktypeId=" + worktypeId +
+                        " CREATE (wt)-[h1:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(w)" +
+                        " CREATE (w)-[h2:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(wt)";
+                System.out.println(cypherCreate);
                 session.run(cypherCreate);
                 j++;
 
