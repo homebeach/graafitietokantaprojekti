@@ -11,7 +11,7 @@ public class Main
 
         //dataGenerator.printSampleDataSizes();
 
-        dataGenerator.insertData(4,4,4, 1,1,1,1,1,2);
+        dataGenerator.insertData(2,1,1, 1,1,1,1,1,3);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

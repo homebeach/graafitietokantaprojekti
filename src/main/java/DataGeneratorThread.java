@@ -29,12 +29,14 @@ public class DataGeneratorThread extends Thread {
     private int itemFactor = 0;
     private int sequentialInvoices = 0;
 
+    private List<Integer> itemIndexes;
+
 
     private List<String> firstnames;
     private List<String> surnames;
     private List<HashMap<String, String>> addresses;
 
-    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, int customerFactor, int invoiceFactor, int targetFactor, int workFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex) {
+    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, int customerFactor, int invoiceFactor, int targetFactor, int workFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex, List<Integer> itemIndexes) {
 
         this.threadindex = threadindex;
         this.iterationCount = iterationCount;
@@ -52,6 +54,7 @@ public class DataGeneratorThread extends Thread {
         this.invoiceIndex = invoiceIndex;
         this.targetIndex = targetIndex;
         this.workIndex = workIndex;
+        this.itemIndexes = itemIndexes;
     }
 
     enum worktype {
@@ -111,7 +114,7 @@ public class DataGeneratorThread extends Thread {
 
                 for (int i = 0; i < iterationCount; i++) {
 
-                    insertRow(i, batchExecuteValue, session, preparedStatements);
+                    insertRow(i, batchExecuteValue, session, preparedStatements, itemIndexes);
 
                 }
 
@@ -157,7 +160,7 @@ public class DataGeneratorThread extends Thread {
 
     }
 
-    public void insertRow(int index, int batchExecuteValue, Session session, HashMap<String, PreparedStatement> preparedStatements) throws SQLException {
+    public void insertRow(int index, int batchExecuteValue, Session session, HashMap<String, PreparedStatement> preparedStatements, List<Integer> itemIndexes) throws SQLException {
 
         PreparedStatement customer = preparedStatements.get("customer");
         PreparedStatement invoice = preparedStatements.get("invoice");
@@ -225,7 +228,6 @@ public class DataGeneratorThread extends Thread {
 
                     int year = Calendar.getInstance().get(Calendar.YEAR);
 
-
                     gregorianCalendar.set(gregorianCalendar.YEAR, year);
 
                     int dayOfYear = 1 + r.nextInt(gregorianCalendar.getActualMaximum(gregorianCalendar.DAY_OF_YEAR));
@@ -259,15 +261,26 @@ public class DataGeneratorThread extends Thread {
                             invoice.setInt(5,invoiceIndex - 1);
                         }
 
+                        invoice.addBatch();
+
                     } else {
 
                         sqlInsert = "INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (" + invoiceIndex + "," + customerIndex + "," + state + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + invoiceIndex + ")";
-                        invoice.setInt(5, invoiceIndex);
 
+                        invoice.setInt(1, invoiceIndex);
+                        invoice.setInt(2, customerIndex);
+                        invoice.setInt(3, state);
+                        invoice.setDate(4, sqlDueDate, gregorianCalendar);
+                        invoice.setInt(5, invoiceIndex);
+                        invoice.addBatch();
 
                     }
 
-                    invoice.addBatch();
+                    System.out.println("sqlInsert");
+                    System.out.println(sqlInsert);
+
+
+
 
                     //executeSQLInsert(sqlInsert);
 
@@ -475,13 +488,13 @@ public class DataGeneratorThread extends Thread {
             while (i < workFactor) {
 
                 j = 0;
-                while (j < itemFactor) {
+                while (j < itemIndexes.size()) {
 
                     r = new Random(index);
 
                     int amount = 1 + r.nextInt(101);
 
-                    int warehouseitemId = j;
+                    int warehouseitemId = itemIndexes.get(j);
 
                     String sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + warehouseitemId + ")";
 
@@ -495,7 +508,7 @@ public class DataGeneratorThread extends Thread {
                             " CREATE (s)-[i1:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v)" +
                             " CREATE (v)-[i2:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
 
-                    //System.out.println(cypherCreate);
+                    System.out.println(cypherCreate);
                     session.run(cypherCreate);
 
                     j++;
@@ -540,6 +553,7 @@ public class DataGeneratorThread extends Thread {
                 i++;
                 workIndex++;
             }
+
 
         if (index % batchExecuteValue == 0 || index == (iterationCount - 1)) {
 

@@ -265,15 +265,16 @@ public class DataGenerator {
             executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (7, 'SHALLOW RVP 5-SWITCH', 5, 'pcs', 3.90, 24, false)");
             executeSQLInsert("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (8, 'BINDING SPIRAL 7,5-60MM INVISIBLE', 100, 'm', 0.09, 24, false)");
 
+
             session.run("CREATE (v:warehouseitem {warehouseitemId: 0, name:\"MMJ 3X2,5MM² CABLE\", balance:100, unit:\"m\", purchaseprice:0.64, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 1, name:\"SOCKET 2-GROUND OL JUSSI\", balance:20, unit:\"pcs\", purchaseprice:17.90, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 2, name:\"SOCKET CORNER MODEL 3-PARTS\", balance:10, unit:\"pcs\", purchaseprice:14.90, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 3, name:\"COVER PLATE 2-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 4, name:\"COVER PLATE 1-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:2.90, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 5, name:\"SWITCH 5-SRJ SUBMERGED JUSSI\", balance:25, unit:\"pcs\", purchaseprice:11.90, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 6, name:\"SWITCH SURFACE JUSSI 1/6\", balance:10, unit:\"pcs\", purchaseprice:8.90, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 7, name:\"SHALLOW RVP 5-SWITCH\", balance:5, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
-            session.run("CREATE (v:warehouseitem {warehouseitemid: 8, name:\"BINDING SPIRAL 7,5-60MM INVISIBLE\", balance:100, unit:\"m\", purchaseprice:0.09, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 1, name:\"SOCKET 2-GROUND OL JUSSI\", balance:20, unit:\"pcs\", purchaseprice:17.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 2, name:\"SOCKET CORNER MODEL 3-PARTS\", balance:10, unit:\"pcs\", purchaseprice:14.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 3, name:\"COVER PLATE 2-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 4, name:\"COVER PLATE 1-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:2.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 5, name:\"SWITCH 5-SRJ SUBMERGED JUSSI\", balance:25, unit:\"pcs\", purchaseprice:11.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 6, name:\"SWITCH SURFACE JUSSI 1/6\", balance:10, unit:\"pcs\", purchaseprice:8.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 7, name:\"SHALLOW RVP 5-SWITCH\", balance:5, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
+            session.run("CREATE (v:warehouseitem {warehouseitemId: 8, name:\"BINDING SPIRAL 7,5-60MM INVISIBLE\", balance:100, unit:\"m\", purchaseprice:0.09, vat:24, removed:\"false\"})");
 
             executeSQLInsert("INSERT INTO warehouse.worktype (id, name, price) VALUES (0, 'design', 55)");
             executeSQLInsert("INSERT INTO warehouse.worktype (id, name, price) VALUES (1, 'work', 45)");
@@ -321,9 +322,30 @@ public class DataGenerator {
                 int surnameindex = 0;
                 int addressindex = 0;
 
+
+
+
+
                 for (int i = 0; i < threadCount; i++) {
 
-                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, customerFactor, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex);
+                    Random r = new Random();
+
+                    List<Integer> itemIndexes = new ArrayList<Integer>();
+
+                    for(int j=0; j<itemFactor; j++) {
+
+                        int itemIndex = r.nextInt(9);
+                        while(itemIndexes.contains(itemIndex)) {
+                            itemIndex = r.nextInt(9);
+                        }
+
+                        itemIndexes.add(itemIndex);
+
+                    }
+
+                    System.out.println("size: " + itemIndexes.size());
+
+                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, customerFactor, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes);
                     thread.start();
                     customerIndex = customerIndex + iterationsPerThread*customerFactor;
                     invoiceIndex = invoiceIndex + iterationsPerThread*customerFactor*invoiceFactor;
