@@ -1,0 +1,88 @@
+MATCH (w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN u.amount*u.discount*i.purchaseprice;
+WHERE f.rental_value > 4.0 AND c.category_name = 'Game'
+RETURN f;
+
+MATCH (w:work)-[h:WORKHOURS]->(wt:worktype) RETURN h.hours*h.discount*wt.price;
+
+
+MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN  (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice);
+Started streaming 117813 records after 5 ms and completed after 720 ms, displaying first 1000 rows.
+
+
+MATCH -[u:USED_ITEM]->(w:work)
+
+Leon Theremin
+
+worktype,workhours,work,warehouseitem,useditem
+
+MATCH (:Person {name: 'Jennifer'})-[:WORKS_FOR]->(company:Company)
+RETURN company.name
+
+
+MATCH (:Person {name: 'Jennifer'})-[:WORKS_FOR]->(company:Company)
+RETURN company.name
+
+
+MATCH (w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN u.amount*u.discount*i.purchaseprice;
+Started streaming 39269 records after 2 ms and completed after 209 ms, displaying first 1000 rows.
+
+
+select (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price from worktype,workhours,work,warehouseitem,useditem where worktype.id=workhours.worktypeid and workhours.workid=work.id and work.id=useditem.workid and warehouseitem.id=useditem.warehouseitemid;
+
+select customer.id,work.id from customer, invoice, workinvoice, work where customer.id=invoice.customerid and invoice.id=workinvoice.invoiceId and workinvoice.workId=work.id;
+
+MATCH (wt:worktype {worktypeId:0})-[h:WORKHOURS]->(w:work {workId:0})-[u:USED_ITEM]->(i:warehouseitem) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice);
+
+MATCH (wt:worktype)-[h:WORKHOURS]->(w:work {workId:0})-[u:USED_ITEM]->(i:warehouseitem) RETURN *;
+
+MATCH (w:work {workId:0})-[u:USED_ITEM]->(i:warehouseitem) RETURN *;
+
+
+MATCH (s:work),(v:warehouseitem) WHERE s.workId=0 AND v.warehouseitemId=0
+
+
+SELECT q1.customerId, q1.invoiceId, q2.workId, q2.price
+FROM (select customer.id as customerId, invoice.id as invoiceId, work.id as workId from customer, invoice, workinvoice, work where customer.id=invoice.customerid and invoice.id=workinvoice.invoiceId and workinvoice.workId=work.id
+) as q1, (select work.id as workId, sum((price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount)) as price from worktype,workhours,work,warehouseitem,useditem where worktype.id=workhours.worktypeid and workhours.workid=work.id and work.id=useditem.workid and useditem.warehouseitemid=warehouseitem.id group by work.id
+) as q2
+WHERE q1.workId = q2.workId;
+
+MATCH (c:customer)-[p:PAYS]->(i:invoice)-[wi:WORK_INVOICE]->(w:work) 
+MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem)
+RETURN  c.customerId, i.invoiceId,w.workId, sum((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice));
+
+
+
+
+
+WITH previous_invoices AS (
+    SELECT       
+    id,
+	customerId,
+	state,
+	duedate,
+	previousinvoice
+    FROM       
+        invoice
+    WHERE id=0
+    UNION ALL
+    SELECT       
+    j.id,
+	j.customerId,
+	j.state,
+	j.duedate,
+	j.previousinvoice
+    FROM 
+        invoice i, invoice j
+    WHERE i.id = j.previousinvoice
+)
+SELECT 
+*
+FROM 
+    previous_invoices;
+
+
+
+MATCH (i:invoice { invoiceId:0 })-[p:PREVIOUS_INVOICE *0..]->(j:invoice)
+RETURN *;
+
