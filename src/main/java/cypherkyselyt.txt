@@ -11,8 +11,6 @@ Started streaming 117813 records after 5 ms and completed after 720 ms, displayi
 
 MATCH -[u:USED_ITEM]->(w:work)
 
-Leon Theremin
-
 worktype,workhours,work,warehouseitem,useditem
 
 MATCH (:Person {name: 'Jennifer'})-[:WORKS_FOR]->(company:Company)
