@@ -25,6 +25,7 @@ public class DataGenerator {
     private int targetFactor = 0;
     private int workFactor = 0;
     private int itemFactor = 0;
+    private int itemCount = 0;
     private int sequentialInvoices = 0;
 
 
@@ -279,29 +280,66 @@ public class DataGenerator {
         }
     }
 
+    public void createItems(Session session) {
 
-    public void createBasicData(Session session) {
+        for(int i=0; i<itemCount; i++) {
 
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (0, 'MMJ 3X2,5MM² CABLE', 100, 'm', 0.64, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (1, 'SOCKET 2-GROUND OL JUSSI', 20, 'pcs', 17.90, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (2, 'SOCKET CORNER MODEL 3-PARTS', 10, 'pcs', 14.90, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (3, 'COVER PLATE 2-OS JUSSI', 20, 'pcs', 3.90, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (4, 'COVER PLATE 1-OS JUSSI', 20, 'pcs', 2.90, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (5, 'SWITCH 5-SRJ SUBMERGED JUSSI', 25, 'pcs', 11.90, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (6, 'SWITCH SURFACE JUSSI 1/6', 10, 'pcs', 8.90, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (7, 'SHALLOW RVP 5-SWITCH', 5, 'pcs', 3.90, 24, false)");
-        executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (8, 'BINDING SPIRAL 7,5-60MM INVISIBLE', 100, 'm', 0.09, 24, false)");
+            Random r = new Random(i);
+            int balance = r.nextInt(100);
+            float purchaseprice = r.nextFloat();
+            int vat = r.nextInt(50);
+            boolean removed = r.nextBoolean();
+
+            if (i % 2 == 0) {
 
 
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 0, name:\"MMJ 3X2,5MM² CABLE\", balance:100, unit:\"m\", purchaseprice:0.64, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 1, name:\"SOCKET 2-GROUND OL JUSSI\", balance:20, unit:\"pcs\", purchaseprice:17.90, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 2, name:\"SOCKET CORNER MODEL 3-PARTS\", balance:10, unit:\"pcs\", purchaseprice:14.90, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 3, name:\"COVER PLATE 2-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 4, name:\"COVER PLATE 1-OS JUSSI\", balance:20, unit:\"pcs\", purchaseprice:2.90, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 5, name:\"SWITCH 5-SRJ SUBMERGED JUSSI\", balance:25, unit:\"pcs\", purchaseprice:11.90, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 6, name:\"SWITCH SURFACE JUSSI 1/6\", balance:10, unit:\"pcs\", purchaseprice:8.90, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 7, name:\"SHALLOW RVP 5-SWITCH\", balance:5, unit:\"pcs\", purchaseprice:3.90, vat:24, removed:\"false\"})");
-        session.run("CREATE (v:warehouseitem {warehouseitemId: 8, name:\"BINDING SPIRAL 7,5-60MM INVISIBLE\", balance:100, unit:\"m\", purchaseprice:0.09, vat:24, removed:\"false\"})");
+                int x = r.nextInt(10);
+                int y = r.nextInt(10);
+                int size = r.nextInt(10);
+
+                String item = "MMJ " + x + "X" + y + "," + size + "MM²CABLE";
+
+                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'm'," + purchaseprice + "," + vat + "," + removed + ")");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name: \"" + item + "\", balance:" + balance + ", unit:\"m\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+
+
+            } else if (i % 3 == 0) {
+
+
+                int ground = r.nextInt(10);
+                String item = "SOCKET " + ground + "-GROUND OL JUSSI";
+
+                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+
+            } else if (i % 5 == 0) {
+
+                int spiral1 = r.nextInt(10);
+                int spiral2 = r.nextInt(10);
+                int spiral3 = r.nextInt(100);
+
+                String item = "BINDING SPIRAL " + spiral1 + "," + spiral2 + "-" + spiral3 + "MM INVISIBLE";
+
+                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+
+
+            } else if (i % 7 == 0) {
+
+                int parts = r.nextInt(10);
+
+                String item = "SOCKET CORNER MODEL " + parts + "-PARTS";
+
+                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+
+            }
+
+        }
+
+    }
+
+    public void createWorkTypes(Session session) {
 
         executeSQLUpdate("INSERT INTO warehouse.worktype (id, name, price) VALUES (0, 'design', 55)");
         executeSQLUpdate("INSERT INTO warehouse.worktype (id, name, price) VALUES (1, 'work', 45)");
@@ -319,7 +357,9 @@ public class DataGenerator {
 
         String database = "warehouse";
 
-        String createWarehouse = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
+        String dropDatabase = "DROP DATABASE `" + database + "`";
+
+        String createDatabase = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
 
         //PreparedStatement customer = connection.prepareStatement("INSERT INTO warehouse.customer (id, name, address) VALUES (?,?,?)");
 
@@ -371,15 +411,8 @@ public class DataGenerator {
 
         String work = "CREATE TABLE IF NOT EXISTS `work` (" +
         "`id` bigint(20) unsigned NOT NULL," +
-        "`type` int(11) NOT NULL," +
-        "`price` decimal(65,2) DEFAULT NULL," +
-        "`invoiceId` bigint(20) unsigned NOT NULL," +
-        "`targetId` bigint(20) unsigned NOT NULL," +
-        "PRIMARY KEY (`id`)," +
-        "KEY `invoiceId` (`invoiceId`)," +
-        "KEY `targetId` (`targetId`)," +
-        "CONSTRAINT `work_ibfk_1` FOREIGN KEY (`invoiceId`) REFERENCES `invoice` (`id`)," +
-        "CONSTRAINT `work_ibfk_2` FOREIGN KEY (`targetId`) REFERENCES `target` (`id`))";
+        "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
+        "PRIMARY KEY (`id`))";
 
         //PreparedStatement target = connection.prepareStatement("INSERT INTO warehouse.target (id, name, address, customerid) VALUES (?,?,?,?)");
 
@@ -423,7 +456,6 @@ public class DataGenerator {
         "`price` decimal(65,2) NOT NULL," +
         "PRIMARY KEY (`id`))";
 
-
         String warehouseItem = "CREATE TABLE IF NOT EXISTS `warehouseitem` (" +
         "`id` bigint(20) unsigned NOT NULL," +
         "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
@@ -456,9 +488,8 @@ public class DataGenerator {
          */
 
 
-        executeSQLUpdate("DROP DATABASE `" + database + "`");
-
-        executeSQLUpdate(createWarehouse);
+        executeSQLUpdate(dropDatabase);
+        executeSQLUpdate(createDatabase);
         executeSQLUpdate(customer, "jdbc:mariadb://127.0.0.1/" +  database);
         executeSQLUpdate(warehouseItem, "jdbc:mariadb://127.0.0.1/" +  database);
         executeSQLUpdate(workType, "jdbc:mariadb://127.0.0.1/" +  database);
@@ -474,7 +505,7 @@ public class DataGenerator {
 
 
 
-    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int customerFactor, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor) {
+    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int customerFactor, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor, int itemCount) {
 
         this.iterationsPerThread = iterationsPerThread;
         this.customerFactor = customerFactor;
@@ -483,6 +514,7 @@ public class DataGenerator {
         this.targetFactor = targetFactor;
         this.workFactor = workFactor;
         this.itemFactor = itemFactor;
+        this.itemCount = itemCount;
 
         try {
 
@@ -494,7 +526,11 @@ public class DataGenerator {
 
             session.run("MATCH (n) DETACH DELETE n");
 
-            createBasicData(session);
+
+            createItems(session);
+            createWorkTypes(session);
+
+            System.exit(0);
 
             Connection conn = null;
             Statement stmt = null;
@@ -543,12 +579,11 @@ public class DataGenerator {
                     Random r = new Random();
 
                     List<Integer> itemIndexes = new ArrayList<Integer>();
-
                     for(int j=0; j<itemFactor; j++) {
 
-                        int itemIndex = r.nextInt(9);
+                        int itemIndex = r.nextInt(itemCount);
                         while(itemIndexes.contains(itemIndex)) {
-                            itemIndex = r.nextInt(9);
+                            itemIndex = r.nextInt(itemCount);
                         }
 
                         itemIndexes.add(itemIndex);

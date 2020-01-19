@@ -95,6 +95,8 @@ public class DataGeneratorThread extends Thread {
                 PreparedStatement target = connection.prepareStatement("INSERT INTO warehouse.target (id, name, address, customerid) VALUES (?,?,?,?)");
                 PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
 
+                PreparedStatement warehouseItem = connection.prepareStatement("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (?,?,?,?,?,?,?)");
+
                 PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
 
                 PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
@@ -106,6 +108,7 @@ public class DataGeneratorThread extends Thread {
                 preparedStatements.put("customer",customer);
                 preparedStatements.put("invoice",invoice);
                 preparedStatements.put("target",target);
+                preparedStatements.put("warehouseItem",warehouseItem);
                 preparedStatements.put("work",work);
                 preparedStatements.put("worktarget",workTarget);
                 preparedStatements.put("workinvoice",workInvoice);
@@ -165,6 +168,7 @@ public class DataGeneratorThread extends Thread {
         PreparedStatement customer = preparedStatements.get("customer");
         PreparedStatement invoice = preparedStatements.get("invoice");
         PreparedStatement target = preparedStatements.get("target");
+        PreparedStatement warehouseItem = preparedStatements.get("warehouseItem");
         PreparedStatement work = preparedStatements.get("work");
         PreparedStatement workTarget = preparedStatements.get("worktarget");
         PreparedStatement workInvoice = preparedStatements.get("workinvoice");
@@ -177,9 +181,9 @@ public class DataGeneratorThread extends Thread {
         int j = 0;
         int k = 0;
 
-            int customerIndexOriginal = customerIndex;
+        int customerIndexOriginal = customerIndex;
 
-            System.out.println("Thread: " + threadindex + " Index: " + index);
+        System.out.println("Thread: " + threadindex + " Index: " + index);
 
             while (i < customerFactor) {
 
@@ -479,8 +483,13 @@ public class DataGeneratorThread extends Thread {
 
             workIndex = workIndexOriginal;
 
-            Random r = new Random(index);
 
+
+
+
+
+
+            Random r = new Random(index);
             int discountpercent = 1 + r.nextInt(101);
             double discount = (0.01 * discountpercent);
 
