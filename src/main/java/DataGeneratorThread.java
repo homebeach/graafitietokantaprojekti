@@ -245,9 +245,6 @@ public class DataGeneratorThread extends Thread {
 
                     String sqlInsert = "";
 
-
-
-
                     if (j < sequentialInvoices) {
 
                         invoice.setInt(1, invoiceIndex);
@@ -279,15 +276,6 @@ public class DataGeneratorThread extends Thread {
                         invoice.addBatch();
 
                     }
-
-                    System.out.println("sqlInsert");
-                    System.out.println(sqlInsert);
-
-
-
-
-                    //executeSQLInsert(sqlInsert);
-
 
                     LocalDate localDate = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                     int month = localDate.getMonthValue();
@@ -507,6 +495,8 @@ public class DataGeneratorThread extends Thread {
 
                     String sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + warehouseitemId + ")";
 
+                    System.out.println(sqlInsert);
+
                     usedItem.setInt(1, amount);
                     usedItem.setDouble(2, discount);
                     usedItem.setInt(3, workIndex);
@@ -517,7 +507,6 @@ public class DataGeneratorThread extends Thread {
                             " CREATE (s)-[i1:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v)" +
                             " CREATE (v)-[i2:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
 
-                    System.out.println(cypherCreate);
                     session.run(cypherCreate);
 
                     j++;

@@ -7,17 +7,24 @@ public class Main
 
         DataGenerator dataGenerator = new DataGenerator();
 
+
+
         dataGenerator.createTables();
+
+
+        /*
 
         dataGenerator.createTestTables();
 
         dataGenerator.loadTestData();
 
-        //dataGenerator.getSampleData();
+         */
+
+        dataGenerator.getSampleData();
 
         //dataGenerator.printSampleDataSizes();
 
-        //dataGenerator.insertData(1,1,1, 1,1,1,1,1,1,100);
+        dataGenerator.insertData(1,1,1, 1,10,10,10,10,10,100);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

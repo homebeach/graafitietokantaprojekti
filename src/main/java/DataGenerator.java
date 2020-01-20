@@ -477,10 +477,14 @@ public class DataGenerator {
                         firstIteration = false;
 
                     }
-
+                    index++;
                 }
 
                 surnames.executeBatch();
+
+                index = 0;
+
+                firstIteration = true;
 
                 br = new BufferedReader(new FileReader(addressesFile));
                 while ((line = br.readLine()) != null) {
@@ -534,7 +538,7 @@ public class DataGenerator {
                         firstIteration = false;
 
                     }
-
+                    index++;
                 }
 
                 addresses.executeBatch();
@@ -595,7 +599,6 @@ public class DataGenerator {
         "`customerId` bigint(20) unsigned NOT NULL," +
         "`state` int(11) NOT NULL," +
         "`duedate` date DEFAULT NULL," +
-        "`firstinvoice` bigint(20) unsigned NOT NULL," +
         "`previousinvoice` bigint(20) unsigned NOT NULL," +
         "PRIMARY KEY (`id`)," +
         "KEY `customerId` (`customerId`)," +
@@ -655,7 +658,7 @@ public class DataGenerator {
         "PRIMARY KEY (`workId`,`worktypeId`)," +
         "KEY `worktypeId` (`worktypeId`)," +
         "CONSTRAINT `workhours_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-        "CONSTRAINT `workhours_ibfk_2` FOREIGN KEY (`worktypeId`) REFERENCES `work` (`id`))";
+        "CONSTRAINT `workhours_ibfk_2` FOREIGN KEY (`worktypeId`) REFERENCES `worktype` (`id`))";
 
         String workType = "CREATE TABLE IF NOT EXISTS `worktype` (" +
         "`id` bigint(20) unsigned NOT NULL," +
@@ -733,11 +736,8 @@ public class DataGenerator {
 
             session.run("MATCH (n) DETACH DELETE n");
 
-
             createItems(session);
             createWorkTypes(session);
-
-            System.exit(0);
 
             Connection conn = null;
             Statement stmt = null;
