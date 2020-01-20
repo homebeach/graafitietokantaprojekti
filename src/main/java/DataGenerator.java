@@ -10,6 +10,11 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
 public class DataGenerator {
 
     private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
@@ -222,15 +227,15 @@ public class DataGenerator {
             surnames = new ArrayList<String>();
             addresses = new ArrayList<HashMap<String, String>>();
 
-            ResultSet rs = executeSQLQuery("SELECT name FROM testdata.firstnames;");
+            ResultSet rs = executeSQLQuery("SELECT firstname FROM testdata.firstnames;");
             while (rs.next()) {
-                String firstName = rs.getString("name");
+                String firstName = rs.getString("firstname");
                 firstnames.add(firstName);
             }
 
-            rs = executeSQLQuery("SELECT name FROM testdata.surnames;");
+            rs = executeSQLQuery("SELECT surname FROM testdata.surnames;");
             while (rs.next()) {
-                String surName = rs.getString("name");
+                String surName = rs.getString("surname");
                 surnames.add(surName);
             }
 
@@ -351,6 +356,217 @@ public class DataGenerator {
 
     }
 
+    public void createTestTables() {
+
+        String database = "testdata";
+
+        String dropDatabase = "DROP DATABASE `" + database + "`";
+
+        String createDatabase = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
+
+        String firstnames = "CREATE TABLE IF NOT EXISTS `firstnames` (" +
+                "`id` serial," +
+                "`firstname` varchar(100) NOT NULL," +
+                "PRIMARY KEY (`id`))";
+
+        String surnames = "CREATE TABLE IF NOT EXISTS `surnames` (" +
+                "`id` serial," +
+                "`surname` varchar(100) NOT NULL," +
+                "PRIMARY KEY (`id`))";
+
+        String addresses = "CREATE TABLE IF NOT EXISTS `addresses` (" +
+                "`id` serial," +
+                "`street` varchar(200) NOT NULL," +
+                "`city` varchar(100) NOT NULL," +
+                "`district` varchar(100) NOT NULL," +
+                "`region` varchar(50) NOT NULL," +
+                "`postcode` varchar(50) NOT NULL," +
+                "PRIMARY KEY (`id`))";
+
+        executeSQLUpdate(dropDatabase);
+        executeSQLUpdate(createDatabase);
+        executeSQLUpdate(firstnames, "jdbc:mariadb://127.0.0.1/" +  database);
+        executeSQLUpdate(surnames, "jdbc:mariadb://127.0.0.1/" +  database);
+        executeSQLUpdate(addresses, "jdbc:mariadb://127.0.0.1/" +  database);
+
+    }
+
+
+    public void loadTestData() {
+
+            String firstnamesFile = "./data/firstnames.csv";
+            String surnamesFile = "./data/surnames.csv";
+            String addressesFile = "./data/city_of_houston.csv";
+
+            BufferedReader br = null;
+            String line = "";
+            String cvsSplitBy = ",";
+
+
+            try {
+
+                Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+
+                PreparedStatement firstnames = connection.prepareStatement("INSERT INTO testdata.firstnames (firstname) VALUES (?)");
+                PreparedStatement surnames = connection.prepareStatement("INSERT INTO testdata.surnames (surname) VALUES (?)");
+                PreparedStatement addresses = connection.prepareStatement("INSERT INTO testdata.addresses (street,city,district,region,postcode) VALUES (?,?,?,?,?)");
+
+                /*
+                boolean firstIteration = true;
+
+                int index = 0;
+
+                int batchExecuteValue = 50;
+
+                br = new BufferedReader(new FileReader(firstnamesFile));
+                while ((line = br.readLine()) != null) {
+
+                    if(!firstIteration) {
+
+                        // use comma as separator
+                        String[] firstnameInArray = line.split(cvsSplitBy);
+
+                        String firstname = firstnameInArray[0];
+
+                        firstnames.setString(1, firstname);
+                        firstnames.addBatch();
+
+                        if (index % batchExecuteValue == 0) {
+
+                            firstnames.executeBatch();
+
+                        }
+
+                    } else {
+
+                        firstIteration = false;
+
+                    }
+
+                    index++;
+                }
+
+                firstnames.executeBatch();
+
+                index = 0;
+
+                firstIteration = true;
+
+                br = new BufferedReader(new FileReader(surnamesFile));
+                while ((line = br.readLine()) != null) {
+
+                    if(!firstIteration) {
+
+                        // use comma as separator
+                        String[] surnameInArray = line.split(cvsSplitBy);
+
+                        String surname = surnameInArray[0].toLowerCase();
+                        surname = surname.substring(0, 1).toUpperCase() + surname.substring(1);
+
+                        surnames.setString(1, surname);
+                        surnames.addBatch();
+
+                        if (index % batchExecuteValue == 0) {
+
+                            surnames.executeBatch();
+
+                        }
+
+                    } else {
+
+                        firstIteration = false;
+
+                    }
+
+                }
+
+                surnames.executeBatch();
+
+
+
+                 */
+                int index = 0;
+
+                int batchExecuteValue = 50;
+
+                boolean firstIteration = true;
+
+                br = new BufferedReader(new FileReader(addressesFile));
+                while ((line = br.readLine()) != null) {
+
+                    if(!firstIteration) {
+
+                        String[] addressInArray = line.split(cvsSplitBy);
+
+                        String street = addressInArray[3].toLowerCase();
+
+                        if(street.length() > 1) {
+                            street = street.substring(0, 1).toUpperCase() + street.substring(1);
+                        }
+
+                        String city = addressInArray[5].toLowerCase();
+
+                        if(city.length() > 1) {
+                            city = city.substring(0, 1).toUpperCase() + city.substring(1);
+                        }
+
+                        String district = addressInArray[6].toLowerCase();
+
+                        if(district.length() > 1) {
+                            district = district.substring(0, 1).toUpperCase() + district.substring(1);
+                        }
+
+
+                        String region = addressInArray[7].toLowerCase();
+
+                        if(region.length() > 1) {
+                            region = region.substring(0, 1).toUpperCase() + region.substring(1);
+                        }
+
+                        String postcode = addressInArray[8];
+
+                        addresses.setString(1, street);
+                        addresses.setString(2, city);
+                        addresses.setString(3, district);
+                        addresses.setString(4, region);
+                        addresses.setString(5, postcode);
+                        addresses.addBatch();
+
+                        if (index % batchExecuteValue == 0) {
+
+                            addresses.executeBatch();
+
+                        }
+
+                    } else {
+
+                        firstIteration = false;
+
+                    }
+
+                }
+
+                addresses.executeBatch();
+
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+    }
+
+
 
     public void createTables() {
 
@@ -397,13 +613,13 @@ public class DataGenerator {
         //PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
 
         String workInvoice = "CREATE TABLE IF NOT EXISTS `workinvoice` (" +
-                "`workId` bigint(20) unsigned NOT NULL," +
-                "`invoiceId` bigint(20) unsigned NOT NULL," +
-                "PRIMARY KEY (`workId`,`invoiceId`)," +
-                "KEY `workId` (`workId`)," +
-                "KEY `invoiceId` (`invoiceId`)," +
-                "CONSTRAINT `workinvoice_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-                "CONSTRAINT `workinvoice_ibfk_2` FOREIGN KEY (`invoiceId`) REFERENCES `invoice` (`id`))";
+        "`workId` bigint(20) unsigned NOT NULL," +
+        "`invoiceId` bigint(20) unsigned NOT NULL," +
+        "PRIMARY KEY (`workId`,`invoiceId`)," +
+        "KEY `workId` (`workId`)," +
+        "KEY `invoiceId` (`invoiceId`)," +
+        "CONSTRAINT `workinvoice_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
+        "CONSTRAINT `workinvoice_ibfk_2` FOREIGN KEY (`invoiceId`) REFERENCES `invoice` (`id`))";
 
 
         //PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
@@ -430,13 +646,13 @@ public class DataGenerator {
         //PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
 
         String workTarget = "CREATE TABLE IF NOT EXISTS `worktarget` (" +
-                "`workId` bigint(20) unsigned NOT NULL," +
-                "`targetId` bigint(20) unsigned NOT NULL," +
-                "PRIMARY KEY (`workId`,`targetId`)," +
-                "KEY `workId` (`workId`)," +
-                "KEY `targetId` (`targetId`)," +
-                "CONSTRAINT `worktarget_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-                "CONSTRAINT `worktarget_ibfk_2` FOREIGN KEY (`targetId`) REFERENCES `target` (`id`))";
+        "`workId` bigint(20) unsigned NOT NULL," +
+        "`targetId` bigint(20) unsigned NOT NULL," +
+        "PRIMARY KEY (`workId`,`targetId`)," +
+        "KEY `workId` (`workId`)," +
+        "KEY `targetId` (`targetId`)," +
+        "CONSTRAINT `worktarget_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
+        "CONSTRAINT `worktarget_ibfk_2` FOREIGN KEY (`targetId`) REFERENCES `target` (`id`))";
 
         //PreparedStatement workHours = connection.prepareStatement("INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(?,?,?,?)");
 
