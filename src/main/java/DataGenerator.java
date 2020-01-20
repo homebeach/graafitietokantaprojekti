@@ -411,7 +411,7 @@ public class DataGenerator {
                 PreparedStatement surnames = connection.prepareStatement("INSERT INTO testdata.surnames (surname) VALUES (?)");
                 PreparedStatement addresses = connection.prepareStatement("INSERT INTO testdata.addresses (street,city,district,region,postcode) VALUES (?,?,?,?,?)");
 
-                /*
+
                 boolean firstIteration = true;
 
                 int index = 0;
@@ -481,15 +481,6 @@ public class DataGenerator {
                 }
 
                 surnames.executeBatch();
-
-
-
-                 */
-                int index = 0;
-
-                int batchExecuteValue = 50;
-
-                boolean firstIteration = true;
 
                 br = new BufferedReader(new FileReader(addressesFile));
                 while ((line = br.readLine()) != null) {
