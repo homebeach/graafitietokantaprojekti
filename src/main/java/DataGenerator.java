@@ -25,7 +25,6 @@ public class DataGenerator {
     private static final String PASSWORD = "root";
 
     private int iterationsPerThread = 0;
-    private int customerFactor = 0;
     private int invoiceFactor = 0;
     private int targetFactor = 0;
     private int workFactor = 0;
@@ -329,7 +328,7 @@ public class DataGenerator {
                 session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
 
-            } else if (i % 7 == 0) {
+            } else {
 
                 int parts = r.nextInt(10);
 
@@ -715,10 +714,9 @@ public class DataGenerator {
 
 
 
-    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int customerFactor, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor, int itemCount) {
+    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor, int itemCount) {
 
         this.iterationsPerThread = iterationsPerThread;
-        this.customerFactor = customerFactor;
         this.invoiceFactor = invoiceFactor;
         this.sequentialInvoices = sequentialInvoices;
         this.targetFactor = targetFactor;
@@ -777,10 +775,6 @@ public class DataGenerator {
                 int surnameindex = 0;
                 int addressindex = 0;
 
-
-
-
-
                 for (int i = 0; i < threadCount; i++) {
 
                     Random r = new Random();
@@ -797,13 +791,11 @@ public class DataGenerator {
 
                     }
 
-                    System.out.println("size: " + itemIndexes.size());
-
-                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, customerFactor, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes);
+                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes);
                     thread.start();
-                    customerIndex = customerIndex + iterationsPerThread*customerFactor;
-                    invoiceIndex = invoiceIndex + iterationsPerThread*customerFactor*invoiceFactor;
-                    targetIndex = targetIndex + iterationsPerThread*customerFactor*targetFactor;
+                    customerIndex = customerIndex + iterationsPerThread;
+                    invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
+                    targetIndex = targetIndex + iterationsPerThread*targetFactor;
                     workIndex = workIndex + iterationsPerThread*workFactor;
 
                 }
