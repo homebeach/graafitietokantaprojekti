@@ -30,12 +30,13 @@ public class DataGeneratorThread extends Thread {
 
     private List<Integer> itemIndexes;
 
+    private List<Integer> workTypeIndexes;
 
     private List<String> firstnames;
     private List<String> surnames;
     private List<HashMap<String, String>> addresses;
 
-    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, int invoiceFactor, int targetFactor, int workFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex, List<Integer> itemIndexes) {
+    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, int invoiceFactor, int targetFactor, int workFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex, List<Integer> itemIndexes, List<Integer> workTypeIndexes) {
 
         this.threadindex = threadindex;
         this.iterationCount = iterationCount;
@@ -53,23 +54,7 @@ public class DataGeneratorThread extends Thread {
         this.targetIndex = targetIndex;
         this.workIndex = workIndex;
         this.itemIndexes = itemIndexes;
-    }
-
-    enum worktype {
-        work, design, supporting_work
-    }
-
-    class RandomEnum<E extends Enum<worktype>> {
-        Random r = new Random();
-        E[] values;
-
-        public RandomEnum(Class<E> token) {
-            values = token.getEnumConstants();
-        }
-
-        public E random() {
-            return values[r.nextInt(values.length)];
-        }
+        this.workTypeIndexes = workTypeIndexes;
     }
 
     public void run() {
@@ -192,12 +177,13 @@ public class DataGeneratorThread extends Thread {
         session.run(cypherCreate);
 
         int invoiceIndexOriginal = invoiceIndex;
-
         int customerInvoiceIndexOriginal = invoiceIndex;
+
+        Random r = new Random(index);
+
         j = 0;
         while (j < invoiceFactor) {
 
-            Random r = new Random(index);
             //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
             int state = 1 + r.nextInt(3);
 
@@ -329,7 +315,7 @@ public class DataGeneratorThread extends Thread {
         j = 0;
         while (j < workFactor) {
 
-            Random r = new Random(index);
+            r.setSeed(index);
 
             int price = 1 + r.nextInt(1001);
             //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
@@ -395,12 +381,12 @@ public class DataGeneratorThread extends Thread {
             j = 0;
             while (j < invoiceFactor) {
 
-                Random r = new Random(index);
+                r.setSeed(index);
 
                 int price = 1 + r.nextInt(1001);
                 //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
 
-                r = new Random(index);
+                r.setSeed(index);
 
                 int type = 1 + r.nextInt(4); // tämä on turha
 
@@ -424,7 +410,7 @@ public class DataGeneratorThread extends Thread {
 
         workIndex = workIndexOriginal;
 
-        Random r = new Random(index);
+        r.setSeed(index);
         int discountpercent = 1 + r.nextInt(101);
         double discount = (0.01 * discountpercent);
 
@@ -434,7 +420,7 @@ public class DataGeneratorThread extends Thread {
             j = 0;
             while (j < itemIndexes.size()) {
 
-                r = new Random(index);
+                r.setSeed(index);
 
                 int amount = 1 + r.nextInt(101);
 
@@ -469,12 +455,12 @@ public class DataGeneratorThread extends Thread {
         while (i < workFactor) {
 
             j = 0;
-            while (j < 3) {
+            while (j < workTypeIndexes.size()) {
 
-                r = new Random(index);
+                r.setSeed(index);
 
                 int hours = r.nextInt(100);
-                int worktypeId = j;
+                int worktypeId = workTypeIndexes.get(j);
 
                 sqlInsert = "INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(" + worktypeId + "," + hours + "," + discount + "," + workIndex + ")";
 

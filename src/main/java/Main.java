@@ -9,22 +9,27 @@ public class Main
 
 
 
-        dataGenerator.createTables();
+        //dataGenerator.createTables();
 
+
+        dataGenerator.truncateDatabase();
+
+        dataGenerator.getSampleData();
+
+        dataGenerator.createItems(100);
+        dataGenerator.createWorkTypes(100);
 
         /*
 
         dataGenerator.createTestTables();
 
-        dataGenerator.loadTestData();
+        dataGenerator.loadTestData(50);
 
          */
 
-        dataGenerator.getSampleData();
-
         //dataGenerator.printSampleDataSizes();
 
-        dataGenerator.insertData(1,1,1, 1,10,10,10,10,100);
+        dataGenerator.insertData(1,10,10, 10,10,10,10,10,10);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

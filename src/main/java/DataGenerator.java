@@ -29,7 +29,6 @@ public class DataGenerator {
     private int targetFactor = 0;
     private int workFactor = 0;
     private int itemFactor = 0;
-    private int itemCount = 0;
     private int sequentialInvoices = 0;
 
 
@@ -180,6 +179,15 @@ public class DataGenerator {
             conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
             stmt = conn.createStatement();
 
+            org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+
+            Session session = driver.session();
+
+            session.run("MATCH (n) DETACH DELETE n");
+
+            session.close();
+            driver.close();
+
             stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
             stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
             stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
@@ -194,8 +202,6 @@ public class DataGenerator {
             stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
             stmt.executeBatch();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -265,97 +271,188 @@ public class DataGenerator {
         System.out.println("Firstnames size: " + firstnames.size());
         System.out.println("Surnames size: " + surnames.size());
         System.out.println("Addresses size: " + addresses.size());
+
     }
 
-    enum worktype {
-        work, design, supporting_work
-    }
-
-    class RandomEnum<E extends Enum<worktype>> {
-        Random r = new Random();
-        E[] values;
-
-        public RandomEnum(Class<E> token) {
-            values = token.getEnumConstants();
-        }
-
-        public E random() {
-            return values[r.nextInt(values.length)];
-        }
-    }
-
-    public void createItems(Session session) {
-
-        for(int i=0; i<itemCount; i++) {
-
-            Random r = new Random(i);
-            int balance = r.nextInt(100);
-            float purchaseprice = r.nextFloat();
-            int vat = r.nextInt(50);
-            boolean removed = r.nextBoolean();
-
-            if (i % 2 == 0) {
+    public void createItems(int itemCount) {
 
 
-                int x = r.nextInt(10);
-                int y = r.nextInt(10);
-                int size = r.nextInt(10);
+        try {
 
-                String item = "MMJ " + x + "X" + y + "," + size + "MM²CABLE";
+            org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
 
-                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'm'," + purchaseprice + "," + vat + "," + removed + ")");
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name: \"" + item + "\", balance:" + balance + ", unit:\"m\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+            Session session = driver.session();
+
+            Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+
+            PreparedStatement warehouseitem = connection.prepareStatement("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (?,?,?,?,?,?,?)");
+
+            for (int i = 0; i < itemCount; i++) {
+
+                Random r = new Random(i);
+                int balance = r.nextInt(100);
+                r.setSeed(i);
+                float purchaseprice = r.nextFloat();
+                r.setSeed(i);
+                int vat = r.nextInt(50);
+                r.setSeed(i);
+                boolean removed = r.nextBoolean();
+
+                if (i % 2 == 0) {
+
+                    r.setSeed(i);
+                    r = new Random(i);
+                    int x = r.nextInt(10);
+                    r.setSeed(i + 1);
+                    int y = r.nextInt(10);
+                    r.setSeed(i + 2);
+                    int size = r.nextInt(10);
+
+                    String item = "MMJ " + x + "X" + y + "," + size + "MM²CABLE";
+
+                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'm'," + purchaseprice + "," + vat + "," + removed + ")");
+
+                    warehouseitem.setInt(1, i);
+                    warehouseitem.setString(2, item);
+                    warehouseitem.setInt(3, balance);
+                    warehouseitem.setString(4, "'m'");
+                    warehouseitem.setFloat(5, purchaseprice);
+                    warehouseitem.setInt(6, vat);
+                    warehouseitem.setBoolean(7, removed);
+
+                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name: \"" + item + "\", balance:" + balance + ", unit:\"m\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
 
-            } else if (i % 3 == 0) {
+                } else if (i % 3 == 0) {
+
+                    r.setSeed(i);
+                    int ground = r.nextInt(10);
+                    String item = "SOCKET " + ground + "-GROUND OL JUSSI";
+
+                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
+
+                    warehouseitem.setInt(1, i);
+                    warehouseitem.setString(2, item);
+                    warehouseitem.setInt(3, balance);
+                    warehouseitem.setString(4, "'pcs'");
+                    warehouseitem.setFloat(5, purchaseprice);
+                    warehouseitem.setInt(6, vat);
+                    warehouseitem.setBoolean(7, removed);
+
+                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+
+                } else if (i % 5 == 0) {
+
+                    r.setSeed(i);
+                    int spiral1 = r.nextInt(10);
+                    r.setSeed(i + 1);
+                    int spiral2 = r.nextInt(10);
+                    r.setSeed(i + 2);
+                    int spiral3 = r.nextInt(100);
+
+                    String item = "BINDING SPIRAL " + spiral1 + "," + spiral2 + "-" + spiral3 + "MM INVISIBLE";
+
+                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
+
+                    warehouseitem.setInt(1, i);
+                    warehouseitem.setString(2, item);
+                    warehouseitem.setInt(3, balance);
+                    warehouseitem.setString(4, "'pcs'");
+                    warehouseitem.setFloat(5, purchaseprice);
+                    warehouseitem.setInt(6, vat);
+                    warehouseitem.setBoolean(7, removed);
+
+                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
 
-                int ground = r.nextInt(10);
-                String item = "SOCKET " + ground + "-GROUND OL JUSSI";
+                } else {
 
-                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+                    r.setSeed(i);
+                    int parts = r.nextInt(10);
 
-            } else if (i % 5 == 0) {
+                    String item = "SOCKET CORNER MODEL " + parts + "-PARTS";
 
-                int spiral1 = r.nextInt(10);
-                int spiral2 = r.nextInt(10);
-                int spiral3 = r.nextInt(100);
+                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
 
-                String item = "BINDING SPIRAL " + spiral1 + "," + spiral2 + "-" + spiral3 + "MM INVISIBLE";
+                    warehouseitem.setInt(1, i);
+                    warehouseitem.setString(2, item);
+                    warehouseitem.setInt(3, balance);
+                    warehouseitem.setString(4, "'pcs'");
+                    warehouseitem.setFloat(5, purchaseprice);
+                    warehouseitem.setInt(6, vat);
+                    warehouseitem.setBoolean(7, removed);
 
-                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
+                }
 
-            } else {
-
-                int parts = r.nextInt(10);
-
-                String item = "SOCKET CORNER MODEL " + parts + "-PARTS";
-
-                executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+                warehouseitem.execute();
 
             }
 
+            session.close();
+            driver.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
 
-    public void createWorkTypes(Session session) {
+    public void createWorkTypes(int workTypeCount) {
 
-        executeSQLUpdate("INSERT INTO warehouse.worktype (id, name, price) VALUES (0, 'design', 55)");
-        executeSQLUpdate("INSERT INTO warehouse.worktype (id, name, price) VALUES (1, 'work', 45)");
-        executeSQLUpdate("INSERT INTO warehouse.worktype (id, name, price) VALUES (2, 'supporting work', 35)");
 
-        session.run("CREATE (wt:worktype {worktypeId: 0, name:\"design\", price:55})");
-        session.run("CREATE (wt:worktype {worktypeId: 1, name:\"work\", price:46})");
-        session.run("CREATE (wt:worktype {worktypeId: 2, name:\"supporting work\", price:35})");
+        try {
+
+            org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+
+            Session session = driver.session();
+
+            Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+
+            PreparedStatement worktype = connection.prepareStatement("INSERT INTO warehouse.worktype (id, name, price) VALUES (?, ?, ?)");
+
+            for (int i = 0; i < workTypeCount; i++) {
+
+
+                Random r = new Random(i);
+                int price = r.nextInt(100);
+
+                worktype.setInt(1, i);
+                worktype.setInt(3, price);
+
+                if(i % 2 == 0) {
+
+                    worktype.setString(2,"design");
+                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"design\", price:" + price + "})");
+
+                } else if(i % 3 == 0) {
+
+                    worktype.setString(2,"work");
+                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"work\", price:" + price + "})");
+
+                } else {
+
+                    worktype.setString(2,"supporting work");
+                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"supporting work\", price:" + price + "})");
+
+                }
+
+                worktype.execute();
+
+            }
+
+            session.close();
+            driver.close();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
-    public void createTestTables() {
+    public void createSampleTables() {
 
         String database = "testdata";
 
@@ -391,7 +488,7 @@ public class DataGenerator {
     }
 
 
-    public void loadTestData() {
+    public void loadSampleData(int batchExecuteValue) {
 
             String firstnamesFile = "./data/firstnames.csv";
             String surnamesFile = "./data/surnames.csv";
@@ -414,8 +511,6 @@ public class DataGenerator {
                 boolean firstIteration = true;
 
                 int index = 0;
-
-                int batchExecuteValue = 50;
 
                 br = new BufferedReader(new FileReader(firstnamesFile));
                 while ((line = br.readLine()) != null) {
@@ -656,6 +751,7 @@ public class DataGenerator {
         "`workId` bigint(20) unsigned NOT NULL," +
         "PRIMARY KEY (`workId`,`worktypeId`)," +
         "KEY `worktypeId` (`worktypeId`)," +
+        "KEY `workId` (`workId`)," +
         "CONSTRAINT `workhours_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
         "CONSTRAINT `workhours_ibfk_2` FOREIGN KEY (`worktypeId`) REFERENCES `worktype` (`id`))";
 
@@ -714,7 +810,7 @@ public class DataGenerator {
 
 
 
-    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int itemFactor, int itemCount) {
+    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int workTypeFactor, int itemFactor) {
 
         this.iterationsPerThread = iterationsPerThread;
         this.invoiceFactor = invoiceFactor;
@@ -722,7 +818,6 @@ public class DataGenerator {
         this.targetFactor = targetFactor;
         this.workFactor = workFactor;
         this.itemFactor = itemFactor;
-        this.itemCount = itemCount;
 
         try {
 
@@ -730,12 +825,7 @@ public class DataGenerator {
 
             Session session = driver.session();
 
-            truncateDatabase();
 
-            session.run("MATCH (n) DETACH DELETE n");
-
-            createItems(session);
-            createWorkTypes(session);
 
             Connection conn = null;
             Statement stmt = null;
@@ -749,9 +839,7 @@ public class DataGenerator {
                 PreparedStatement invoice = connection.prepareStatement("INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (?,?,?,?,?)");
                 PreparedStatement target = connection.prepareStatement("INSERT INTO warehouse.target (id, name, address, customerid) VALUES (?,?,?,?)");
                 PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
-
                 PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
-
                 PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
                 PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(?,?,?,?)");
                 PreparedStatement workHours = connection.prepareStatement("INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(?,?,?,?)");
@@ -775,6 +863,31 @@ public class DataGenerator {
                 int surnameindex = 0;
                 int addressindex = 0;
 
+                ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WAREHOUSEITEMCOUNT FROM WAREHOUSE.WAREHOUSEITEM");
+
+                int itemCount = 0;
+
+                while(rs.next()) {
+
+                    itemCount = rs.getInt("WAREHOUSEITEMCOUNT");
+                    System.out.println("This is itemcount " + itemCount);
+
+                }
+
+
+                rs = executeSQLQuery("SELECT COUNT(*) AS WORKTYPECOUNT FROM WAREHOUSE.WORKTYPE");
+
+                int workTypeCount = 0;
+
+                while(rs.next()) {
+
+                    workTypeCount = rs.getInt("WORKTYPECOUNT");
+                    System.out.println("This is worktypecount " + workTypeCount);
+
+                }
+
+
+
                 for (int i = 0; i < threadCount; i++) {
 
                     Random r = new Random();
@@ -782,16 +895,41 @@ public class DataGenerator {
                     List<Integer> itemIndexes = new ArrayList<Integer>();
                     for(int j=0; j<itemFactor; j++) {
 
+                        r.setSeed(j);
+
                         int itemIndex = r.nextInt(itemCount);
+
+                        int offset = 1;
                         while(itemIndexes.contains(itemIndex)) {
+                            r.setSeed(j + offset);
                             itemIndex = r.nextInt(itemCount);
+                            offset++;
                         }
 
                         itemIndexes.add(itemIndex);
 
                     }
 
-                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes);
+                    List<Integer> workTypeIndexes = new ArrayList<Integer>();
+                    for(int j=0; j<workTypeFactor; j++) {
+
+                        r.setSeed(j);
+
+                        int workTypeIndex = r.nextInt(workTypeCount);
+
+                        int offset = 1;
+                        while(workTypeIndexes.contains(workTypeIndex)) {
+
+                            r.setSeed(j + offset);
+                            workTypeIndex = r.nextInt(workTypeCount);
+                            offset++;
+                        }
+
+                        workTypeIndexes.add(workTypeIndex);
+
+                    }
+
+                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes, workTypeIndexes);
                     thread.start();
                     customerIndex = customerIndex + iterationsPerThread;
                     invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
