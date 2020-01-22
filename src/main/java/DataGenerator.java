@@ -6,6 +6,8 @@ import org.neo4j.driver.v1.Session;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -14,6 +16,9 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DataGenerator {
 
@@ -886,7 +891,13 @@ public class DataGenerator {
 
                 }
 
+                ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
+                long startTimeInMilliseconds = System.currentTimeMillis();
+
+                Timestamp startTime = new Timestamp(startTimeInMilliseconds);
+
+                System.out.println("Insertion started at: " + startTime.toString());
 
                 for (int i = 0; i < threadCount; i++) {
 
@@ -929,14 +940,35 @@ public class DataGenerator {
 
                     }
 
+
+
                     DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes, workTypeIndexes);
-                    thread.start();
+
+                    executor.execute(thread);
                     customerIndex = customerIndex + iterationsPerThread;
                     invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
                     targetIndex = targetIndex + iterationsPerThread*targetFactor;
                     workIndex = workIndex + iterationsPerThread*workFactor;
 
                 }
+
+                executor.shutdown();
+                while (!executor.isTerminated()) {
+                }
+
+                long endTimeInMilliseconds = System.currentTimeMillis();
+
+                Timestamp endTime = new Timestamp(endTimeInMilliseconds);
+
+
+                long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+                String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+
+                Instant end = Instant.now();
+
+                System.out.println("Insertion finished at: " + endTime.toString());
+                System.out.println("Time elapsed: " + elapsedTime);
 
             }
 
