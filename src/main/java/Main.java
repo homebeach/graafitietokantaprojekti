@@ -12,12 +12,12 @@ public class Main
         //dataGenerator.createTables();
 
 
-        dataGenerator.truncateDatabase();
+        //dataGenerator.truncateDatabase();
 
-        dataGenerator.getSampleData();
+        //dataGenerator.getSampleData();
 
-        dataGenerator.createItems(100);
-        dataGenerator.createWorkTypes(100);
+        //dataGenerator.createItems(100);
+        //dataGenerator.createWorkTypes(100);
 
         /*
 
@@ -29,7 +29,11 @@ public class Main
 
         //dataGenerator.printSampleDataSizes();
 
-        dataGenerator.insertData(1,10,10, 10,10,10,10,10,10);
+        //dataGenerator.insertData(10,10,10, 10,10,10,10,10,10);
+
+        QueryTester quertyTester = new QueryTester();
+
+        quertyTester.executeQueryTests();
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

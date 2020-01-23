@@ -19,13 +19,13 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DataGenerator {
 
     private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     private static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
 
-    //  Database credentials
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
@@ -897,6 +897,8 @@ public class DataGenerator {
 
                 Timestamp startTime = new Timestamp(startTimeInMilliseconds);
 
+                ReentrantLock lock = new ReentrantLock();
+
                 System.out.println("Insertion started at: " + startTime.toString());
 
                 for (int i = 0; i < threadCount; i++) {
@@ -942,8 +944,7 @@ public class DataGenerator {
 
 
 
-                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes, workTypeIndexes);
-
+                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes, workTypeIndexes);
                     executor.execute(thread);
                     customerIndex = customerIndex + iterationsPerThread;
                     invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
@@ -960,12 +961,9 @@ public class DataGenerator {
 
                 Timestamp endTime = new Timestamp(endTimeInMilliseconds);
 
-
                 long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
                 String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
-
-                Instant end = Instant.now();
 
                 System.out.println("Insertion finished at: " + endTime.toString());
                 System.out.println("Time elapsed: " + elapsedTime);
@@ -979,5 +977,4 @@ public class DataGenerator {
             e.printStackTrace();
         }
     }
-
 }

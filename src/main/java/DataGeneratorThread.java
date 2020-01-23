@@ -9,13 +9,13 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DataGeneratorThread extends Thread {
 
     private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
     private static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
 
-    //  Database credentials
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
@@ -28,6 +28,9 @@ public class DataGeneratorThread extends Thread {
     private int itemFactor = 0;
     private int sequentialInvoices = 0;
 
+    private ReentrantLock lock;
+
+
     private List<Integer> itemIndexes;
 
     private List<Integer> workTypeIndexes;
@@ -36,7 +39,7 @@ public class DataGeneratorThread extends Thread {
     private List<String> surnames;
     private List<HashMap<String, String>> addresses;
 
-    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, int invoiceFactor, int targetFactor, int workFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex, List<Integer> itemIndexes, List<Integer> workTypeIndexes) {
+    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, ReentrantLock lock, int invoiceFactor, int targetFactor, int workFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex, List<Integer> itemIndexes, List<Integer> workTypeIndexes) {
 
         this.threadindex = threadindex;
         this.iterationCount = iterationCount;
@@ -55,6 +58,7 @@ public class DataGeneratorThread extends Thread {
         this.workIndex = workIndex;
         this.itemIndexes = itemIndexes;
         this.workTypeIndexes = workTypeIndexes;
+        this.lock = lock;
     }
 
     public void run() {
@@ -100,7 +104,7 @@ public class DataGeneratorThread extends Thread {
 
                 for (int i = 0; i < iterationCount; i++) {
 
-                    insertRow(i, batchExecuteValue, session, preparedStatements, itemIndexes);
+                    insertRow(i, batchExecuteValue, session, preparedStatements);
 
                 }
 
@@ -140,7 +144,7 @@ public class DataGeneratorThread extends Thread {
 
     }
 
-    public void insertRow(int index, int batchExecuteValue, Session session, HashMap<String, PreparedStatement> preparedStatements, List<Integer> itemIndexes) throws SQLException {
+    public void insertRow(int index, int batchExecuteValue, Session session, HashMap<String, PreparedStatement> preparedStatements) throws SQLException, InterruptedException {
 
         PreparedStatement customer = preparedStatements.get("customer");
         PreparedStatement invoice = preparedStatements.get("invoice");
@@ -473,8 +477,14 @@ public class DataGeneratorThread extends Thread {
                 cypherCreate = "MATCH (w:work),(wt:worktype) WHERE w.workId=" + workIndex + " AND wt.worktypeId=" + worktypeId +
                             " CREATE (wt)-[h1:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(w)" +
                             " CREATE (w)-[h2:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(wt)";
+
+                lock.lock();
+
                 //System.out.println(cypherCreate);
                 session.run(cypherCreate);
+
+                Thread.sleep(500);
+                lock.unlock();
                 j++;
 
             }
