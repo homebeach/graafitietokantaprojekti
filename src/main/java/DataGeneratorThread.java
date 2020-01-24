@@ -1,7 +1,8 @@
 import com.github.javafaker.Faker;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
 
 import java.sql.*;
 import java.text.DateFormat;
@@ -65,7 +66,7 @@ public class DataGeneratorThread extends Thread {
 
         try {
 
-            org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
 
             Session session = driver.session();
 
@@ -144,6 +145,12 @@ public class DataGeneratorThread extends Thread {
 
     }
 
+    public void writeToNeo4J(Session session, String cypherQuery) throws SQLException {
+
+        session.writeTransaction(tx -> tx.run(cypherQuery));
+
+    }
+
     public void insertRow(int index, int batchExecuteValue, Session session, HashMap<String, PreparedStatement> preparedStatements) throws SQLException, InterruptedException {
 
         PreparedStatement customer = preparedStatements.get("customer");
@@ -178,7 +185,7 @@ public class DataGeneratorThread extends Thread {
         customer.addBatch();
 
         String cypherCreate = "CREATE (a:customer {customerId: " + customerIndex + ", name:\"" + name + "\",address:\"" + streetAddress + "\"})";
-        session.run(cypherCreate);
+        writeToNeo4J(session, cypherCreate);
 
         int invoiceIndexOriginal = invoiceIndex;
         int customerInvoiceIndexOriginal = invoiceIndex;
@@ -247,21 +254,21 @@ public class DataGeneratorThread extends Thread {
                 if (invoiceIndex == customerInvoiceIndexOriginal) {
 
                     cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + customerInvoiceIndexOriginal + ", previousinvoice: " + invoiceIndex + "})";
-                    session.run(cypherCreate);
+                    writeToNeo4J(session, cypherCreate);
 
                     cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
-                    session.run(cypherCreate);
+                    writeToNeo4J(session, cypherCreate);
 
                 } else {
 
                     cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + customerInvoiceIndexOriginal + ", previousinvoice: " + (invoiceIndex - 1) + "})";
-                    session.run(cypherCreate);
+                    writeToNeo4J(session, cypherCreate);
 
                     cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
-                    session.run(cypherCreate);
+                    writeToNeo4J(session, cypherCreate);
 
                     cypherCreate = "MATCH (a:invoice),(b:invoice) WHERE a.invoiceId = " + (invoiceIndex - 1) + " AND b.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PREVIOUS_INVOICE]->(b)";
-                    session.run(cypherCreate);
+                    writeToNeo4J(session, cypherCreate);
 
 
                 }
@@ -269,10 +276,10 @@ public class DataGeneratorThread extends Thread {
             } else {
 
                     cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + invoiceIndex + ", previousinvoice: " + invoiceIndex + "})";
-                    session.run(cypherCreate);
+                    writeToNeo4J(session, cypherCreate);
 
                     cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
-                    session.run(cypherCreate);
+                    writeToNeo4J(session, cypherCreate);
 
             }
 
@@ -300,10 +307,10 @@ public class DataGeneratorThread extends Thread {
            target.addBatch();
 
            cypherCreate = "CREATE (t:target {tyotargetId: " + targetIndex + ", name: \"" + name + "\", address: \"" + streetAddress + "\", customerid: " + customerIndex + " })";
-           session.run(cypherCreate);
+           writeToNeo4J(session, cypherCreate);
 
            cypherCreate = "MATCH (a:customer),(t:target) WHERE a.customerId = " + customerIndex + " AND t.tyotargetId = " + targetIndex + " CREATE (a)-[m:CUSTOMER_TARGET]->(t)";
-           session.run(cypherCreate);
+           writeToNeo4J(session, cypherCreate);
 
            targetIndex++;
            j++;
@@ -333,13 +340,13 @@ public class DataGeneratorThread extends Thread {
             work.addBatch();
 
             cypherCreate = "CREATE (s:work {workId: " + workIndex + ", name: \"" + name + "\"})";
-            session.run(cypherCreate);
+            writeToNeo4J(session, cypherCreate);
 
             cypherCreate = "MATCH (s:work),(l:invoice) WHERE s.workId = " + workIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (s)-[m:WORK_INVOICE]->(l)";
-            session.run(cypherCreate);
+            writeToNeo4J(session, cypherCreate);
 
             cypherCreate = "MATCH (s:work),(t:target) WHERE s.workId = " + workIndex + "  AND t.tyotargetId = " + targetIndex + " CREATE (s)-[m:WORK_INVOICE]->(t)";
-            session.run(cypherCreate);
+            writeToNeo4J(session, cypherCreate);
 
             workIndex++;
             j++;
@@ -363,7 +370,7 @@ public class DataGeneratorThread extends Thread {
                 workTarget.addBatch();
 
                 cypherCreate = "MATCH (s:work),(t:target) WHERE s.workId = " + workIndex + "  AND t.tyotargetId = " + targetIndex + " CREATE (s)-[m:WORK_TARGET]->(t)";
-                session.run(cypherCreate);
+                writeToNeo4J(session, cypherCreate);
 
                 targetIndex++;
                 j++;
@@ -387,13 +394,6 @@ public class DataGeneratorThread extends Thread {
 
                 r.setSeed(index);
 
-                int price = 1 + r.nextInt(1001);
-                //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
-
-                r.setSeed(index);
-
-                int type = 1 + r.nextInt(4); // tämä on turha
-
                 sqlInsert = "INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (" + workIndex + "," + invoiceIndex + ")";
 
                 workInvoice.setInt(1, workIndex);
@@ -401,7 +401,7 @@ public class DataGeneratorThread extends Thread {
                 workInvoice.addBatch();
 
                 cypherCreate = "MATCH (s:work),(l:invoice) WHERE s.workId = " + workIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (s)-[m:WORK_INVOICE]->(l)";
-                session.run(cypherCreate);
+                writeToNeo4J(session, cypherCreate);
 
                 invoiceIndex++;
                 j++;
@@ -442,7 +442,7 @@ public class DataGeneratorThread extends Thread {
                             " CREATE (s)-[i1:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v)" +
                             " CREATE (v)-[i2:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
 
-                session.run(cypherCreate);
+                writeToNeo4J(session, cypherCreate);
 
                 j++;
 
@@ -480,8 +480,7 @@ public class DataGeneratorThread extends Thread {
 
                 lock.lock();
 
-                //System.out.println(cypherCreate);
-                session.run(cypherCreate);
+                writeToNeo4J(session, cypherCreate);
 
                 Thread.sleep(500);
                 lock.unlock();

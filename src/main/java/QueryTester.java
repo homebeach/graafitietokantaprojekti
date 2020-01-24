@@ -1,9 +1,14 @@
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
+
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static org.neo4j.driver.Values.parameters;
 
 public class QueryTester {
 
@@ -36,7 +41,7 @@ public class QueryTester {
 
         long startTimeInMilliseconds = System.currentTimeMillis();
 
-        session.run(cypherQuery);
+        Result result = session.readTransaction(tx -> tx.run(cypherQuery));
 
         long endTimeInMilliseconds = System.currentTimeMillis();
         long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
@@ -49,7 +54,7 @@ public class QueryTester {
 
     public void executeQueryTests() {
 
-        org.neo4j.driver.v1.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+        org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
 
         Session session = driver.session();
 
@@ -64,7 +69,6 @@ public class QueryTester {
             conn = DriverManager.getConnection(DB_URL + DATABASE, USERNAME, PASSWORD);
             stmt = conn.createStatement();
 
-
             String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,warehouseitem,useditem " +
                     "WHERE work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
 
@@ -74,6 +78,8 @@ public class QueryTester {
 
             measureQueryTimeCypher(session, workItemPriceCypher);
 
+            System.out.println();
+
             String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,warehouseitem,useditem WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
 
             measureQueryTimeSQL(stmt, workPriceSQL);
@@ -81,6 +87,27 @@ public class QueryTester {
             String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)";
 
             measureQueryTimeCypher(session, workPriceCypher);
+
+            System.out.println();
+
+            //asiakkaan laskujen töiden summat
+
+            String customerWorkPricesSQL = "SELECT q1.customerId, q1.invoiceId, q2.workId, q2.price " +
+            "FROM (SELECT customer.id AS customerId, invoice.id AS invoiceId, work.id AS workId FROM customer, invoice, workinvoice, work " +
+            "WHERE customer.id=invoice.customerid AND invoice.id=workinvoice.invoiceId AND workinvoice.workId=work.id) AS q1, " +
+            "(SELECT work.id AS workId, SUM((price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount)) AS price " +
+            "FROM worktype,workhours,work,warehouseitem,useditem WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND useditem.warehouseitemid=warehouseitem.id GROUP BY work.id) AS q2 " +
+            "WHERE q1.workId = q2.workId";
+
+            measureQueryTimeSQL(stmt, customerWorkPricesSQL);
+
+            String customerWorkPricesCypher = "MATCH (c:customer)-[p:PAYS]->(i:invoice)-[wi:WORK_INVOICE]->(w:work) " +
+            "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) " +
+            "RETURN  c.customerId, i.invoiceId,w.workId, sum((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice))";
+
+            measureQueryTimeCypher(session, customerWorkPricesCypher);
+
+            System.out.println();
 
             String previousInvoicesSQL = "WITH previous_invoices AS (" +
                     "SELECT id,customerId,state,duedate,previousinvoice " +

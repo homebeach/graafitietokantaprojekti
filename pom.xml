@@ -49,11 +49,6 @@
             <artifactId>javafaker</artifactId>
             <version>0.18</version>
         </dependency>
-        <dependency>
-            <groupId>org.neo4j.driver</groupId>
-            <artifactId>neo4j-java-driver</artifactId>
-            <version>1.7.2</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.tinkerpop</groupId>
@@ -83,7 +78,7 @@
         <dependency>
             <groupId>org.neo4j.driver</groupId>
             <artifactId>neo4j-java-driver</artifactId>
-            <version>1.7.5</version>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

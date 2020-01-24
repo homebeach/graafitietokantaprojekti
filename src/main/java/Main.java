@@ -7,8 +7,6 @@ public class Main
 
         DataGenerator dataGenerator = new DataGenerator();
 
-
-
         //dataGenerator.createTables();
 
 
@@ -29,11 +27,11 @@ public class Main
 
         //dataGenerator.printSampleDataSizes();
 
-        //dataGenerator.insertData(10,10,10, 10,10,10,10,10,10);
+        //dataGenerator.insertData(10,10,10,10,10,10,10,10,10);
 
-        QueryTester quertyTester = new QueryTester();
+        QueryTester queryTester = new QueryTester();
 
-        quertyTester.executeQueryTests();
+        queryTester.executeQueryTests();
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 
