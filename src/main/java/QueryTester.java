@@ -1,14 +1,10 @@
 
-import org.neo4j.driver.AuthTokens;
-import org.neo4j.driver.GraphDatabase;
-import org.neo4j.driver.Result;
-import org.neo4j.driver.Session;
+import org.neo4j.driver.*;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import static org.neo4j.driver.Values.parameters;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class QueryTester {
 
@@ -19,40 +15,93 @@ public class QueryTester {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
-    public void measureQueryTimeSQL(Statement stmt, String sqlQuery) throws SQLException {
+    public List<Long> measureQueryTimeSQL(Statement stmt, String sqlQuery, int iterations) throws SQLException {
 
-        System.out.println("Executing SQL Query: " + sqlQuery);
+        System.out.println("Executing SQL Query: " + sqlQuery + " with " + iterations + " iterations.");
 
-        long startTimeInMilliseconds = System.currentTimeMillis();
+        List<Long> results = new ArrayList<Long>();
 
-        ResultSet resultSet = stmt.executeQuery(sqlQuery);
+        ResultSet resultSet = null;
 
-        long endTimeInMilliseconds = System.currentTimeMillis();
-        long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
-        //String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
-        //System.out.println("Time elapsed: " + elapsedTime);
-        System.out.println("Time elapsed in milliseconds: " + elapsedTimeMilliseconds);
+        for(int i=0; i<iterations; i++) {
+
+            long startTimeInMilliseconds = System.currentTimeMillis();
+
+            resultSet = stmt.executeQuery(sqlQuery);
+
+            long endTimeInMilliseconds = System.currentTimeMillis();
+            long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+            results.add(elapsedTimeMilliseconds);
+
+        }
+
+        resultSet.last();
+        System.out.println("Query returned "+resultSet.getRow()+" rows.");
+
+        return results;
+    }
+
+    public List<Long> measureQueryTimeCypher(Session session, String cypherQuery, int iterations) throws SQLException {
+
+        System.out.println("Executing Cypher Query: " + cypherQuery + " with " + iterations + " iterations.");
+
+        List<Long> results = new ArrayList<Long>();
+
+        Result result = null;
+
+        for(int i=0; i<iterations; i++) {
+
+            long startTimeInMilliseconds = System.currentTimeMillis();
+
+            //Result result = session.readTransaction(tx -> tx.run(cypherQuery));
+
+            result = session.run(cypherQuery);
+
+            long endTimeInMilliseconds = System.currentTimeMillis();
+            long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+            results.add(elapsedTimeMilliseconds);
+
+        }
+
+        List<Record> records = result.list();
+
+        System.out.println("Query returned "+ records.size() +" records.");
+
+        return results;
+    }
+
+    public void showResults(List<Long> results, boolean showAll) throws SQLException {
+
+
+        if(showAll) {
+            System.out.println("Smallest number in resultset: " + results.get(0) + ".");
+            System.out.println("Biggest number in resultset: " + results.get(results.size()) + ".");
+        }
+
+        Collections.sort(results);
+        results.remove(0);
+        results.remove(results.size() -1);
+
+        long sum = 0;
+
+        for(int i=0; i<results.size(); i++) {
+
+            if(showAll) {
+                System.out.println("Result with index " + i + ": " + results.get(0) + ".");
+            }
+            sum = sum + results.get(i);
+        }
+
+        double average = sum / results.size();
+
+        System.out.println("Average time for query" + average);
+
 
     }
 
-    public void measureQueryTimeCypher(Session session, String cypherQuery) throws SQLException {
-
-        System.out.println("Executing Cypher Query: " + cypherQuery);
-
-        long startTimeInMilliseconds = System.currentTimeMillis();
-
-        Result result = session.readTransaction(tx -> tx.run(cypherQuery));
-
-        long endTimeInMilliseconds = System.currentTimeMillis();
-        long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
-        ///String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
-        //System.out.println("Time elapsed: " + elapsedTimeMilliseconds);
-        System.out.println("Time elapsed in milliseconds: " + elapsedTimeMilliseconds);
-
-
-    }
-
-    public void executeQueryTests() {
+    public void executeQueryTests(int iterations) {
 
         org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
 
@@ -61,6 +110,8 @@ public class QueryTester {
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSet = null;
+
+        boolean showAll = true;
 
         try {
 
@@ -72,25 +123,35 @@ public class QueryTester {
             String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,warehouseitem,useditem " +
                     "WHERE work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
 
-            measureQueryTimeSQL(stmt, workItemPriceSQL);
+            List<Long> results = measureQueryTimeSQL(stmt, workItemPriceSQL, iterations);
+
+            showResults(results, showAll);
 
             String workItemPriceCypher = "MATCH (w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN u.amount*u.discount*i.purchaseprice";
 
-            measureQueryTimeCypher(session, workItemPriceCypher);
+            results = measureQueryTimeCypher(session, workItemPriceCypher, iterations);
+
+            showResults(results, showAll);
 
             System.out.println();
 
             String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,warehouseitem,useditem WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
 
-            measureQueryTimeSQL(stmt, workPriceSQL);
+            results = measureQueryTimeSQL(stmt, workPriceSQL, iterations);
+
+            showResults(results, showAll);
 
             String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)";
 
-            measureQueryTimeCypher(session, workPriceCypher);
+            results = measureQueryTimeCypher(session, workPriceCypher, iterations);
+
+            showResults(results, showAll);
 
             System.out.println();
 
             //asiakkaan laskujen töiden summat
+
+            /*
 
             String customerWorkPricesSQL = "SELECT q1.customerId, q1.invoiceId, q2.workId, q2.price " +
             "FROM (SELECT customer.id AS customerId, invoice.id AS invoiceId, work.id AS workId FROM customer, invoice, workinvoice, work " +
@@ -107,6 +168,8 @@ public class QueryTester {
 
             measureQueryTimeCypher(session, customerWorkPricesCypher);
 
+
+             */
             System.out.println();
 
             String previousInvoicesSQL = "WITH previous_invoices AS (" +
@@ -119,11 +182,15 @@ public class QueryTester {
                     ") " +
                     "SELECT * FROM previous_invoices";
 
-            measureQueryTimeSQL(stmt, previousInvoicesSQL);
+            results = measureQueryTimeSQL(stmt, previousInvoicesSQL, iterations);
+
+            showResults(results, showAll);
 
             String previousInvoicesCypher = "MATCH (i:invoice)-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
 
-            measureQueryTimeCypher(session, previousInvoicesCypher);
+            results = measureQueryTimeCypher(session, previousInvoicesCypher, iterations);
+
+            showResults(results, showAll);
 
 
         } catch (Exception e) {

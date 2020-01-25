@@ -27,7 +27,7 @@ public class Main
 
         //dataGenerator.printSampleDataSizes();
 
-        //dataGenerator.insertData(10,10,10,10,10,10,10,10,10);
+        //dataGenerator.insertData(1,10,10,10,10,10,10,10);
 
         QueryTester queryTester = new QueryTester();
 

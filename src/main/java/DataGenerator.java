@@ -1,15 +1,10 @@
-import com.github.javafaker.Faker;
+
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
 
 import java.sql.*;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 
 import java.io.BufferedReader;
@@ -32,7 +27,6 @@ public class DataGenerator {
     private int iterationsPerThread = 0;
     private int invoiceFactor = 0;
     private int targetFactor = 0;
-    private int workFactor = 0;
     private int itemFactor = 0;
     private int sequentialInvoices = 0;
 
@@ -777,27 +771,6 @@ public class DataGenerator {
         "PRIMARY KEY (`id`))";
 
 
-       /*
-        System.out.println(createWarehouse + ";");
-        System.out.println();
-        System.out.println(customer + ";");
-        System.out.println();
-        System.out.println(useditem + ";");
-        System.out.println();
-        System.out.println(invoice + ";");
-        System.out.println();
-        System.out.println(work + ";");
-        System.out.println();
-        System.out.println(target + ";");
-        System.out.println();
-        System.out.println(workhours + ";");
-        System.out.println();
-        System.out.println(worktype + ";");
-        System.out.println();
-        System.out.println(warehouseitem + ";");
-         */
-
-
         executeSQLUpdate(dropDatabase);
         executeSQLUpdate(createDatabase);
         executeSQLUpdate(customer, "jdbc:mariadb://127.0.0.1/" +  database);
@@ -815,13 +788,12 @@ public class DataGenerator {
 
 
 
-    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor, int workTypeFactor, int itemFactor) {
+    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int invoiceFactor, int sequentialInvoices, int targetFactor, int workTypeFactor, int itemFactor) {
 
         this.iterationsPerThread = iterationsPerThread;
         this.invoiceFactor = invoiceFactor;
         this.sequentialInvoices = sequentialInvoices;
         this.targetFactor = targetFactor;
-        this.workFactor = workFactor;
         this.itemFactor = itemFactor;
 
         try {
@@ -829,8 +801,6 @@ public class DataGenerator {
             org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
 
             Session session = driver.session();
-
-
 
             Connection conn = null;
             Statement stmt = null;
@@ -864,9 +834,6 @@ public class DataGenerator {
                 int invoiceIndex = 0;
                 int targetIndex = 0;
                 int workIndex = 0;
-                int firstnameindex = 0;
-                int surnameindex = 0;
-                int addressindex = 0;
 
                 ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WAREHOUSEITEMCOUNT FROM WAREHOUSE.WAREHOUSEITEM");
 
@@ -944,12 +911,12 @@ public class DataGenerator {
 
 
 
-                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, workFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes, workTypeIndexes);
+                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes, workTypeIndexes);
                     executor.execute(thread);
                     customerIndex = customerIndex + iterationsPerThread;
                     invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
                     targetIndex = targetIndex + iterationsPerThread*targetFactor;
-                    workIndex = workIndex + iterationsPerThread*workFactor;
+                    workIndex = workIndex + iterationsPerThread;
 
                 }
 

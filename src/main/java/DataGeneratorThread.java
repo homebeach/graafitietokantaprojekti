@@ -20,14 +20,23 @@ public class DataGeneratorThread extends Thread {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
-    private int threadindex = 0;
+
     private int iterationCount = 0;
     private int batchExecuteValue = 0;
     private int invoiceFactor = 0;
     private int targetFactor = 0;
-    private int workFactor = 0;
     private int itemFactor = 0;
     private int sequentialInvoices = 0;
+
+    private int threadIndex = 0;
+    int customerIndex = 0;
+    int invoiceIndex = 0;
+    int targetIndex = 0;
+    int workIndex = 0;
+
+    int firstnameindex = 0;
+    int surnameindex = 0;
+    int addressindex = 0;
 
     private ReentrantLock lock;
 
@@ -40,14 +49,13 @@ public class DataGeneratorThread extends Thread {
     private List<String> surnames;
     private List<HashMap<String, String>> addresses;
 
-    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, ReentrantLock lock, int invoiceFactor, int targetFactor, int workFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex, List<Integer> itemIndexes, List<Integer> workTypeIndexes) {
+    public DataGeneratorThread(int threadindex, int iterationCount, int batchExecuteValue, ReentrantLock lock, int invoiceFactor, int targetFactor, int itemFactor, int sequentialInvoices, List<String> firstnames, List<String> surnames, List<HashMap<String, String>> addresses, int customerIndex, int invoiceIndex, int targetIndex, int workIndex, List<Integer> itemIndexes, List<Integer> workTypeIndexes) {
 
-        this.threadindex = threadindex;
+        this.threadIndex = threadindex;
         this.iterationCount = iterationCount;
         this.batchExecuteValue = batchExecuteValue;
         this.invoiceFactor = invoiceFactor;
         this.targetFactor = targetFactor;
-        this.workFactor = workFactor;
         this.itemFactor = itemFactor;
         this.sequentialInvoices = sequentialInvoices;
         this.firstnames = firstnames;
@@ -120,20 +128,6 @@ public class DataGeneratorThread extends Thread {
         }
     }
 
-
-
-
-
-    int customerIndex = 0;
-    int invoiceIndex = 0;
-    int targetIndex = 0;
-    int workIndex = 0;
-
-    int firstnameindex = 0;
-    int surnameindex = 0;
-    int addressindex = 0;
-
-
     public void setIndexes(int index) {
 
         Random r = new Random(index);
@@ -169,7 +163,7 @@ public class DataGeneratorThread extends Thread {
         int j = 0;
         int k = 0;
 
-        System.out.println("Thread: " + threadindex + " Index: " + index);
+        System.out.println("Thread: " + threadIndex + " Index: " + index);
 
         setIndexes(index);
 
@@ -306,10 +300,10 @@ public class DataGeneratorThread extends Thread {
            target.setInt(4, customerIndex);
            target.addBatch();
 
-           cypherCreate = "CREATE (t:target {tyotargetId: " + targetIndex + ", name: \"" + name + "\", address: \"" + streetAddress + "\", customerid: " + customerIndex + " })";
+           cypherCreate = "CREATE (t:target {targetId: " + targetIndex + ", name: \"" + name + "\", address: \"" + streetAddress + "\", customerid: " + customerIndex + " })";
            writeToNeo4J(session, cypherCreate);
 
-           cypherCreate = "MATCH (a:customer),(t:target) WHERE a.customerId = " + customerIndex + " AND t.tyotargetId = " + targetIndex + " CREATE (a)-[m:CUSTOMER_TARGET]->(t)";
+           cypherCreate = "MATCH (c:customer),(t:target) WHERE c.customerId = " + customerIndex + " AND t.targetId = " + targetIndex + " CREATE (c)-[m:CUSTOMER_TARGET]->(t)";
            writeToNeo4J(session, cypherCreate);
 
            targetIndex++;
@@ -323,175 +317,132 @@ public class DataGeneratorThread extends Thread {
         targetIndex = targetIndexOriginal;
         invoiceIndex = invoiceIndexOriginal;
 
+        String workName = "Generic " + workIndex;
+
+        //sqlInsert = "INSERT INTO warehouse.work (id, name) VALUES (" + workIndex + ",'" + workName + "')";
+
+        work.setInt(1, workIndex);
+        work.setString(2, workName);
+        work.addBatch();
+
+        cypherCreate = "CREATE (s:work {workId: " + workIndex + ", name: \"" + name + "\"})";
+        writeToNeo4J(session, cypherCreate);
+
+        targetIndex = targetIndexOriginal;
+
         j = 0;
-        while (j < workFactor) {
+        while (j < targetFactor) {
+
+            sqlInsert = "INSERT INTO warehouse.worktarget (workId, targetId) VALUES (" + workIndex + "," + targetIndex + ")";
+            //executeSQLInsert(sqlInsert);
+
+            workTarget.setInt(1, workIndex);
+            workTarget.setInt(2, targetIndex);
+            workTarget.addBatch();
+
+            cypherCreate = "MATCH (s:work),(t:target) WHERE s.workId = " + workIndex + "  AND t.targetId = " + targetIndex + " CREATE (s)-[m:WORK_TARGET]->(t)";
+            writeToNeo4J(session, cypherCreate);
+
+            cypherCreate = "MATCH (t:target),(s:work) WHERE t.targetId = " + targetIndex + " AND s.workId = " + workIndex + " CREATE (t)-[m:WORK_TARGET]->(s)";
+            writeToNeo4J(session, cypherCreate);
+
+            targetIndex++;
+            j++;
+
+        }
+
+
+        invoiceIndex = invoiceIndexOriginal;
+
+        j = 0;
+        while (j < invoiceFactor) {
 
             r.setSeed(index);
 
-            int price = 1 + r.nextInt(1001);
-            //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
+            sqlInsert = "INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (" + workIndex + "," + invoiceIndex + ")";
 
-            String workName = "Generic " + workIndex;
-
-            sqlInsert = "INSERT INTO warehouse.work (id, name) VALUES (" + workIndex + ",'" + workName + "')";
-
-            work.setInt(1, workIndex);
-            work.setString(2, workName);
-            work.addBatch();
-
-            cypherCreate = "CREATE (s:work {workId: " + workIndex + ", name: \"" + name + "\"})";
-            writeToNeo4J(session, cypherCreate);
+            workInvoice.setInt(1, workIndex);
+            workInvoice.setInt(2, invoiceIndex);
+            workInvoice.addBatch();
 
             cypherCreate = "MATCH (s:work),(l:invoice) WHERE s.workId = " + workIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (s)-[m:WORK_INVOICE]->(l)";
             writeToNeo4J(session, cypherCreate);
 
-            cypherCreate = "MATCH (s:work),(t:target) WHERE s.workId = " + workIndex + "  AND t.tyotargetId = " + targetIndex + " CREATE (s)-[m:WORK_INVOICE]->(t)";
+
+            cypherCreate = "MATCH (l:invoice), (s:work) WHERE l.invoiceId = " + invoiceIndex + " AND s.workId = " + workIndex + "  CREATE (l)-[m:WORK_INVOICE]->(s)";
             writeToNeo4J(session, cypherCreate);
 
-            workIndex++;
+            invoiceIndex++;
             j++;
-        }
-
-        workIndex = workIndexOriginal;
-
-        i = 0;
-        while (i < workFactor) {
-
-            targetIndex = targetIndexOriginal;
-
-            j = 0;
-            while (j < targetFactor) {
-
-                sqlInsert = "INSERT INTO warehouse.worktarget (workId, targetId) VALUES (" + workIndex + "," + targetIndex + ")";
-                //executeSQLInsert(sqlInsert);
-
-                workTarget.setInt(1, workIndex);
-                workTarget.setInt(2, targetIndex);
-                workTarget.addBatch();
-
-                cypherCreate = "MATCH (s:work),(t:target) WHERE s.workId = " + workIndex + "  AND t.tyotargetId = " + targetIndex + " CREATE (s)-[m:WORK_TARGET]->(t)";
-                writeToNeo4J(session, cypherCreate);
-
-                targetIndex++;
-                j++;
-
-            }
-
-            workIndex++;
-            i++;
 
         }
-
-        workIndex = workIndexOriginal;
-
-        i = 0;
-        while (i < workFactor) {
-
-            invoiceIndex = invoiceIndexOriginal;
-
-            j = 0;
-            while (j < invoiceFactor) {
-
-                r.setSeed(index);
-
-                sqlInsert = "INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (" + workIndex + "," + invoiceIndex + ")";
-
-                workInvoice.setInt(1, workIndex);
-                workInvoice.setInt(2, invoiceIndex);
-                workInvoice.addBatch();
-
-                cypherCreate = "MATCH (s:work),(l:invoice) WHERE s.workId = " + workIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (s)-[m:WORK_INVOICE]->(l)";
-                writeToNeo4J(session, cypherCreate);
-
-                invoiceIndex++;
-                j++;
-
-            }
-
-            workIndex++;
-            i++;
-        }
-
-        workIndex = workIndexOriginal;
 
         r.setSeed(index);
         int discountpercent = 1 + r.nextInt(101);
         double discount = (0.01 * discountpercent);
 
-        i = 0;
-        while (i < workFactor) {
+        j = 0;
+        while (j < itemIndexes.size()) {
 
-            j = 0;
-            while (j < itemIndexes.size()) {
+            r.setSeed(index);
 
-                r.setSeed(index);
+            int amount = 1 + r.nextInt(101);
 
-                int amount = 1 + r.nextInt(101);
+            int warehouseitemId = itemIndexes.get(j);
 
-                int warehouseitemId = itemIndexes.get(j);
+            //sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + warehouseitemId + ")";
 
-                sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + warehouseitemId + ")";
+            usedItem.setInt(1, amount);
+            usedItem.setDouble(2, discount);
+            usedItem.setInt(3, workIndex);
+            usedItem.setInt(4, warehouseitemId);
+            usedItem.addBatch();
 
-                usedItem.setInt(1, amount);
-                usedItem.setDouble(2, discount);
-                usedItem.setInt(3, workIndex);
-                usedItem.setInt(4, warehouseitemId);
-                usedItem.addBatch();
+            cypherCreate = "MATCH (s:work),(v:warehouseitem) WHERE s.workId=" + workIndex + " AND v.warehouseitemId=" + warehouseitemId + " CREATE (s)-[ui:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v) ";
+            writeToNeo4J(session, cypherCreate);
 
-                cypherCreate = "MATCH (s:work),(v:warehouseitem) WHERE s.workId=" + workIndex + " AND v.warehouseitemId=" + warehouseitemId +
-                            " CREATE (s)-[i1:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v)" +
-                            " CREATE (v)-[i2:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
+            cypherCreate = "MATCH (v:warehouseitem),(s:work) WHERE v.warehouseitemId=" + warehouseitemId + " AND s.workId=" + workIndex + "   CREATE (v)-[ui:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
+            writeToNeo4J(session, cypherCreate);
 
-                writeToNeo4J(session, cypherCreate);
+            j++;
 
-                j++;
-
-            }
-
-            i++;
-            workIndex++;
         }
 
+        j = 0;
+        while (j < workTypeIndexes.size()) {
 
-        workIndex = workIndexOriginal;
+            r.setSeed(index);
 
-        i = 0;
-        while (i < workFactor) {
+            int hours = r.nextInt(100);
+            int worktypeId = workTypeIndexes.get(j);
 
-            j = 0;
-            while (j < workTypeIndexes.size()) {
+            sqlInsert = "INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(" + worktypeId + "," + hours + "," + discount + "," + workIndex + ")";
 
-                r.setSeed(index);
+            workHours.setInt(1, worktypeId);
+            workHours.setInt(2, hours);
+            workHours.setDouble(3, discount);
+            workHours.setInt(4, workIndex);
+            workHours.addBatch();
 
-                int hours = r.nextInt(100);
-                int worktypeId = workTypeIndexes.get(j);
+            cypherCreate = "MATCH (w:work),(wt:worktype) WHERE w.workId=" + workIndex + " AND wt.worktypeId=" + worktypeId + " CREATE (w)-[wh:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(wt) ";
+            writeToNeo4J(session, cypherCreate);
 
-                sqlInsert = "INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(" + worktypeId + "," + hours + "," + discount + "," + workIndex + ")";
+            cypherCreate = "MATCH (wt:worktype),(w:work) WHERE wt.worktypeId=" + worktypeId + " AND w.workId=" + workIndex  + " CREATE (wt)-[wh:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(w)";
+            writeToNeo4J(session, cypherCreate);
 
-                workHours.setInt(1, worktypeId);
-                workHours.setInt(2, hours);
-                workHours.setDouble(3, discount);
-                workHours.setInt(4, workIndex);
-                workHours.addBatch();
 
-                cypherCreate = "MATCH (w:work),(wt:worktype) WHERE w.workId=" + workIndex + " AND wt.worktypeId=" + worktypeId +
-                            " CREATE (wt)-[h1:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(w)" +
-                            " CREATE (w)-[h2:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(wt)";
 
-                lock.lock();
 
-                writeToNeo4J(session, cypherCreate);
+            //lock.lock();
 
-                Thread.sleep(500);
-                lock.unlock();
-                j++;
 
-            }
+            //Thread.sleep(500);
+            //lock.unlock();
+            j++;
 
-            i++;
-            workIndex++;
         }
 
+        workIndex++;
 
         if (index % batchExecuteValue == 0 || index == (iterationCount - 1)) {
 
