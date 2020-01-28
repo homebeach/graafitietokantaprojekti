@@ -24,12 +24,10 @@ public class DataGenerator {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
-    private int iterationsPerThread = 0;
-    private int invoiceFactor = 0;
-    private int targetFactor = 0;
-    private int itemFactor = 0;
-    private int sequentialInvoices = 0;
+    private static final String NEO4J_DB_URL = "bolt://localhost:7687";
 
+    private static final String NEO4J_USERNAME = "neo4j";
+    private static final String NEO4J_PASSWORD = "admin";
 
     private List<String> firstnames;
     private List<String> surnames;
@@ -178,7 +176,7 @@ public class DataGenerator {
             conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
             stmt = conn.createStatement();
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
 
             Session session = driver.session();
 
@@ -190,14 +188,16 @@ public class DataGenerator {
             stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
             stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
             stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.target;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.warehouseitem;");
             stmt.addBatch("TRUNCATE TABLE warehouse.work;");
             stmt.addBatch("TRUNCATE TABLE warehouse.workhours;");
             stmt.addBatch("TRUNCATE TABLE warehouse.workinvoice;");
             stmt.addBatch("TRUNCATE TABLE warehouse.worktarget;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.target;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
+
             stmt.addBatch("TRUNCATE TABLE warehouse.worktype;");
+            stmt.addBatch("TRUNCATE TABLE warehouse.warehouseitem;");
+
             stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
             stmt.executeBatch();
 
@@ -278,7 +278,7 @@ public class DataGenerator {
 
         try {
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
 
             Session session = driver.session();
 
@@ -314,7 +314,7 @@ public class DataGenerator {
                     warehouseitem.setInt(1, i);
                     warehouseitem.setString(2, item);
                     warehouseitem.setInt(3, balance);
-                    warehouseitem.setString(4, "'m'");
+                    warehouseitem.setString(4, "m");
                     warehouseitem.setFloat(5, purchaseprice);
                     warehouseitem.setInt(6, vat);
                     warehouseitem.setBoolean(7, removed);
@@ -333,7 +333,7 @@ public class DataGenerator {
                     warehouseitem.setInt(1, i);
                     warehouseitem.setString(2, item);
                     warehouseitem.setInt(3, balance);
-                    warehouseitem.setString(4, "'pcs'");
+                    warehouseitem.setString(4, "pcs");
                     warehouseitem.setFloat(5, purchaseprice);
                     warehouseitem.setInt(6, vat);
                     warehouseitem.setBoolean(7, removed);
@@ -356,7 +356,7 @@ public class DataGenerator {
                     warehouseitem.setInt(1, i);
                     warehouseitem.setString(2, item);
                     warehouseitem.setInt(3, balance);
-                    warehouseitem.setString(4, "'pcs'");
+                    warehouseitem.setString(4, "pcs");
                     warehouseitem.setFloat(5, purchaseprice);
                     warehouseitem.setInt(6, vat);
                     warehouseitem.setBoolean(7, removed);
@@ -403,13 +403,13 @@ public class DataGenerator {
 
         try {
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
 
             Session session = driver.session();
 
             Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
 
-            PreparedStatement worktype = connection.prepareStatement("INSERT INTO warehouse.worktype (id, name, price) VALUES (?, ?, ?)");
+            PreparedStatement workType = connection.prepareStatement("INSERT INTO warehouse.worktype (id, name, price) VALUES (?, ?, ?)");
 
             for (int i = 0; i < workTypeCount; i++) {
 
@@ -417,27 +417,27 @@ public class DataGenerator {
                 Random r = new Random(i);
                 int price = r.nextInt(100);
 
-                worktype.setInt(1, i);
-                worktype.setInt(3, price);
+                workType.setInt(1, i);
+                workType.setInt(3, price);
 
                 if(i % 2 == 0) {
 
-                    worktype.setString(2,"design");
+                    workType.setString(2,"design");
                     session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"design\", price:" + price + "})");
 
                 } else if(i % 3 == 0) {
 
-                    worktype.setString(2,"work");
+                    workType.setString(2,"work");
                     session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"work\", price:" + price + "})");
 
                 } else {
 
-                    worktype.setString(2,"supporting work");
+                    workType.setString(2,"supporting work");
                     session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"supporting work\", price:" + price + "})");
 
                 }
 
-                worktype.execute();
+                workType.execute();
 
             }
 
@@ -449,6 +449,54 @@ public class DataGenerator {
             e.printStackTrace();
         }
 
+    }
+
+    public int getWorkCount() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WORKCOUNT FROM WAREHOUSE.WORK");
+
+        int workCount = 0;
+
+        while(rs.next()) {
+
+            workCount = rs.getInt("WORKCOUNT");
+            System.out.println("Workcount " + workCount);
+
+        }
+
+        return workCount;
+    }
+
+    public int getWorkTypeCount() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WORKTYPECOUNT FROM WAREHOUSE.WORKTYPE");
+
+        int workTypeCount = 0;
+
+        while(rs.next()) {
+
+            workTypeCount = rs.getInt("WORKTYPECOUNT");
+            System.out.println("Worktype count " + workTypeCount);
+
+        }
+
+        return workTypeCount;
+    }
+
+    public int getWareHouseItemCount() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WAREHOUSEITEMCOUNT FROM WAREHOUSE.WAREHOUSEITEM");
+
+        int wareHouseItemCount = 0;
+
+        while(rs.next()) {
+
+            wareHouseItemCount = rs.getInt("WAREHOUSEITEMCOUNT");
+            System.out.println("Warehouseitem count " + wareHouseItemCount);
+
+        }
+
+        return wareHouseItemCount;
     }
 
     public void createSampleTables() {
@@ -517,11 +565,11 @@ public class DataGenerator {
                     if(!firstIteration) {
 
                         // use comma as separator
-                        String[] firstnameInArray = line.split(cvsSplitBy);
+                        String[] firstNameInArray = line.split(cvsSplitBy);
 
-                        String firstname = firstnameInArray[0];
+                        String firstName = firstNameInArray[0];
 
-                        firstnames.setString(1, firstname);
+                        firstnames.setString(1, firstName);
                         firstnames.addBatch();
 
                         if (index % batchExecuteValue == 0) {
@@ -786,15 +834,7 @@ public class DataGenerator {
 
     }
 
-
-
-    public void insertData(int threadCount, int iterationsPerThread, int batchExecuteValue, int invoiceFactor, int sequentialInvoices, int targetFactor, int workTypeFactor, int itemFactor) {
-
-        this.iterationsPerThread = iterationsPerThread;
-        this.invoiceFactor = invoiceFactor;
-        this.sequentialInvoices = sequentialInvoices;
-        this.targetFactor = targetFactor;
-        this.itemFactor = itemFactor;
+    public void insertCustomerData(int threadCount, int iterationsPerThread, int batchExecuteValue, int invoiceFactor, int sequentialInvoices, int targetFactor, int workFactor) {
 
         try {
 
@@ -813,50 +853,28 @@ public class DataGenerator {
                 PreparedStatement customer = connection.prepareStatement("INSERT INTO warehouse.customer (id, name, address) VALUES (?,?,?)");
                 PreparedStatement invoice = connection.prepareStatement("INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (?,?,?,?,?)");
                 PreparedStatement target = connection.prepareStatement("INSERT INTO warehouse.target (id, name, address, customerid) VALUES (?,?,?,?)");
-                PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
-                PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
                 PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
-                PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(?,?,?,?)");
-                PreparedStatement workHours = connection.prepareStatement("INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(?,?,?,?)");
+                PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
 
                 HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
 
-                preparedStatements.put("customer",customer);
-                preparedStatements.put("invoice",invoice);
-                preparedStatements.put("target",target);
-                preparedStatements.put("work",work);
-                preparedStatements.put("worktarget",workTarget);
-                preparedStatements.put("workinvoice",workInvoice);
-                preparedStatements.put("useditem",usedItem);
-                preparedStatements.put("workhours",workHours);
+                preparedStatements.put("customer", customer);
+                preparedStatements.put("invoice", invoice);
+                preparedStatements.put("target", target);
+                preparedStatements.put("workinvoice", workInvoice);
+                preparedStatements.put("worktarget", workTarget);
 
                 int customerIndex = 0;
                 int invoiceIndex = 0;
                 int targetIndex = 0;
                 int workIndex = 0;
+                int workCount = getWorkCount();
 
-                ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WAREHOUSEITEMCOUNT FROM WAREHOUSE.WAREHOUSEITEM");
-
-                int itemCount = 0;
-
-                while(rs.next()) {
-
-                    itemCount = rs.getInt("WAREHOUSEITEMCOUNT");
-                    System.out.println("This is itemcount " + itemCount);
-
+                if(workCount < 1) {
+                    throw new Exception("Work count is smaller than 1!");
                 }
 
-
-                rs = executeSQLQuery("SELECT COUNT(*) AS WORKTYPECOUNT FROM WAREHOUSE.WORKTYPE");
-
-                int workTypeCount = 0;
-
-                while(rs.next()) {
-
-                    workTypeCount = rs.getInt("WORKTYPECOUNT");
-                    System.out.println("This is worktypecount " + workTypeCount);
-
-                }
+                getSampleData();
 
                 ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
@@ -866,52 +884,14 @@ public class DataGenerator {
 
                 ReentrantLock lock = new ReentrantLock();
 
-                System.out.println("Insertion started at: " + startTime.toString());
+                System.out.println("Insertion of Customer related data started at: " + startTime.toString());
 
                 for (int i = 0; i < threadCount; i++) {
 
                     Random r = new Random();
 
-                    List<Integer> itemIndexes = new ArrayList<Integer>();
-                    for(int j=0; j<itemFactor; j++) {
 
-                        r.setSeed(j);
-
-                        int itemIndex = r.nextInt(itemCount);
-
-                        int offset = 1;
-                        while(itemIndexes.contains(itemIndex)) {
-                            r.setSeed(j + offset);
-                            itemIndex = r.nextInt(itemCount);
-                            offset++;
-                        }
-
-                        itemIndexes.add(itemIndex);
-
-                    }
-
-                    List<Integer> workTypeIndexes = new ArrayList<Integer>();
-                    for(int j=0; j<workTypeFactor; j++) {
-
-                        r.setSeed(j);
-
-                        int workTypeIndex = r.nextInt(workTypeCount);
-
-                        int offset = 1;
-                        while(workTypeIndexes.contains(workTypeIndex)) {
-
-                            r.setSeed(j + offset);
-                            workTypeIndex = r.nextInt(workTypeCount);
-                            offset++;
-                        }
-
-                        workTypeIndexes.add(workTypeIndex);
-
-                    }
-
-
-
-                    DataGeneratorThread thread = new DataGeneratorThread(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, itemFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, itemIndexes, workTypeIndexes);
+                    DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
                     executor.execute(thread);
                     customerIndex = customerIndex + iterationsPerThread;
                     invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
@@ -932,7 +912,94 @@ public class DataGenerator {
 
                 String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
 
-                System.out.println("Insertion finished at: " + endTime.toString());
+                System.out.println("Insertion of Customer related data finished at: " + endTime.toString());
+                System.out.println("Time elapsed: " + elapsedTime);
+
+            }
+
+            session.close();
+            driver.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+    public void insertWorkData(int threadCount, int iterationsPerThread, int batchExecuteValue, int targetFactor, int workTypeFactor, int itemFactor) {
+
+        try {
+
+            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+
+            Session session = driver.session();
+
+            Connection conn = null;
+            Statement stmt = null;
+            ResultSet resultSet = null;
+
+            Class.forName(JDBC_DRIVER);
+
+            try (Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD)) {
+
+                PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
+                PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
+                PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
+                PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(?,?,?,?)");
+                PreparedStatement workHours = connection.prepareStatement("INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(?,?,?,?)");
+
+                HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
+
+                preparedStatements.put("work",work);
+                preparedStatements.put("worktarget",workTarget);
+                preparedStatements.put("workinvoice",workInvoice);
+                preparedStatements.put("useditem",usedItem);
+                preparedStatements.put("workhours",workHours);
+
+                int targetIndex = 0;
+                int workIndex = 0;
+
+                int itemCount = getWareHouseItemCount();
+
+                int workTypeCount = getWorkTypeCount();
+
+
+                ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+                long startTimeInMilliseconds = System.currentTimeMillis();
+
+                Timestamp startTime = new Timestamp(startTimeInMilliseconds);
+
+                ReentrantLock lock = new ReentrantLock();
+
+                System.out.println("Insertion of Work related data started at: " + startTime.toString());
+
+                for (int i = 0; i < threadCount; i++) {
+
+                    Random r = new Random();
+
+                    DataGeneratorThreadWork thread = new DataGeneratorThreadWork(i, iterationsPerThread, batchExecuteValue, lock, workIndex, itemFactor, itemCount, workTypeFactor, workTypeCount);
+                    executor.execute(thread);
+                    targetIndex = targetIndex + iterationsPerThread*targetFactor;
+                    workIndex = workIndex + iterationsPerThread;
+
+                }
+
+                executor.shutdown();
+                while (!executor.isTerminated()) {
+                }
+
+                long endTimeInMilliseconds = System.currentTimeMillis();
+
+                Timestamp endTime = new Timestamp(endTimeInMilliseconds);
+
+                long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+                String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+
+                System.out.println("Insertion of Work related data finished at: " + endTime.toString());
                 System.out.println("Time elapsed: " + elapsedTime);
 
             }

@@ -14,8 +14,8 @@ public class Main
 
         //dataGenerator.getSampleData();
 
-        //dataGenerator.createItems(100);
-        //dataGenerator.createWorkTypes(100);
+        //dataGenerator.createItems(1000);
+        //dataGenerator.createWorkTypes(1000);
 
         /*
 
@@ -29,9 +29,15 @@ public class Main
 
         //dataGenerator.insertData(1,10,10,10,10,10,10,10);
 
+
+        //dataGenerator.insertWorkData(10,100,10,10,10,10);
+
+        //dataGenerator.insertCustomerData(10,100,10,10,10,10,10);
+
+
         QueryTester queryTester = new QueryTester();
 
-        queryTester.executeQueryTests();
+        queryTester.executeQueryTests(10, true);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

@@ -67,41 +67,43 @@ public class QueryTester {
 
         List<Record> records = result.list();
 
-        System.out.println("Query returned "+ records.size() +" records.");
+        System.out.println("Query returned: " + records.size() + " records.");
 
         return results;
     }
 
     public void showResults(List<Long> results, boolean showAll) throws SQLException {
 
+        Collections.sort(results);
 
         if(showAll) {
             System.out.println("Smallest number in resultset: " + results.get(0) + ".");
-            System.out.println("Biggest number in resultset: " + results.get(results.size()) + ".");
+            System.out.println("Biggest number in resultset: " + results.get(results.size() - 1) + ".");
         }
 
-        Collections.sort(results);
-        results.remove(0);
-        results.remove(results.size() -1);
+        if(results.size() > 2) {
+            results.remove(0);
+            results.remove(results.size() - 1);
+        }
 
         long sum = 0;
 
         for(int i=0; i<results.size(); i++) {
 
             if(showAll) {
-                System.out.println("Result with index " + i + ": " + results.get(0) + ".");
+                //System.out.println("Result with index " + i + ": " + results.get(i) + ".");
             }
             sum = sum + results.get(i);
         }
 
         double average = sum / results.size();
 
-        System.out.println("Average time for query" + average);
+        System.out.println("Average time for query: " + average);
 
 
     }
 
-    public void executeQueryTests(int iterations) {
+    public void executeQueryTests(int iterations, boolean showAll) {
 
         org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
 
@@ -110,8 +112,6 @@ public class QueryTester {
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSet = null;
-
-        boolean showAll = true;
 
         try {
 
@@ -127,6 +127,8 @@ public class QueryTester {
 
             showResults(results, showAll);
 
+            System.out.println();
+
             String workItemPriceCypher = "MATCH (w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN u.amount*u.discount*i.purchaseprice";
 
             results = measureQueryTimeCypher(session, workItemPriceCypher, iterations);
@@ -141,13 +143,14 @@ public class QueryTester {
 
             showResults(results, showAll);
 
+            System.out.println();
+
             String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)";
 
             results = measureQueryTimeCypher(session, workPriceCypher, iterations);
 
             showResults(results, showAll);
 
-            System.out.println();
 
             //asiakkaan laskujen töiden summat
 
@@ -185,6 +188,8 @@ public class QueryTester {
             results = measureQueryTimeSQL(stmt, previousInvoicesSQL, iterations);
 
             showResults(results, showAll);
+
+            System.out.println();
 
             String previousInvoicesCypher = "MATCH (i:invoice)-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
 
