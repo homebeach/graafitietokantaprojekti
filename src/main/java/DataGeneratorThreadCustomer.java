@@ -18,6 +18,10 @@ public class DataGeneratorThreadCustomer extends Thread {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
+    private static final String NEO4J_DB_URL = "bolt://localhost:7687";
+
+    private static final String NEO4J_USERNAME = "neo4j";
+    private static final String NEO4J_PASSWORD = "admin";
 
     private int iterationCount = 0;
     private int batchExecuteValue = 0;
@@ -68,7 +72,7 @@ public class DataGeneratorThreadCustomer extends Thread {
 
         try {
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
 
             Session session = driver.session();
 
@@ -181,7 +185,7 @@ public class DataGeneratorThreadCustomer extends Thread {
         customer.setString(2, name);
         customer.setString(3, streetAddress);
         customer.addBatch();
-
+        customer.executeBatch();
         String cypherCreate = "CREATE (a:customer {customerId: " + customerIndex + ", name:\"" + name + "\",address:\"" + streetAddress + "\"})";
         writeToNeo4J(session, cypherCreate);
 
@@ -229,6 +233,12 @@ public class DataGeneratorThreadCustomer extends Thread {
                 }
 
                 invoice.addBatch();
+
+                if (j % batchExecuteValue == 0) {
+
+                    invoice.executeBatch();
+
+                }
 
             } else {
 

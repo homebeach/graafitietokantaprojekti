@@ -14,6 +14,11 @@ public class DataGeneratorThreadWork extends Thread {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
+    private static final String NEO4J_DB_URL = "bolt://localhost:7687";
+
+    private static final String NEO4J_USERNAME = "neo4j";
+    private static final String NEO4J_PASSWORD = "admin";
+
     private int iterationCount = 0;
     private int batchExecuteValue = 0;
 
@@ -45,7 +50,7 @@ public class DataGeneratorThreadWork extends Thread {
 
         try {
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
 
             Session session = driver.session();
 

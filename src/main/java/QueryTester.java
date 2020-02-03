@@ -120,6 +120,9 @@ public class QueryTester {
             conn = DriverManager.getConnection(DB_URL + DATABASE, USERNAME, PASSWORD);
             stmt = conn.createStatement();
 
+            List<Long> results;
+
+            /*
             String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,warehouseitem,useditem " +
                     "WHERE work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
 
@@ -150,7 +153,7 @@ public class QueryTester {
             results = measureQueryTimeCypher(session, workPriceCypher, iterations);
 
             showResults(results, showAll);
-
+            */
 
             //asiakkaan laskujen töiden summat
 
@@ -178,6 +181,7 @@ public class QueryTester {
             String previousInvoicesSQL = "WITH previous_invoices AS (" +
                     "SELECT id,customerId,state,duedate,previousinvoice " +
                     "FROM invoice " +
+                    "WHERE id=0 " +
                     "UNION ALL " +
                     "SELECT j.id, j.customerId,j.state,j.duedate,j.previousinvoice " +
                     "FROM invoice i, invoice j " +
@@ -191,7 +195,7 @@ public class QueryTester {
 
             System.out.println();
 
-            String previousInvoicesCypher = "MATCH (i:invoice)-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
+            String previousInvoicesCypher = "MATCH (i:invoice { invoiceId:0 })-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
 
             results = measureQueryTimeCypher(session, previousInvoicesCypher, iterations);
 

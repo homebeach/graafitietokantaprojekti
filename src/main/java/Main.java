@@ -10,12 +10,12 @@ public class Main
         //dataGenerator.createTables();
 
 
-        //dataGenerator.truncateDatabase();
+        dataGenerator.truncateDatabase();
 
         //dataGenerator.getSampleData();
 
-        //dataGenerator.createItems(1000);
-        //dataGenerator.createWorkTypes(1000);
+        dataGenerator.createItems(100);
+        dataGenerator.createWorkTypes(100);
 
         /*
 
@@ -27,12 +27,11 @@ public class Main
 
         //dataGenerator.printSampleDataSizes();
 
-        //dataGenerator.insertData(1,10,10,10,10,10,10,10);
 
 
-        //dataGenerator.insertWorkData(10,100,10,10,10,10);
+        dataGenerator.insertWorkData(1,1,1,10,10,10);
 
-        //dataGenerator.insertCustomerData(10,100,10,10,10,10,10);
+        dataGenerator.insertCustomerData(1,1,1,100,100,10,10);
 
 
         QueryTester queryTester = new QueryTester();
