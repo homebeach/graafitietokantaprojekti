@@ -7,15 +7,15 @@ public class Main
 
         DataGenerator dataGenerator = new DataGenerator();
 
-        //dataGenerator.createTables();
+        dataGenerator.createTables();
 
 
-        dataGenerator.truncateDatabase();
+       // dataGenerator.truncateDatabase();
 
         //dataGenerator.getSampleData();
 
-        dataGenerator.createItems(100);
-        dataGenerator.createWorkTypes(100);
+      //  dataGenerator.createItems(100);
+       // dataGenerator.createWorkTypes(100);
 
         /*
 
@@ -29,14 +29,14 @@ public class Main
 
 
 
-        dataGenerator.insertWorkData(1,1,1,10,10,10);
+        //dataGenerator.insertWorkData(1,1,1,10,10,10);
 
-        dataGenerator.insertCustomerData(1,1,1,100,100,10,10);
+        //dataGenerator.insertCustomerData(1,1,1,10,10,10,10);
 
 
-        QueryTester queryTester = new QueryTester();
+        //QueryTester queryTester = new QueryTester();
 
-        queryTester.executeQueryTests(10, true);
+        //queryTester.executeQueryTests(4, true);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 
@@ -93,6 +93,14 @@ public class Main
         tinkerPopGraph.getEdgesForNodes("varasto");
 
         tinkerPopGraph.printGraph();
+
+        -katsotaan Neo4J ajonaaikaiset parametrit kuntoon
+        -asenna mysql ja tee sama testi mysql kanssa yritä etsiä sama versio kuin intialaisten tutkimuksessa
+        -töiden summa asiakkaalle x
+        -vie 100 000 riviä
+
+        -kokeillaan a->b->c relaatio asiakkaalle x 100 000 rivillä
+
 
         */
     }

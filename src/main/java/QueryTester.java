@@ -122,7 +122,7 @@ public class QueryTester {
 
             List<Long> results;
 
-            /*
+
             String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,warehouseitem,useditem " +
                     "WHERE work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
 
@@ -153,7 +153,7 @@ public class QueryTester {
             results = measureQueryTimeCypher(session, workPriceCypher, iterations);
 
             showResults(results, showAll);
-            */
+
 
             //asiakkaan laskujen töiden summat
 
@@ -171,6 +171,14 @@ public class QueryTester {
             String customerWorkPricesCypher = "MATCH (c:customer)-[p:PAYS]->(i:invoice)-[wi:WORK_INVOICE]->(w:work) " +
             "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) " +
             "RETURN  c.customerId, i.invoiceId,w.workId, sum((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice))";
+
+            MATCH (c:customer)-[p:PAYS]->(i:invoice)-[wi:WORK_INVOICE]->(w:work)
+            WITH collect(w.workId, ((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice))) as rs1;
+            MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem)
+            WITH rs1, collect(c.customerId,i.invoiceId,w.workId) as rs2
+            UNWIND rs2 as resultSet
+            RETURN resultSet.customerId, resultSet.invoiceId,resultSet.workId, resultSet.price;
+
 
             measureQueryTimeCypher(session, customerWorkPricesCypher);
 

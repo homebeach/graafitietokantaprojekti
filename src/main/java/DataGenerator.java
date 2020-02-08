@@ -713,15 +713,69 @@ public class DataGenerator {
 
         String createDatabase = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
 
-        //PreparedStatement customer = connection.prepareStatement("INSERT INTO warehouse.customer (id, name, address) VALUES (?,?,?)");
-
         String customer = "CREATE TABLE IF NOT EXISTS `customer` (" +
         "`id` bigint(20) unsigned NOT NULL," +
         "`name` varchar(50) NOT NULL CHECK (`name` <> '')," +
         "`address` varchar(150) NOT NULL CHECK (`address` <> '')," +
         "PRIMARY KEY (`id`))";
 
-        //PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(?,?,?,?)");
+        String warehouseItem = "CREATE TABLE IF NOT EXISTS `warehouseitem` (" +
+                "`id` bigint(20) unsigned NOT NULL," +
+                "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
+                "`balance` int(11) NOT NULL," +
+                "`unit` varchar(10) NOT NULL CHECK (`unit` <> '')," +
+                "`purchaseprice` decimal(65,2) NOT NULL," +
+                "`vat` decimal(65,2) NOT NULL," +
+                "`removed` tinyint(1) NOT NULL DEFAULT 0," +
+                "PRIMARY KEY (`id`))";
+
+        String workType = "CREATE TABLE IF NOT EXISTS `worktype` (" +
+                "`id` bigint(20) unsigned NOT NULL," +
+                "`name` varchar(20) NOT NULL CHECK (`name` <> '')," +
+                "`price` decimal(65,2) NOT NULL," +
+                "PRIMARY KEY (`id`))";
+
+        String invoice = "CREATE TABLE IF NOT EXISTS `invoice` (" +
+                "`id` bigint(20) unsigned NOT NULL," +
+                "`customerId` bigint(20) unsigned NOT NULL," +
+                "`state` int(11) NOT NULL," +
+                "`duedate` date DEFAULT NULL," +
+                "`previousinvoice` bigint(20) unsigned NOT NULL," +
+                "PRIMARY KEY (`id`)," +
+                "KEY `customerId` (`customerId`)," +
+                "CONSTRAINT `customer_ibfk_1` FOREIGN KEY (`customerId`) REFERENCES `customer` (`id`))";
+
+        String target = "CREATE TABLE IF NOT EXISTS `target` (" +
+                "`id` bigint(20) unsigned NOT NULL," +
+                "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
+                "`address` varchar(100) NOT NULL CHECK (`address` <> '')," +
+                "`customerid` bigint(20) unsigned NOT NULL," +
+                "PRIMARY KEY (`id`)," +
+                "KEY `customerid` (`customerid`)," +
+                "CONSTRAINT `target_ibfk_1` FOREIGN KEY (`customerid`) REFERENCES `customer` (`id`))";
+
+        String work = "CREATE TABLE IF NOT EXISTS `work` (" +
+                "`id` bigint(20) unsigned NOT NULL," +
+                "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
+                "PRIMARY KEY (`id`))";
+
+        String workInvoice = "CREATE TABLE IF NOT EXISTS `workinvoice` (" +
+                "`workId` bigint(20) unsigned NOT NULL," +
+                "`invoiceId` bigint(20) unsigned NOT NULL," +
+                "PRIMARY KEY (`workId`,`invoiceId`)," +
+                "KEY `workId` (`workId`)," +
+                "KEY `invoiceId` (`invoiceId`)," +
+                "CONSTRAINT `workinvoice_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
+                "CONSTRAINT `workinvoice_ibfk_2` FOREIGN KEY (`invoiceId`) REFERENCES `invoice` (`id`))";
+
+        String workTarget = "CREATE TABLE IF NOT EXISTS `worktarget` (" +
+                "`workId` bigint(20) unsigned NOT NULL," +
+                "`targetId` bigint(20) unsigned NOT NULL," +
+                "PRIMARY KEY (`workId`,`targetId`)," +
+                "KEY `workId` (`workId`)," +
+                "KEY `targetId` (`targetId`)," +
+                "CONSTRAINT `worktarget_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
+                "CONSTRAINT `worktarget_ibfk_2` FOREIGN KEY (`targetId`) REFERENCES `target` (`id`))";
 
         String usedItem = "CREATE TABLE IF NOT EXISTS `useditem` (" +
         "`amount` int(11) DEFAULT NULL CHECK (`amount` > 0)," +
@@ -732,64 +786,6 @@ public class DataGenerator {
         "KEY `warehouseitemId` (`warehouseitemId`)," +
         "CONSTRAINT `useditem_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
         "CONSTRAINT `useditem_ibfk_2` FOREIGN KEY (`warehouseitemId`) REFERENCES `warehouseitem` (`id`))";
-
-        //PreparedStatement invoice = connection.prepareStatement("INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (?,?,?,?,?)");
-
-        String invoice = "CREATE TABLE IF NOT EXISTS `invoice` (" +
-        "`id` bigint(20) unsigned NOT NULL," +
-        "`customerId` bigint(20) unsigned NOT NULL," +
-        "`state` int(11) NOT NULL," +
-        "`duedate` date DEFAULT NULL," +
-        "`previousinvoice` bigint(20) unsigned NOT NULL," +
-        "PRIMARY KEY (`id`)," +
-        "KEY `customerId` (`customerId`)," +
-        "CONSTRAINT `customer_ibfk_1` FOREIGN KEY (`customerId`) REFERENCES `customer` (`id`))";
-
-        //PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
-
-        String workInvoice = "CREATE TABLE IF NOT EXISTS `workinvoice` (" +
-        "`workId` bigint(20) unsigned NOT NULL," +
-        "`invoiceId` bigint(20) unsigned NOT NULL," +
-        "PRIMARY KEY (`workId`,`invoiceId`)," +
-        "KEY `workId` (`workId`)," +
-        "KEY `invoiceId` (`invoiceId`)," +
-        "CONSTRAINT `workinvoice_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-        "CONSTRAINT `workinvoice_ibfk_2` FOREIGN KEY (`invoiceId`) REFERENCES `invoice` (`id`))";
-
-
-        //PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
-
-
-        String work = "CREATE TABLE IF NOT EXISTS `work` (" +
-        "`id` bigint(20) unsigned NOT NULL," +
-        "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
-        "PRIMARY KEY (`id`))";
-
-        //PreparedStatement target = connection.prepareStatement("INSERT INTO warehouse.target (id, name, address, customerid) VALUES (?,?,?,?)");
-
-
-        String target = "CREATE TABLE IF NOT EXISTS `target` (" +
-        "`id` bigint(20) unsigned NOT NULL," +
-        "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
-        "`address` varchar(100) NOT NULL CHECK (`address` <> '')," +
-        "`customerid` bigint(20) unsigned NOT NULL," +
-        "PRIMARY KEY (`id`)," +
-        "KEY `customerid` (`customerid`)," +
-        "CONSTRAINT `target_ibfk_1` FOREIGN KEY (`customerid`) REFERENCES `customer` (`id`))";
-
-
-        //PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
-
-        String workTarget = "CREATE TABLE IF NOT EXISTS `worktarget` (" +
-        "`workId` bigint(20) unsigned NOT NULL," +
-        "`targetId` bigint(20) unsigned NOT NULL," +
-        "PRIMARY KEY (`workId`,`targetId`)," +
-        "KEY `workId` (`workId`)," +
-        "KEY `targetId` (`targetId`)," +
-        "CONSTRAINT `worktarget_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-        "CONSTRAINT `worktarget_ibfk_2` FOREIGN KEY (`targetId`) REFERENCES `target` (`id`))";
-
-        //PreparedStatement workHours = connection.prepareStatement("INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(?,?,?,?)");
 
         String workHours = "CREATE TABLE IF NOT EXISTS `workhours` (" +
         "`worktypeId` bigint(20) unsigned NOT NULL," +
@@ -802,21 +798,9 @@ public class DataGenerator {
         "CONSTRAINT `workhours_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
         "CONSTRAINT `workhours_ibfk_2` FOREIGN KEY (`worktypeId`) REFERENCES `worktype` (`id`))";
 
-        String workType = "CREATE TABLE IF NOT EXISTS `worktype` (" +
-        "`id` bigint(20) unsigned NOT NULL," +
-        "`name` varchar(20) NOT NULL CHECK (`name` <> '')," +
-        "`price` decimal(65,2) NOT NULL," +
-        "PRIMARY KEY (`id`))";
 
-        String warehouseItem = "CREATE TABLE IF NOT EXISTS `warehouseitem` (" +
-        "`id` bigint(20) unsigned NOT NULL," +
-        "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
-        "`balance` int(11) NOT NULL," +
-        "`unit` varchar(10) NOT NULL CHECK (`unit` <> '')," +
-        "`purchaseprice` decimal(65,2) NOT NULL," +
-        "`vat` decimal(65,2) NOT NULL," +
-        "`removed` tinyint(1) NOT NULL DEFAULT 0," +
-        "PRIMARY KEY (`id`))";
+
+
 
 
         executeSQLUpdate(dropDatabase);
