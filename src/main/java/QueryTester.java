@@ -126,7 +126,7 @@ public class QueryTester {
             String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,warehouseitem,useditem " +
                     "WHERE work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
 
-            List<Long> results = measureQueryTimeSQL(stmt, workItemPriceSQL, iterations);
+            results = measureQueryTimeSQL(stmt, workItemPriceSQL, iterations);
 
             showResults(results, showAll);
 

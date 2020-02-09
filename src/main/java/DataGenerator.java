@@ -24,6 +24,9 @@ public class DataGenerator {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
+    private HashMap<String, String[]> sql_databases;
+
+
     private static final String NEO4J_DB_URL = "bolt://localhost:7687";
 
     private static final String NEO4J_USERNAME = "neo4j";
@@ -32,6 +35,10 @@ public class DataGenerator {
     private List<String> firstnames;
     private List<String> surnames;
     private List<HashMap<String, String>> addresses;
+
+    public DataGenerator(HashMap<String, String[]> sql_databases) {
+        this.sql_databases = sql_databases;
+    }
 
     public void executeSQLUpdate(String sqlQuery) {
 
@@ -77,7 +84,7 @@ public class DataGenerator {
 
     }
 
-    public void executeSQLUpdate(String sqlQuery, String db_url) {
+    public void executeSQLUpdate(String sqlQuery, String db_url, String driver, String username, String password) {
 
         Connection conn = null;
         Statement stmt = null;
@@ -85,9 +92,9 @@ public class DataGenerator {
 
         try {
 
-            Class.forName(JDBC_DRIVER);
+            Class.forName(driver);
 
-            conn = DriverManager.getConnection(db_url, USERNAME, PASSWORD);
+            conn = DriverManager.getConnection(db_url, username, password);
             stmt = conn.createStatement();
 
             stmt.executeUpdate(sqlQuery);
@@ -163,61 +170,70 @@ public class DataGenerator {
         return resultSet;
     }
 
-    public ResultSet truncateDatabase() {
+    public ResultSet truncateDatabases() {
 
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSet = null;
 
-        try {
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
 
-            Class.forName(JDBC_DRIVER);
+        Session session = driver.session();
 
-            conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-            stmt = conn.createStatement();
+        session.run("MATCH (n) DETACH DELETE n");
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
+        session.close();
+        driver.close();
 
-            Session session = driver.session();
+        for (String db_url : sql_databases.keySet()) {
+            String[] db_info = sql_databases.get(db_url);
 
-            session.run("MATCH (n) DETACH DELETE n");
-
-            session.close();
-            driver.close();
-
-            stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.work;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.workhours;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.workinvoice;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.worktarget;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.target;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
-
-            stmt.addBatch("TRUNCATE TABLE warehouse.worktype;");
-            stmt.addBatch("TRUNCATE TABLE warehouse.warehouseitem;");
-
-            stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
-            stmt.executeBatch();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
+            String db_driver = db_info[0];
+            String db_username = db_info[1];
+            String db_password = db_info[2];
 
             try {
-                if (stmt != null) {
-                    conn.close();
+
+                    Class.forName(db_driver);
+
+                    conn = DriverManager.getConnection(db_url, db_username, db_password);
+                    stmt = conn.createStatement();
+
+                    stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.work;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.workhours;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.workinvoice;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.worktarget;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.target;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
+
+                    stmt.addBatch("TRUNCATE TABLE warehouse.worktype;");
+                    stmt.addBatch("TRUNCATE TABLE warehouse.warehouseitem;");
+
+                    stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
+                    stmt.executeBatch();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+
+                    try {
+                        if (stmt != null) {
+                            conn.close();
+                        }
+                    } catch (SQLException se) {
+                    }
+                    try {
+                        if (conn != null) {
+                            conn.close();
+                        }
+                    } catch (SQLException se) {
+                        se.printStackTrace();
+                    }
                 }
-            } catch (SQLException se) {
-            }
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
+
         }
 
         return resultSet;
@@ -273,183 +289,7 @@ public class DataGenerator {
 
     }
 
-    public void createItems(int itemCount) {
 
-
-        try {
-
-            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
-
-            Session session = driver.session();
-
-            Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-
-            PreparedStatement warehouseitem = connection.prepareStatement("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (?,?,?,?,?,?,?)");
-
-            for (int i = 0; i < itemCount; i++) {
-
-                Random r = new Random(i);
-                int balance = r.nextInt(100);
-                r.setSeed(i);
-                float purchaseprice = r.nextFloat();
-                r.setSeed(i);
-                int vat = r.nextInt(50);
-                r.setSeed(i);
-                boolean removed = r.nextBoolean();
-
-                if (i % 2 == 0) {
-
-                    r.setSeed(i);
-                    r = new Random(i);
-                    int x = r.nextInt(10);
-                    r.setSeed(i + 1);
-                    int y = r.nextInt(10);
-                    r.setSeed(i + 2);
-                    int size = r.nextInt(10);
-
-                    String item = "MMJ " + x + "X" + y + "," + size + "MM²CABLE";
-
-                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'm'," + purchaseprice + "," + vat + "," + removed + ")");
-
-                    warehouseitem.setInt(1, i);
-                    warehouseitem.setString(2, item);
-                    warehouseitem.setInt(3, balance);
-                    warehouseitem.setString(4, "m");
-                    warehouseitem.setFloat(5, purchaseprice);
-                    warehouseitem.setInt(6, vat);
-                    warehouseitem.setBoolean(7, removed);
-
-                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name: \"" + item + "\", balance:" + balance + ", unit:\"m\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
-
-
-                } else if (i % 3 == 0) {
-
-                    r.setSeed(i);
-                    int ground = r.nextInt(10);
-                    String item = "SOCKET " + ground + "-GROUND OL JUSSI";
-
-                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
-
-                    warehouseitem.setInt(1, i);
-                    warehouseitem.setString(2, item);
-                    warehouseitem.setInt(3, balance);
-                    warehouseitem.setString(4, "pcs");
-                    warehouseitem.setFloat(5, purchaseprice);
-                    warehouseitem.setInt(6, vat);
-                    warehouseitem.setBoolean(7, removed);
-
-                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
-
-                } else if (i % 5 == 0) {
-
-                    r.setSeed(i);
-                    int spiral1 = r.nextInt(10);
-                    r.setSeed(i + 1);
-                    int spiral2 = r.nextInt(10);
-                    r.setSeed(i + 2);
-                    int spiral3 = r.nextInt(100);
-
-                    String item = "BINDING SPIRAL " + spiral1 + "," + spiral2 + "-" + spiral3 + "MM INVISIBLE";
-
-                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
-
-                    warehouseitem.setInt(1, i);
-                    warehouseitem.setString(2, item);
-                    warehouseitem.setInt(3, balance);
-                    warehouseitem.setString(4, "pcs");
-                    warehouseitem.setFloat(5, purchaseprice);
-                    warehouseitem.setInt(6, vat);
-                    warehouseitem.setBoolean(7, removed);
-
-                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
-
-
-                } else {
-
-                    r.setSeed(i);
-                    int parts = r.nextInt(10);
-
-                    String item = "SOCKET CORNER MODEL " + parts + "-PARTS";
-
-                    //executeSQLUpdate("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (" + i + ", '" + item + "'," + balance + ", 'pcs'," + purchaseprice + "," + vat + "," + removed + ")");
-
-                    warehouseitem.setInt(1, i);
-                    warehouseitem.setString(2, item);
-                    warehouseitem.setInt(3, balance);
-                    warehouseitem.setString(4, "'pcs'");
-                    warehouseitem.setFloat(5, purchaseprice);
-                    warehouseitem.setInt(6, vat);
-                    warehouseitem.setBoolean(7, removed);
-
-                    session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
-
-                }
-
-                warehouseitem.execute();
-
-            }
-
-            session.close();
-            driver.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void createWorkTypes(int workTypeCount) {
-
-
-        try {
-
-            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
-
-            Session session = driver.session();
-
-            Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-
-            PreparedStatement workType = connection.prepareStatement("INSERT INTO warehouse.worktype (id, name, price) VALUES (?, ?, ?)");
-
-            for (int i = 0; i < workTypeCount; i++) {
-
-
-                Random r = new Random(i);
-                int price = r.nextInt(100);
-
-                workType.setInt(1, i);
-                workType.setInt(3, price);
-
-                if(i % 2 == 0) {
-
-                    workType.setString(2,"design");
-                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"design\", price:" + price + "})");
-
-                } else if(i % 3 == 0) {
-
-                    workType.setString(2,"work");
-                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"work\", price:" + price + "})");
-
-                } else {
-
-                    workType.setString(2,"supporting work");
-                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"supporting work\", price:" + price + "})");
-
-                }
-
-                workType.execute();
-
-            }
-
-            session.close();
-            driver.close();
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
 
     public int getWorkCount() throws SQLException {
 
@@ -528,9 +368,9 @@ public class DataGenerator {
 
         executeSQLUpdate(dropDatabase);
         executeSQLUpdate(createDatabase);
-        executeSQLUpdate(firstnames, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(surnames, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(addresses, "jdbc:mariadb://127.0.0.1/" +  database);
+        executeSQLUpdate(firstnames, "jdbc:mariadb://127.0.0.1/" +  database, JDBC_DRIVER, USERNAME, PASSWORD);
+        executeSQLUpdate(surnames, "jdbc:mariadb://127.0.0.1/" +  database, JDBC_DRIVER, USERNAME, PASSWORD);
+        executeSQLUpdate(addresses, "jdbc:mariadb://127.0.0.1/" +  database, JDBC_DRIVER, USERNAME, PASSWORD);
 
     }
 
@@ -714,10 +554,10 @@ public class DataGenerator {
         String createDatabase = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
 
         String customer = "CREATE TABLE IF NOT EXISTS `customer` (" +
-        "`id` bigint(20) unsigned NOT NULL," +
-        "`name` varchar(50) NOT NULL CHECK (`name` <> '')," +
-        "`address` varchar(150) NOT NULL CHECK (`address` <> '')," +
-        "PRIMARY KEY (`id`))";
+                "`id` bigint(20) unsigned NOT NULL," +
+                "`name` varchar(50) NOT NULL CHECK (`name` <> '')," +
+                "`address` varchar(150) NOT NULL CHECK (`address` <> '')," +
+                "PRIMARY KEY (`id`))";
 
         String warehouseItem = "CREATE TABLE IF NOT EXISTS `warehouseitem` (" +
                 "`id` bigint(20) unsigned NOT NULL," +
@@ -778,43 +618,47 @@ public class DataGenerator {
                 "CONSTRAINT `worktarget_ibfk_2` FOREIGN KEY (`targetId`) REFERENCES `target` (`id`))";
 
         String usedItem = "CREATE TABLE IF NOT EXISTS `useditem` (" +
-        "`amount` int(11) DEFAULT NULL CHECK (`amount` > 0)," +
-        "`discount` decimal(65,2) DEFAULT NULL," +
-        "`workId` bigint(20) unsigned NOT NULL," +
-        "`warehouseitemId` bigint(20) unsigned NOT NULL," +
-        "PRIMARY KEY (`workId`,`warehouseitemId`)," +
-        "KEY `warehouseitemId` (`warehouseitemId`)," +
-        "CONSTRAINT `useditem_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-        "CONSTRAINT `useditem_ibfk_2` FOREIGN KEY (`warehouseitemId`) REFERENCES `warehouseitem` (`id`))";
+                "`amount` int(11) DEFAULT NULL CHECK (`amount` > 0)," +
+                "`discount` decimal(65,2) DEFAULT NULL," +
+                "`workId` bigint(20) unsigned NOT NULL," +
+                "`warehouseitemId` bigint(20) unsigned NOT NULL," +
+                "PRIMARY KEY (`workId`,`warehouseitemId`)," +
+                "KEY `warehouseitemId` (`warehouseitemId`)," +
+                "CONSTRAINT `useditem_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
+                "CONSTRAINT `useditem_ibfk_2` FOREIGN KEY (`warehouseitemId`) REFERENCES `warehouseitem` (`id`))";
 
         String workHours = "CREATE TABLE IF NOT EXISTS `workhours` (" +
-        "`worktypeId` bigint(20) unsigned NOT NULL," +
-        "`hours` int(11) NOT NULL," +
-        "`discount` decimal(65,2) DEFAULT NULL," +
-        "`workId` bigint(20) unsigned NOT NULL," +
-        "PRIMARY KEY (`workId`,`worktypeId`)," +
-        "KEY `worktypeId` (`worktypeId`)," +
-        "KEY `workId` (`workId`)," +
-        "CONSTRAINT `workhours_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-        "CONSTRAINT `workhours_ibfk_2` FOREIGN KEY (`worktypeId`) REFERENCES `worktype` (`id`))";
+                "`worktypeId` bigint(20) unsigned NOT NULL," +
+                "`hours` int(11) NOT NULL," +
+                "`discount` decimal(65,2) DEFAULT NULL," +
+                "`workId` bigint(20) unsigned NOT NULL," +
+                "PRIMARY KEY (`workId`,`worktypeId`)," +
+                "KEY `worktypeId` (`worktypeId`)," +
+                "KEY `workId` (`workId`)," +
+                "CONSTRAINT `workhours_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
+                "CONSTRAINT `workhours_ibfk_2` FOREIGN KEY (`worktypeId`) REFERENCES `worktype` (`id`))";
 
 
+        for (String db_url : sql_databases.keySet()) {
+            String[] db_info = sql_databases.get(db_url);
+            String db_driver = db_info[0];
+            String db_username = db_info[1];
+            String db_password = db_info[2];
 
+            executeSQLUpdate(dropDatabase, db_url, db_driver, db_username, db_password);
+            executeSQLUpdate(createDatabase, db_url, db_driver, db_username, db_password);
+            executeSQLUpdate(customer, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(warehouseItem, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(workType, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(invoice, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(target, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(work, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(workInvoice, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(workTarget, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(usedItem, db_url +  database, db_driver, db_username, db_password);
+            executeSQLUpdate(workHours, db_url +  database, db_driver, db_username, db_password);
 
-
-
-        executeSQLUpdate(dropDatabase);
-        executeSQLUpdate(createDatabase);
-        executeSQLUpdate(customer, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(warehouseItem, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(workType, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(invoice, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(target, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(work, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(workInvoice, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(workTarget, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(usedItem, "jdbc:mariadb://127.0.0.1/" +  database);
-        executeSQLUpdate(workHours, "jdbc:mariadb://127.0.0.1/" +  database);
+        }
 
     }
 
@@ -822,87 +666,54 @@ public class DataGenerator {
 
         try {
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            int customerIndex = 0;
+            int invoiceIndex = 0;
+            int targetIndex = 0;
+            int workIndex = 0;
+            int workCount = getWorkCount();
 
-            Session session = driver.session();
+            if(workCount < 1) {
+                throw new Exception("Work count is smaller than 1!");
+            }
 
-            Connection conn = null;
-            Statement stmt = null;
-            ResultSet resultSet = null;
+            getSampleData();
 
-            Class.forName(JDBC_DRIVER);
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
-            try (Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD)) {
+            long startTimeInMilliseconds = System.currentTimeMillis();
 
-                PreparedStatement customer = connection.prepareStatement("INSERT INTO warehouse.customer (id, name, address) VALUES (?,?,?)");
-                PreparedStatement invoice = connection.prepareStatement("INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (?,?,?,?,?)");
-                PreparedStatement target = connection.prepareStatement("INSERT INTO warehouse.target (id, name, address, customerid) VALUES (?,?,?,?)");
-                PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
-                PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
+            Timestamp startTime = new Timestamp(startTimeInMilliseconds);
 
-                HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
+            ReentrantLock lock = new ReentrantLock();
 
-                preparedStatements.put("customer", customer);
-                preparedStatements.put("invoice", invoice);
-                preparedStatements.put("target", target);
-                preparedStatements.put("workinvoice", workInvoice);
-                preparedStatements.put("worktarget", workTarget);
+            System.out.println("Insertion of Customer related data started at: " + startTime.toString());
 
-                int customerIndex = 0;
-                int invoiceIndex = 0;
-                int targetIndex = 0;
-                int workIndex = 0;
-                int workCount = getWorkCount();
+            for (int i = 0; i < threadCount; i++) {
 
-                if(workCount < 1) {
-                    throw new Exception("Work count is smaller than 1!");
-                }
-
-                getSampleData();
-
-                ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-
-                long startTimeInMilliseconds = System.currentTimeMillis();
-
-                Timestamp startTime = new Timestamp(startTimeInMilliseconds);
-
-                ReentrantLock lock = new ReentrantLock();
-
-                System.out.println("Insertion of Customer related data started at: " + startTime.toString());
-
-                for (int i = 0; i < threadCount; i++) {
-
-                    Random r = new Random();
-
-
-                    DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
-                    executor.execute(thread);
-                    customerIndex = customerIndex + iterationsPerThread;
-                    invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
-                    targetIndex = targetIndex + iterationsPerThread*targetFactor;
-                    workIndex = workIndex + iterationsPerThread;
-
-                }
-
-                executor.shutdown();
-                while (!executor.isTerminated()) {
-                }
-
-                long endTimeInMilliseconds = System.currentTimeMillis();
-
-                Timestamp endTime = new Timestamp(endTimeInMilliseconds);
-
-                long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
-
-                String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
-
-                System.out.println("Insertion of Customer related data finished at: " + endTime.toString());
-                System.out.println("Time elapsed: " + elapsedTime);
+                DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
+                executor.execute(thread);
+                customerIndex = customerIndex + iterationsPerThread;
+                invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
+                targetIndex = targetIndex + iterationsPerThread*targetFactor;
+                workIndex = workIndex + iterationsPerThread;
 
             }
 
-            session.close();
-            driver.close();
+            executor.shutdown();
+            while (!executor.isTerminated()) {
+            }
+
+            long endTimeInMilliseconds = System.currentTimeMillis();
+
+            Timestamp endTime = new Timestamp(endTimeInMilliseconds);
+
+            long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+
+            System.out.println("Insertion of Customer related data finished at: " + endTime.toString());
+            System.out.println("Time elapsed: " + elapsedTime);
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -916,83 +727,105 @@ public class DataGenerator {
 
         try {
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+            int targetIndex = 0;
+            int workIndex = 0;
 
-            Session session = driver.session();
+            int itemCount = getWareHouseItemCount();
 
-            Connection conn = null;
-            Statement stmt = null;
-            ResultSet resultSet = null;
+            int workTypeCount = getWorkTypeCount();
 
-            Class.forName(JDBC_DRIVER);
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
-            try (Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD)) {
+            long startTimeInMilliseconds = System.currentTimeMillis();
 
-                PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
-                PreparedStatement workTarget = connection.prepareStatement("INSERT INTO warehouse.worktarget (workId, targetId) VALUES (?,?)");
-                PreparedStatement workInvoice = connection.prepareStatement("INSERT INTO warehouse.workinvoice (workId, invoiceId) VALUES (?,?)");
-                PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(?,?,?,?)");
-                PreparedStatement workHours = connection.prepareStatement("INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(?,?,?,?)");
+            Timestamp startTime = new Timestamp(startTimeInMilliseconds);
 
-                HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
+            ReentrantLock lock = new ReentrantLock();
 
-                preparedStatements.put("work",work);
-                preparedStatements.put("worktarget",workTarget);
-                preparedStatements.put("workinvoice",workInvoice);
-                preparedStatements.put("useditem",usedItem);
-                preparedStatements.put("workhours",workHours);
+            System.out.println("Insertion of Work related data started at: " + startTime.toString());
 
-                int targetIndex = 0;
-                int workIndex = 0;
+            for (int i = 0; i < threadCount; i++) {
 
-                int itemCount = getWareHouseItemCount();
-
-                int workTypeCount = getWorkTypeCount();
-
-
-                ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-
-                long startTimeInMilliseconds = System.currentTimeMillis();
-
-                Timestamp startTime = new Timestamp(startTimeInMilliseconds);
-
-                ReentrantLock lock = new ReentrantLock();
-
-                System.out.println("Insertion of Work related data started at: " + startTime.toString());
-
-                for (int i = 0; i < threadCount; i++) {
-
-                    Random r = new Random();
-
-                    DataGeneratorThreadWork thread = new DataGeneratorThreadWork(i, iterationsPerThread, batchExecuteValue, lock, workIndex, itemFactor, itemCount, workTypeFactor, workTypeCount);
-                    executor.execute(thread);
-                    targetIndex = targetIndex + iterationsPerThread*targetFactor;
-                    workIndex = workIndex + iterationsPerThread;
-
-                }
-
-                executor.shutdown();
-                while (!executor.isTerminated()) {
-                }
-
-                long endTimeInMilliseconds = System.currentTimeMillis();
-
-                Timestamp endTime = new Timestamp(endTimeInMilliseconds);
-
-                long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
-
-                String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
-
-                System.out.println("Insertion of Work related data finished at: " + endTime.toString());
-                System.out.println("Time elapsed: " + elapsedTime);
+                DataGeneratorThreadWork thread = new DataGeneratorThreadWork(i, iterationsPerThread, batchExecuteValue, lock, workIndex, itemFactor, itemCount, workTypeFactor, workTypeCount);
+                executor.execute(thread);
+                targetIndex = targetIndex + iterationsPerThread*targetFactor;
+                workIndex = workIndex + iterationsPerThread;
 
             }
 
-            session.close();
-            driver.close();
+            executor.shutdown();
+            while (!executor.isTerminated()) {
+            }
+
+            long endTimeInMilliseconds = System.currentTimeMillis();
+
+            Timestamp endTime = new Timestamp(endTimeInMilliseconds);
+
+            long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+
+            System.out.println("Insertion of Work related data finished at: " + endTime.toString());
+            System.out.println("Time elapsed: " + elapsedTime);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
+    public void insertItemsAndWorkTypes(int threadCount, int iterationsPerThread, int batchExecuteValue, int itemCount, int workTypeCount) {
+
+        try {
+
+            int itemIndex = 0;
+            int workTypeIndex = 0;
+
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+            long startTimeInMilliseconds = System.currentTimeMillis();
+
+            Timestamp startTime = new Timestamp(startTimeInMilliseconds);
+
+            ReentrantLock lock = new ReentrantLock();
+
+            System.out.println("Insertion of Work related data started at: " + startTime.toString());
+
+            for (int i = 0; i < threadCount; i++) {
+
+                DataGeneratorThreadItemsAndWorkTypes thread = new DataGeneratorThreadItemsAndWorkTypes(i, batchExecuteValue, sql_databases, lock, itemIndex, itemCount, workTypeIndex, workTypeCount);
+                executor.execute(thread);
+                itemIndex = itemIndex + iterationsPerThread;
+                workTypeIndex = workTypeIndex + iterationsPerThread;
+
+            }
+
+            executor.shutdown();
+            while (!executor.isTerminated()) {
+            }
+
+            long endTimeInMilliseconds = System.currentTimeMillis();
+
+            Timestamp endTime = new Timestamp(endTimeInMilliseconds);
+
+            long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+
+            System.out.println("Insertion of Work related data finished at: " + endTime.toString());
+            System.out.println("Time elapsed: " + elapsedTime);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+
+
+
+
 }

@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.Random;
 
 public class Main
@@ -5,12 +6,42 @@ public class Main
     public static void main(String[] args)
     {
 
-        DataGenerator dataGenerator = new DataGenerator();
+
+        HashMap<String, String[]> sql_databases = new HashMap<String, String[]>();
+
+        String db_url = "jdbc:mariadb://127.0.0.1:3306/";
+        String db_driver = "org.mariadb.jdbc.Driver";
+        String db_username = "root";
+        String db_password = "root";
+
+        String[] db_info = new String[3];
+
+        db_info[0] = db_driver;
+        db_info[1] = db_username;
+        db_info[2] = db_password;
+
+        sql_databases.put(db_url, db_info);
+
+        db_url = "jdbc:mysql://127.0.0.1:3307/";
+        db_driver = "org.mariadb.jdbc.Driver";
+        db_username = "root";
+        db_password = "root";
+
+        db_info = new String[3];
+
+        db_info[0] = db_driver;
+        db_info[1] = db_username;
+        db_info[2] = db_password;
+
+        sql_databases.put(db_url, db_info);
+
+
+        DataGenerator dataGenerator = new DataGenerator(sql_databases);
 
         dataGenerator.createTables();
 
 
-       // dataGenerator.truncateDatabase();
+       // dataGenerator.truncateDatabases();
 
         //dataGenerator.getSampleData();
 
