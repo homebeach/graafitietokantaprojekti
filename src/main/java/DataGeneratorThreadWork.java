@@ -8,16 +8,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DataGeneratorThreadWork extends Thread {
 
-    private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
-
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
-
     private static final String NEO4J_DB_URL = "bolt://localhost:7687";
 
     private static final String NEO4J_USERNAME = "neo4j";
     private static final String NEO4J_PASSWORD = "admin";
+
+    private HashMap<String, String[]> sql_databases;
 
     private int iterationCount = 0;
     private int batchExecuteValue = 0;
@@ -32,7 +28,7 @@ public class DataGeneratorThreadWork extends Thread {
 
     private ReentrantLock lock;
 
-    public DataGeneratorThreadWork(int threadIndex, int iterationCount, int batchExecuteValue, ReentrantLock lock, int workIndex, int itemFactor, int itemCount, int workTypeFactor, int workTypeCount) {
+    public DataGeneratorThreadWork(int threadIndex, int iterationCount, int batchExecuteValue, HashMap<String, String[]> sql_databases, ReentrantLock lock, int workIndex, int itemFactor, int itemCount, int workTypeFactor, int workTypeCount) {
 
         this.threadIndex = threadIndex;
         this.iterationCount = iterationCount;
@@ -42,7 +38,7 @@ public class DataGeneratorThreadWork extends Thread {
         this.itemCount = itemCount;
         this.workTypeFactor = workTypeFactor;
         this.workTypeCount = workTypeCount;
-
+        this.sql_databases = sql_databases;
         this.lock = lock;
     }
 
@@ -58,9 +54,22 @@ public class DataGeneratorThreadWork extends Thread {
             Statement stmt = null;
             ResultSet resultSet = null;
 
-            Class.forName(JDBC_DRIVER);
+            List<HashMap> preparedStatementsList = new ArrayList();
 
-            try (Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD)) {
+            List<Connection> connectionList = new ArrayList();
+
+            for (String db_url : sql_databases.keySet()) {
+
+                String[] db_info = sql_databases.get(db_url);
+
+                String db_driver = db_info[0];
+                String db_username = db_info[1];
+                String db_password = db_info[2];
+
+                Class.forName(db_driver);
+
+                Connection connection = DriverManager.getConnection(db_url, db_username, db_password);
+                connectionList.add(connection);
 
                 PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
                 PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(?,?,?,?)");
@@ -68,19 +77,23 @@ public class DataGeneratorThreadWork extends Thread {
 
                 HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
 
-                preparedStatements.put("work",work);
-                preparedStatements.put("useditem",usedItem);
-                preparedStatements.put("workhours",workHours);
+                preparedStatements.put("work", work);
+                preparedStatements.put("useditem", usedItem);
+                preparedStatements.put("workhours", workHours);
 
-                for (int i = 0; i < iterationCount; i++) {
-
-                    insertRow(i, batchExecuteValue, session, preparedStatements);
-
-                }
-
+                preparedStatementsList.add(preparedStatements);
 
             }
 
+            for (int i = 0; i < iterationCount; i++) {
+
+                insertWork(i, batchExecuteValue, session, preparedStatementsList);
+
+            }
+
+            for (Connection connection : connectionList) {
+                connection.close();
+            }
 
             session.close();
             driver.close();
@@ -154,11 +167,11 @@ public class DataGeneratorThreadWork extends Thread {
     }
 
 
-    public void insertRow(int index, int batchExecuteValue, Session session, HashMap<String, PreparedStatement> preparedStatements) throws SQLException, InterruptedException {
+    public void insertWork(int index, int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
 
-        PreparedStatement work = preparedStatements.get("work");
-        PreparedStatement usedItem = preparedStatements.get("useditem");
-        PreparedStatement workHours = preparedStatements.get("workhours");
+        PreparedStatement work;
+        PreparedStatement usedItem;
+        PreparedStatement workHours;
 
         System.out.println("Thread: " + threadIndex + " Index: " + index);
 
@@ -168,9 +181,15 @@ public class DataGeneratorThreadWork extends Thread {
 
         String sqlInsert = "INSERT INTO warehouse.work (id, name) VALUES (" + workIndex + ",'" + workName + "')";
 
-        work.setInt(1, workIndex);
-        work.setString(2, workName);
-        work.addBatch();
+        for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+
+            work = preparedStatements.get("work");
+
+            work.setInt(1, workIndex);
+            work.setString(2, workName);
+            work.addBatch();
+
+        }
 
         String cypherCreate = "CREATE (s:work {workId: " + workIndex + ", name: \"" + workName + "\"})";
         writeToNeo4J(session, cypherCreate);
@@ -196,11 +215,17 @@ public class DataGeneratorThreadWork extends Thread {
 
             //sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + warehouseitemId + ")";
 
-            usedItem.setInt(1, amount);
-            usedItem.setDouble(2, discount);
-            usedItem.setInt(3, workIndex);
-            usedItem.setInt(4, wareHouseItemId);
-            usedItem.addBatch();
+            for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+
+                usedItem = preparedStatements.get("useditem");
+
+                usedItem.setInt(1, amount);
+                usedItem.setDouble(2, discount);
+                usedItem.setInt(3, workIndex);
+                usedItem.setInt(4, wareHouseItemId);
+                usedItem.addBatch();
+
+            }
 
             cypherCreate = "MATCH (s:work),(v:warehouseitem) WHERE s.workId=" + workIndex + " AND v.warehouseitemId=" + wareHouseItemId + " CREATE (s)-[ui:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v) ";
             writeToNeo4J(session, cypherCreate);
@@ -227,11 +252,17 @@ public class DataGeneratorThreadWork extends Thread {
 
             sqlInsert = "INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(" + worktypeId + "," + hours + "," + discount + "," + workIndex + ")";
 
-            workHours.setInt(1, worktypeId);
-            workHours.setInt(2, hours);
-            workHours.setDouble(3, discount);
-            workHours.setInt(4, workIndex);
-            workHours.addBatch();
+            for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+
+                workHours = preparedStatements.get("workhours");
+
+                workHours.setInt(1, worktypeId);
+                workHours.setInt(2, hours);
+                workHours.setDouble(3, discount);
+                workHours.setInt(4, workIndex);
+                workHours.addBatch();
+
+            }
 
             cypherCreate = "MATCH (w:work),(wt:worktype) WHERE w.workId=" + workIndex + " AND wt.worktypeId=" + worktypeId + " CREATE (w)-[wh:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(wt) ";
             writeToNeo4J(session, cypherCreate);
@@ -255,9 +286,17 @@ public class DataGeneratorThreadWork extends Thread {
 
         if (index % batchExecuteValue == 0 || index == (iterationCount - 1)) {
 
-            work.executeBatch();
-            usedItem.executeBatch();
-            workHours.executeBatch();
+            for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+
+                work = preparedStatements.get("work");
+                usedItem = preparedStatements.get("useditem");
+                workHours = preparedStatements.get("workhours");
+
+                work.executeBatch();
+                usedItem.executeBatch();
+                workHours.executeBatch();
+
+            }
 
         }
 

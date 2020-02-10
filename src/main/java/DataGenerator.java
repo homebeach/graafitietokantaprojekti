@@ -549,7 +549,7 @@ public class DataGenerator {
 
         String database = "warehouse";
 
-        String dropDatabase = "DROP DATABASE `" + database + "`";
+        String dropDatabase = "DROP DATABASE IF EXISTS `" + database + "`";
 
         String createDatabase = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
 
@@ -689,8 +689,7 @@ public class DataGenerator {
             System.out.println("Insertion of Customer related data started at: " + startTime.toString());
 
             for (int i = 0; i < threadCount; i++) {
-
-                DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
+                DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, sql_databases, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
                 executor.execute(thread);
                 customerIndex = customerIndex + iterationsPerThread;
                 invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
@@ -746,7 +745,7 @@ public class DataGenerator {
 
             for (int i = 0; i < threadCount; i++) {
 
-                DataGeneratorThreadWork thread = new DataGeneratorThreadWork(i, iterationsPerThread, batchExecuteValue, lock, workIndex, itemFactor, itemCount, workTypeFactor, workTypeCount);
+                DataGeneratorThreadWork thread = new DataGeneratorThreadWork(i, iterationsPerThread, batchExecuteValue, sql_databases, lock, workIndex, itemFactor, itemCount, workTypeFactor, workTypeCount);
                 executor.execute(thread);
                 targetIndex = targetIndex + iterationsPerThread*targetFactor;
                 workIndex = workIndex + iterationsPerThread;
@@ -774,7 +773,7 @@ public class DataGenerator {
     }
 
 
-    public void insertItemsAndWorkTypes(int threadCount, int iterationsPerThread, int batchExecuteValue, int itemCount, int workTypeCount) {
+    public void insertItemsAndWorkTypes(int threadCount, int batchExecuteValue, int itemCount, int workTypeCount) {
 
         try {
 
@@ -789,14 +788,14 @@ public class DataGenerator {
 
             ReentrantLock lock = new ReentrantLock();
 
-            System.out.println("Insertion of Work related data started at: " + startTime.toString());
+            System.out.println("Insertion of items and work types started at: " + startTime.toString());
 
             for (int i = 0; i < threadCount; i++) {
 
                 DataGeneratorThreadItemsAndWorkTypes thread = new DataGeneratorThreadItemsAndWorkTypes(i, batchExecuteValue, sql_databases, lock, itemIndex, itemCount, workTypeIndex, workTypeCount);
                 executor.execute(thread);
-                itemIndex = itemIndex + iterationsPerThread;
-                workTypeIndex = workTypeIndex + iterationsPerThread;
+                itemIndex = itemIndex + itemCount;
+                workTypeIndex = workTypeIndex + workTypeCount;
 
             }
 
@@ -812,7 +811,7 @@ public class DataGenerator {
 
             String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
 
-            System.out.println("Insertion of Work related data finished at: " + endTime.toString());
+            System.out.println("Insertion of items and work types finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);
 
         } catch (Exception e) {

@@ -23,7 +23,7 @@ public class Main
         sql_databases.put(db_url, db_info);
 
         db_url = "jdbc:mysql://127.0.0.1:3307/";
-        db_driver = "org.mariadb.jdbc.Driver";
+        db_driver = "com.mysql.jdbc.Driver";
         db_username = "root";
         db_password = "root";
 
@@ -41,12 +41,13 @@ public class Main
         dataGenerator.createTables();
 
 
-       // dataGenerator.truncateDatabases();
+        dataGenerator.truncateDatabases();
 
         //dataGenerator.getSampleData();
 
-      //  dataGenerator.createItems(100);
-       // dataGenerator.createWorkTypes(100);
+        dataGenerator.insertItemsAndWorkTypes(10, 10, 10, 10);
+
+
 
         /*
 
@@ -60,9 +61,9 @@ public class Main
 
 
 
-        //dataGenerator.insertWorkData(1,1,1,10,10,10);
+        dataGenerator.insertWorkData(10,10,10,10,10,10);
 
-        //dataGenerator.insertCustomerData(1,1,1,10,10,10,10);
+        dataGenerator.insertCustomerData(10,10,10,10,10,10,10);
 
 
         //QueryTester queryTester = new QueryTester();

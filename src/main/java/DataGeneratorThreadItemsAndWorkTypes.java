@@ -11,12 +11,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
-    private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
-
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
-
     private static final String NEO4J_DB_URL = "bolt://localhost:7687";
 
     private static final String NEO4J_USERNAME = "neo4j";
@@ -63,7 +57,10 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
             List<HashMap> preparedStatementsList = new ArrayList();
 
+            List<Connection> connectionList = new ArrayList();
+
             for (String db_url : sql_databases.keySet()) {
+
                 String[] db_info = sql_databases.get(db_url);
 
                 String db_driver = db_info[0];
@@ -72,23 +69,26 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                 Class.forName(db_driver);
 
-                try (Connection connection = DriverManager.getConnection(db_url, db_username, db_password)) {
+                Connection connection = DriverManager.getConnection(db_url, db_username, db_password);
+                connectionList.add(connection);
 
-                    PreparedStatement warehouseItem = connection.prepareStatement("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (?,?,?,?,?,?,?)");
-                    PreparedStatement workType = connection.prepareStatement("INSERT INTO warehouse.worktype (id, name, price) VALUES (?, ?, ?)");
+                PreparedStatement warehouseItem = connection.prepareStatement("INSERT INTO warehouse.warehouseitem (id, name, balance, unit, purchaseprice, vat, removed) VALUES (?,?,?,?,?,?,?)");
+                PreparedStatement workType = connection.prepareStatement("INSERT INTO warehouse.worktype (id, name, price) VALUES (?, ?, ?)");
 
-                    HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
+                HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
 
-                    preparedStatements.put("warehouseitem", warehouseItem);
-                    preparedStatements.put("worktype", workType);
+                preparedStatements.put("warehouseitem", warehouseItem);
+                preparedStatements.put("worktype", workType);
 
-                    preparedStatementsList.add(preparedStatements);
-
-                }
+                preparedStatementsList.add(preparedStatements);
 
             }
 
             insert(batchExecuteValue, session, preparedStatementsList);
+
+            for (Connection connection : connectionList) {
+                connection.close();
+            }
 
             session.close();
             driver.close();
@@ -114,23 +114,25 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
         for (int i = 0; i < itemCount; i++) {
 
-            Random r = new Random(i);
+            System.out.println("threadIndex: " + threadIndex + " itemIndex: " + itemIndex);
+
+            Random r = new Random(itemIndex);
             int balance = r.nextInt(100);
-            r.setSeed(i);
+            r.setSeed(itemIndex);
             float purchaseprice = r.nextFloat();
-            r.setSeed(i);
+            r.setSeed(itemIndex);
             int vat = r.nextInt(50);
-            r.setSeed(i);
+            r.setSeed(itemIndex);
             boolean removed = r.nextBoolean();
 
             if (i % 2 == 0) {
 
-                r.setSeed(i);
-                r = new Random(i);
+                r.setSeed(itemIndex);
+                r = new Random(itemIndex);
                 int x = r.nextInt(10);
-                r.setSeed(i + 1);
+                r.setSeed(itemIndex + 1);
                 int y = r.nextInt(10);
-                r.setSeed(i + 2);
+                r.setSeed(itemIndex + 2);
                 int size = r.nextInt(10);
 
                 String item = "MMJ " + x + "X" + y + "," + size + "MM²CABLE";
@@ -139,7 +141,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                     warehouseItem = preparedStatements.get("warehouseitem");
 
-                    warehouseItem.setInt(1, i);
+                    warehouseItem.setInt(1, itemIndex);
                     warehouseItem.setString(2, item);
                     warehouseItem.setInt(3, balance);
                     warehouseItem.setString(4, "m");
@@ -150,12 +152,12 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                 }
 
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name: \"" + item + "\", balance:" + balance + ", unit:\"m\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + itemIndex + ", name: \"" + item + "\", balance:" + balance + ", unit:\"m\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
 
             } else if (i % 3 == 0) {
 
-                r.setSeed(i);
+                r.setSeed(itemIndex);
                 int ground = r.nextInt(10);
                 String item = "SOCKET " + ground + "-GROUND OL JUSSI";
 
@@ -163,7 +165,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                     warehouseItem = preparedStatements.get("warehouseitem");
 
-                    warehouseItem.setInt(1, i);
+                    warehouseItem.setInt(1, itemIndex);
                     warehouseItem.setString(2, item);
                     warehouseItem.setInt(3, balance);
                     warehouseItem.setString(4, "pcs");
@@ -174,15 +176,15 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                 }
 
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + itemIndex + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
             } else if (i % 5 == 0) {
 
-                r.setSeed(i);
+                r.setSeed(itemIndex);
                 int spiral1 = r.nextInt(10);
-                r.setSeed(i + 1);
+                r.setSeed(itemIndex + 1);
                 int spiral2 = r.nextInt(10);
-                r.setSeed(i + 2);
+                r.setSeed(itemIndex + 2);
                 int spiral3 = r.nextInt(100);
 
                 String item = "BINDING SPIRAL " + spiral1 + "," + spiral2 + "-" + spiral3 + "MM INVISIBLE";
@@ -191,7 +193,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                     warehouseItem = preparedStatements.get("warehouseitem");
 
-                    warehouseItem.setInt(1, i);
+                    warehouseItem.setInt(1, itemIndex);
                     warehouseItem.setString(2, item);
                     warehouseItem.setInt(3, balance);
                     warehouseItem.setString(4, "pcs");
@@ -202,12 +204,12 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                 }
 
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + itemIndex + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
 
             } else {
 
-                r.setSeed(i);
+                r.setSeed(itemIndex);
                 int parts = r.nextInt(10);
 
                 String item = "SOCKET CORNER MODEL " + parts + "-PARTS";
@@ -216,7 +218,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                     warehouseItem = preparedStatements.get("warehouseitem");
 
-                    warehouseItem.setInt(1, i);
+                    warehouseItem.setInt(1, itemIndex);
                     warehouseItem.setString(2, item);
                     warehouseItem.setInt(3, balance);
                     warehouseItem.setString(4, "'pcs'");
@@ -227,7 +229,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
                 }
 
-                session.run("CREATE (v:warehouseitem {warehouseitemId: " + i + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
+                session.run("CREATE (v:warehouseitem {warehouseitemId: " + itemIndex + ", name:\"" + item + "\", balance:" + balance + ", unit:\"pcs\", purchaseprice:" + purchaseprice + ", vat:" + vat + ", removed:" + removed + "})");
 
             }
 
@@ -242,35 +244,37 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
             }
 
+            itemIndex++;
+
         }
 
         PreparedStatement workType;
 
         for (int i = 0; i < workTypeCount; i++) {
 
-            Random r = new Random(i);
+            Random r = new Random(workTypeIndex);
             int price = r.nextInt(100);
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 
                 workType = preparedStatements.get("worktype");
-                workType.setInt(1, i);
+                workType.setInt(1, workTypeIndex);
                 workType.setInt(3, price);
 
                 if (i % 2 == 0) {
 
                     workType.setString(2, "design");
-                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"design\", price:" + price + "})");
+                    session.run("CREATE (wt:worktype {worktypeId: " + workTypeIndex + ", name:\"design\", price:" + price + "})");
 
                 } else if (i % 3 == 0) {
 
                     workType.setString(2, "work");
-                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"work\", price:" + price + "})");
+                    session.run("CREATE (wt:worktype {worktypeId: " + workTypeIndex + ", name:\"work\", price:" + price + "})");
 
                 } else {
 
                     workType.setString(2, "supporting work");
-                    session.run("CREATE (wt:worktype {worktypeId: " + i + ", name:\"supporting work\", price:" + price + "})");
+                    session.run("CREATE (wt:worktype {worktypeId: " + workTypeIndex + ", name:\"supporting work\", price:" + price + "})");
 
                 }
 
@@ -288,6 +292,8 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
                 }
 
             }
+
+            workTypeIndex++;
 
         }
 
