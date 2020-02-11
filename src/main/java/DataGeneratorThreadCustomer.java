@@ -210,7 +210,7 @@ public class DataGeneratorThreadCustomer extends Thread {
         writeToNeo4J(session, cypherCreate);
 
         int invoiceIndexOriginal = invoiceIndex;
-        int customerInvoiceIndexOriginal = invoiceIndex;
+        int firstInvoice = invoiceIndex;
 
         Random r = new Random(index);
 
@@ -247,7 +247,7 @@ public class DataGeneratorThreadCustomer extends Thread {
                     invoice.setDate(4, sqlDueDate, gregorianCalendar);
 
 
-                    if (invoiceIndex == customerInvoiceIndexOriginal) {
+                    if (invoiceIndex == firstInvoice) {
                         sqlInsert = "INSERT INTO warehouse.invoice (id, customerId, state, duedate, previousinvoice) VALUES (" + invoiceIndex + "," + customerIndex + "," + state + ",STR_TO_DATE('" + dueDateAsString + "','%d-%m-%Y')," + invoiceIndex + ")";
                         invoice.setInt(5, invoiceIndex);
 
@@ -279,9 +279,9 @@ public class DataGeneratorThreadCustomer extends Thread {
 
             if (j < sequentialInvoices) {
 
-                if (invoiceIndex == customerInvoiceIndexOriginal) {
+                if (invoiceIndex == firstInvoice) {
 
-                    cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + customerInvoiceIndexOriginal + ", previousinvoice: " + invoiceIndex + "})";
+                    cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\", previousinvoice: " + invoiceIndex + "})";
                     writeToNeo4J(session, cypherCreate);
 
                     cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
@@ -289,7 +289,7 @@ public class DataGeneratorThreadCustomer extends Thread {
 
                 } else {
 
-                    cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + customerInvoiceIndexOriginal + ", previousinvoice: " + (invoiceIndex - 1) + "})";
+                    cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\", previousinvoice: " + (invoiceIndex - 1) + "})";
                     writeToNeo4J(session, cypherCreate);
 
                     cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";
@@ -303,7 +303,7 @@ public class DataGeneratorThreadCustomer extends Thread {
 
             } else {
 
-                cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\",firstinvoice: " + invoiceIndex + ", previousinvoice: " + invoiceIndex + "})";
+                cypherCreate = "CREATE (l:invoice {invoiceId: " + invoiceIndex + ", customerId: " + customerIndex + ", state: " + state + ", duedate: \"date({ year:" + year + ", month:" + month + ", day:" + day + " })\", previousinvoice: " + invoiceIndex + "})";
                 writeToNeo4J(session, cypherCreate);
 
                 cypherCreate = "MATCH (a:customer),(l:invoice) WHERE a.customerId = " + customerIndex + " AND l.invoiceId = " + invoiceIndex + " CREATE (a)-[m:PAYS]->(l)";

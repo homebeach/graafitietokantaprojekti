@@ -38,14 +38,14 @@ public class Main
 
         DataGenerator dataGenerator = new DataGenerator(sql_databases);
 
-        dataGenerator.createTables();
+        //dataGenerator.createTables();
 
 
         dataGenerator.truncateDatabases();
 
         //dataGenerator.getSampleData();
 
-        dataGenerator.insertItemsAndWorkTypes(10, 10, 10, 10);
+        //dataGenerator.insertItemsAndWorkTypes(10, 10, 10, 10);
 
 
 
@@ -61,10 +61,12 @@ public class Main
 
 
 
-        dataGenerator.insertWorkData(10,10,10,10,10,10);
+        //dataGenerator.insertWorkData(10,10,10,10,10,10);
 
-        dataGenerator.insertCustomerData(10,10,10,10,10,10,10);
+        //dataGenerator.insertCustomerData(10,10,10,10,10,10,10);
 
+
+        dataGenerator.insertSequentialInvoices(10,10,10, 10);
 
         //QueryTester queryTester = new QueryTester();
 

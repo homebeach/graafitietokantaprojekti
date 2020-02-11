@@ -339,6 +339,38 @@ public class DataGenerator {
         return wareHouseItemCount;
     }
 
+    public int getLastCustomerId() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.CUSTOMER");
+
+        int lastCustomerId = 0;
+
+        while(rs.next()) {
+
+            lastCustomerId = rs.getInt("LASTID");
+            System.out.println("Last customer id " + lastCustomerId);
+
+        }
+
+        return lastCustomerId;
+    }
+
+    public int getLastInvoiceId() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.INVOICE");
+
+        int invoiceId = 0;
+
+        while(rs.next()) {
+
+            invoiceId = rs.getInt("LASTID");
+            System.out.println("Last invoice id " + invoiceId);
+
+        }
+
+        return invoiceId;
+    }
+
     public void createSampleTables() {
 
         String database = "testdata";
@@ -719,6 +751,94 @@ public class DataGenerator {
         }
     }
 
+    public void insertSequentialInvoices(int threadCount, int iterationsPerThread, int batchExecuteValue, int sequentialInvoices) {
+
+        try {
+
+            int customerIndex = getLastCustomerId() + 1;
+            int invoiceIndex = getLastInvoiceId() + 1;
+
+            getSampleData();
+
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+            long startTimeInMilliseconds = System.currentTimeMillis();
+
+            Timestamp startTime = new Timestamp(startTimeInMilliseconds);
+
+            ReentrantLock lock = new ReentrantLock();
+
+            System.out.println("Insertion of sequential invoices started at: " + startTime.toString());
+
+
+            for (String db_url : sql_databases.keySet()) {
+
+                String[] db_info = sql_databases.get(db_url);
+
+                String db_driver = db_info[0];
+                String db_username = db_info[1];
+                String db_password = db_info[2];
+
+                Class.forName(db_driver);
+
+                Connection connection = DriverManager.getConnection(db_url, db_username, db_password);
+
+                PreparedStatement customer = connection.prepareStatement("INSERT INTO warehouse.customer (id, name, address) VALUES (?,?,?)");
+
+                String name = firstnames.get(0) + " " + surnames.get(0);
+
+                String streetAddress = addresses.get(0).get("street") + " " + addresses.get(0).get("city") + " " + addresses.get(0).get("district") + " " + addresses.get(0).get("region") + " " + addresses.get(0).get("postcode");
+
+                String sqlInsert = "INSERT INTO warehouse.customer (id, name, address) VALUES (" + customerIndex + ",\"" + name + "\",\"" + streetAddress + "\")";
+
+                customer.setInt(1, customerIndex);
+                customer.setString(2, name);
+                customer.setString(3, streetAddress);
+                customer.addBatch();
+                customer.executeBatch();
+
+                org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
+
+                Session session = driver.session();
+
+                String cypherCreate = "CREATE (a:customer {customerId: " + customerIndex + ", name:\"" + name + "\",address:\"" + streetAddress + "\"})";
+                session.run(cypherCreate);
+
+                session.close();
+                driver.close();
+
+            }
+
+            int firstInvoiceIndex = invoiceIndex;
+
+            for (int i = 0; i < threadCount; i++) {
+
+                DataGeneratorThreadSequentialInvoices thread = new DataGeneratorThreadSequentialInvoices(i, batchExecuteValue, sql_databases, lock, sequentialInvoices, customerIndex, invoiceIndex, firstInvoiceIndex);
+                executor.execute(thread);
+                invoiceIndex = invoiceIndex + sequentialInvoices;
+            }
+
+            executor.shutdown();
+            while (!executor.isTerminated()) {
+            }
+
+            long endTimeInMilliseconds = System.currentTimeMillis();
+
+            Timestamp endTime = new Timestamp(endTimeInMilliseconds);
+
+            long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+
+            System.out.println("Insertion of sequential invoices finished at: " + endTime.toString());
+            System.out.println("Time elapsed: " + elapsedTime);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
 
 
@@ -817,14 +937,7 @@ public class DataGenerator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
-
-
-
-
-
-
-
-
 
 }
