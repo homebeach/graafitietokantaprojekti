@@ -8,37 +8,37 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DataGeneratorThreadWork extends Thread {
 
-    private static final String NEO4J_DB_URL = "bolt://localhost:7687";
-
-    private static final String NEO4J_USERNAME = "neo4j";
-    private static final String NEO4J_PASSWORD = "admin";
-
     private HashMap<String, String[]> sql_databases;
+
+    HashMap<String, String> neo4j_settings;
 
     private int iterationCount = 0;
     private int batchExecuteValue = 0;
 
     private int threadIndex = 0;
 
-    int workIndex = 0;
-    int itemFactor = 0;
-    int itemCount = 0;
-    int workTypeFactor = 0;
-    int workTypeCount = 0;
+    private int workIndex = 0;
+    private final int INITIALWORKINDEX;
+    private int itemFactor = 0;
+    private int itemCount = 0;
+    private int workTypeFactor = 0;
+    private int workTypeCount = 0;
 
     private ReentrantLock lock;
 
-    public DataGeneratorThreadWork(int threadIndex, int iterationCount, int batchExecuteValue, HashMap<String, String[]> sql_databases, ReentrantLock lock, int workIndex, int itemFactor, int itemCount, int workTypeFactor, int workTypeCount) {
+    public DataGeneratorThreadWork(int threadIndex, int iterationCount, int batchExecuteValue, HashMap<String, String[]> sql_databases, HashMap<String, String> neo4j_settings, ReentrantLock lock, int workIndex, int itemFactor, int itemCount, int workTypeFactor, int workTypeCount) {
 
         this.threadIndex = threadIndex;
         this.iterationCount = iterationCount;
         this.batchExecuteValue = batchExecuteValue;
         this.workIndex = workIndex;
+        this.INITIALWORKINDEX = workIndex;
         this.itemFactor = itemFactor;
         this.itemCount = itemCount;
         this.workTypeFactor = workTypeFactor;
         this.workTypeCount = workTypeCount;
         this.sql_databases = sql_databases;
+        this.neo4j_settings = neo4j_settings;
         this.lock = lock;
     }
 
@@ -46,7 +46,11 @@ public class DataGeneratorThreadWork extends Thread {
 
         try {
 
-            org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
+            String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+            String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+            String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+            org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
 
             Session session = driver.session();
 
@@ -72,7 +76,7 @@ public class DataGeneratorThreadWork extends Thread {
                 connectionList.add(connection);
 
                 PreparedStatement work = connection.prepareStatement("INSERT INTO warehouse.work (id, name) VALUES (?,?)");
-                PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(?,?,?,?)");
+                PreparedStatement usedItem = connection.prepareStatement("INSERT INTO warehouse.useditem (amount, discount, workId, itemId) VALUES(?,?,?,?)");
                 PreparedStatement workHours = connection.prepareStatement("INSERT INTO warehouse.workhours (worktypeId, hours, discount, workId) VALUES(?,?,?,?)");
 
                 HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
@@ -87,7 +91,7 @@ public class DataGeneratorThreadWork extends Thread {
 
             for (int i = 0; i < iterationCount; i++) {
 
-                insertWork(i, batchExecuteValue, session, preparedStatementsList);
+                insertWork(batchExecuteValue, session, preparedStatementsList);
 
             }
 
@@ -107,73 +111,60 @@ public class DataGeneratorThreadWork extends Thread {
 
     public void writeToNeo4J(Session session, String cypherQuery) throws SQLException {
 
+        //lock.lock();
+
         session.writeTransaction(tx -> tx.run(cypherQuery));
+
+        //try {
+        //    Thread.sleep(500);
+        //} catch (InterruptedException e) {
+        //    e.printStackTrace();
+        //}
+
+        //lock.unlock();
 
     }
 
     public List<Integer> getItemIndexes(int index) {
 
-        Random r = new Random();
+        System.out.println("itemCount " + itemCount);
 
-        int itemSeed = 10;
-
-        List<Integer> itemIndexes = new ArrayList<Integer>();
-        for(int i=0; i<itemFactor; i++) {
-
-            r.setSeed(i + index + itemSeed);
-
-            int itemIndex = r.nextInt(itemCount);
-
-            int offset = 1;
-            while(itemIndexes.contains(itemIndex)) {
-                r.setSeed(i + index + itemSeed + offset);
-                itemIndex = r.nextInt(itemCount);
-                offset++;
-            }
-
-            itemIndexes.add(itemIndex);
-
+        List<Integer> allItemIndexes = new ArrayList<Integer>();
+        for(int i=0; i<itemCount; i++) {
+            allItemIndexes.add(i);
         }
 
-    return itemIndexes;
+        Collections.shuffle(allItemIndexes, new Random(index));
+
+        List<Integer> selectedItemIndexes = allItemIndexes.subList(0, itemFactor);
+
+        return selectedItemIndexes;
     }
 
     public List<Integer> getWorkTypeIndexes(int index) {
 
-        Random r = new Random();
+        System.out.println("workTypeCount " + workTypeCount);
 
-        int workTypeSeed = 20;
-
-        List<Integer> workTypeIndexes = new ArrayList<Integer>();
-        for (int i = 0; i < workTypeFactor; i++) {
-
-            r.setSeed(i + index + workTypeSeed);
-
-            int workTypeIndex = r.nextInt(workTypeCount);
-
-            int offset = 1;
-            while (workTypeIndexes.contains(workTypeIndex)) {
-
-                r.setSeed(i + index + workTypeSeed + offset);
-                workTypeIndex = r.nextInt(workTypeCount);
-                offset++;
-            }
-
-            workTypeIndexes.add(workTypeIndex);
-
+        List<Integer> allWorkTypeIndexes = new ArrayList<Integer>();
+        for (int i = 0; i < workTypeCount; i++) {
+            allWorkTypeIndexes.add(i);
         }
 
-        return workTypeIndexes;
+        Collections.shuffle(allWorkTypeIndexes, new Random(index));
+
+        List<Integer> selectedWorkTypeIndexes = allWorkTypeIndexes.subList(0, workTypeFactor);
+
+        return selectedWorkTypeIndexes;
     }
 
 
-    public void insertWork(int index, int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
+    public void insertWork(int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
 
         PreparedStatement work;
         PreparedStatement usedItem;
         PreparedStatement workHours;
 
-        System.out.println("Thread: " + threadIndex + " Index: " + index);
+        System.out.println("Thread: " + threadIndex + " workIndex: " + workIndex);
 
         int workIndexOriginal = workIndex;
 
@@ -194,7 +185,7 @@ public class DataGeneratorThreadWork extends Thread {
         String cypherCreate = "CREATE (s:work {workId: " + workIndex + ", name: \"" + workName + "\"})";
         writeToNeo4J(session, cypherCreate);
 
-        Random r = new Random(index);
+        Random r = new Random(workIndex);
 
         int discountPercent = 1 + r.nextInt(101);
         double discount = (0.01 * discountPercent);
@@ -207,13 +198,15 @@ public class DataGeneratorThreadWork extends Thread {
         int i = 0;
         while (i < itemIndexes.size()) {
 
-            r.setSeed(index);
+            System.out.println("Thread: " + threadIndex + " item iterator: " + i);
+
+            r.setSeed(workIndex);
 
             int amount = 1 + r.nextInt(101);
 
-            int wareHouseItemId = itemIndexes.get(i);
+            int itemId = itemIndexes.get(i);
 
-            //sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, warehouseitemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + warehouseitemId + ")";
+            //sqlInsert = "INSERT INTO warehouse.useditem (amount, discount, workId, itemId) VALUES(" + amount + "," + discount + "," + workIndex + "," + itemId + ")";
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 
@@ -222,22 +215,22 @@ public class DataGeneratorThreadWork extends Thread {
                 usedItem.setInt(1, amount);
                 usedItem.setDouble(2, discount);
                 usedItem.setInt(3, workIndex);
-                usedItem.setInt(4, wareHouseItemId);
+                usedItem.setInt(4, itemId);
                 usedItem.addBatch();
 
             }
 
-            cypherCreate = "MATCH (s:work),(v:warehouseitem) WHERE s.workId=" + workIndex + " AND v.warehouseitemId=" + wareHouseItemId + " CREATE (s)-[ui:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v) ";
+            cypherCreate = "MATCH (s:work),(v:item) WHERE s.workId=" + workIndex + " AND v.itemId=" + itemId + " CREATE (s)-[ui:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(v) ";
             writeToNeo4J(session, cypherCreate);
 
-            cypherCreate = "MATCH (v:warehouseitem),(s:work) WHERE v.warehouseitemId=" + wareHouseItemId + " AND s.workId=" + workIndex + "   CREATE (v)-[ui:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
+            cypherCreate = "MATCH (v:item),(s:work) WHERE v.itemId=" + itemId + " AND s.workId=" + workIndex + "   CREATE (v)-[ui:USED_ITEM {amount:" + amount + ", discount:" + discount + "}]->(s)";
             writeToNeo4J(session, cypherCreate);
 
             i++;
 
         }
 
-        List<Integer> workTypeIndexes =  getWorkTypeIndexes(workIndex);
+        List<Integer> workTypeIndexes = getWorkTypeIndexes(workIndex);
 
         //System.out.println("workTypeIndexes");
         //System.out.println(workTypeIndexes.toString());
@@ -245,7 +238,9 @@ public class DataGeneratorThreadWork extends Thread {
         i = 0;
         while (i < workTypeIndexes.size()) {
 
-            r.setSeed(index);
+            System.out.println("Thread: " + threadIndex + " work type iterator: " + i);
+
+            r.setSeed(workIndex);
 
             int hours = r.nextInt(100);
             int worktypeId = workTypeIndexes.get(i);
@@ -270,21 +265,13 @@ public class DataGeneratorThreadWork extends Thread {
             cypherCreate = "MATCH (wt:worktype),(w:work) WHERE wt.worktypeId=" + worktypeId + " AND w.workId=" + workIndex  + " CREATE (wt)-[wh:WORKHOURS {hours:" + hours + ", discount:" + discount + "}]->(w)";
             writeToNeo4J(session, cypherCreate);
 
-
-
-
-            //lock.lock();
-
-
-            //Thread.sleep(500);
-            //lock.unlock();
             i++;
 
         }
 
         workIndex++;
 
-        if (index % batchExecuteValue == 0 || index == (iterationCount - 1)) {
+        if (workIndex % batchExecuteValue == 0 || workIndex == (INITIALWORKINDEX + iterationCount - 1)) {
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 

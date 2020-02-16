@@ -18,73 +18,27 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DataGenerator {
 
-    private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
-
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
-
     private HashMap<String, String[]> sql_databases;
 
+    private HashMap<String, String> neo4j_settings;
 
-    private static final String NEO4J_DB_URL = "bolt://localhost:7687";
-
-    private static final String NEO4J_USERNAME = "neo4j";
-    private static final String NEO4J_PASSWORD = "admin";
+    private String default_db_url;
 
     private List<String> firstnames;
     private List<String> surnames;
     private List<HashMap<String, String>> addresses;
 
-    public DataGenerator(HashMap<String, String[]> sql_databases) {
+    public DataGenerator(HashMap<String, String[]> sql_databases, HashMap<String, String> neo4j_settings, String default_db_url) {
         this.sql_databases = sql_databases;
+        this.neo4j_settings = neo4j_settings;
+        this.default_db_url = default_db_url;
     }
 
-    public void executeSQLUpdate(String sqlQuery) {
+    public void executeSQLUpdate(String sqlQuery, String db_url, String[] db_settings) {
 
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet resultSet = null;
-
-        try {
-
-            Class.forName(JDBC_DRIVER);
-
-            conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-            stmt = conn.createStatement();
-
-            stmt.executeUpdate(sqlQuery);
-
-
-        } catch (SQLException e) {
-            System.out.println("SQLException");
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.out.println("Exception");
-            e.printStackTrace();
-        } finally {
-
-            try {
-                if (stmt != null) {
-                    conn.close();
-                }
-            } catch (SQLException se) {
-                System.out.println("SQLException");
-                se.printStackTrace();
-            }
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException se) {
-                System.out.println("SQLException");
-                se.printStackTrace();
-            }
-        }
-
-    }
-
-    public void executeSQLUpdate(String sqlQuery, String db_url, String driver, String username, String password) {
+        String driver = db_settings[0];
+        String username = db_settings[1];
+        String password = db_settings[2];
 
         Connection conn = null;
         Statement stmt = null;
@@ -137,11 +91,18 @@ public class DataGenerator {
         Statement stmt = null;
         ResultSet resultSet = null;
 
+        String[] db_settings = sql_databases.get(default_db_url);
+
+        String jdbc_driver = db_settings[0];
+
+        String username = db_settings[1];
+        String password = db_settings[2];
+
         try {
 
-            Class.forName(JDBC_DRIVER);
+            Class.forName(jdbc_driver);
 
-            conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+            conn = DriverManager.getConnection(default_db_url, username, password);
             stmt = conn.createStatement();
 
             resultSet = stmt.executeQuery(sqlQuery);
@@ -170,13 +131,17 @@ public class DataGenerator {
         return resultSet;
     }
 
-    public ResultSet truncateDatabases() {
+    public void truncateDatabases() {
 
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSet = null;
 
-        org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
+        String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+        String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+        String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
 
         Session session = driver.session();
 
@@ -194,49 +159,49 @@ public class DataGenerator {
 
             try {
 
-                    Class.forName(db_driver);
+                Class.forName(db_driver);
 
-                    conn = DriverManager.getConnection(db_url, db_username, db_password);
-                    stmt = conn.createStatement();
+                conn = DriverManager.getConnection(db_url, db_username, db_password);
+                stmt = conn.createStatement();
 
-                    stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.work;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.workhours;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.workinvoice;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.worktarget;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.target;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
+                stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.work;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.workhours;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.workinvoice;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.worktarget;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.target;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
 
-                    stmt.addBatch("TRUNCATE TABLE warehouse.worktype;");
-                    stmt.addBatch("TRUNCATE TABLE warehouse.warehouseitem;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.worktype;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.item;");
 
-                    stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
-                    stmt.executeBatch();
+                stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
+                stmt.executeBatch();
 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
 
-                    try {
-                        if (stmt != null) {
-                            conn.close();
-                        }
-                    } catch (SQLException se) {
+                try {
+                    if (stmt != null) {
+                        conn.close();
                     }
-                    try {
-                        if (conn != null) {
-                            conn.close();
-                        }
-                    } catch (SQLException se) {
-                        se.printStackTrace();
-                    }
+                } catch (SQLException se) {
                 }
+                try {
+                    if (conn != null) {
+                        conn.close();
+                    }
+                } catch (SQLException se) {
+                    se.printStackTrace();
+                }
+
+            }
 
         }
 
-        return resultSet;
     }
 
     public void getSampleData() {
@@ -289,8 +254,6 @@ public class DataGenerator {
 
     }
 
-
-
     public int getWorkCount() throws SQLException {
 
         ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WORKCOUNT FROM WAREHOUSE.WORK");
@@ -323,20 +286,20 @@ public class DataGenerator {
         return workTypeCount;
     }
 
-    public int getWareHouseItemCount() throws SQLException {
+    public int getItemCount() throws SQLException {
 
-        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS WAREHOUSEITEMCOUNT FROM WAREHOUSE.WAREHOUSEITEM");
+        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS ITEMCOUNT FROM WAREHOUSE.ITEM");
 
-        int wareHouseItemCount = 0;
+        int itemCount = 0;
 
         while(rs.next()) {
 
-            wareHouseItemCount = rs.getInt("WAREHOUSEITEMCOUNT");
-            System.out.println("Warehouseitem count " + wareHouseItemCount);
+            itemCount = rs.getInt("ITEMCOUNT");
+            System.out.println("Item count " + itemCount);
 
         }
 
-        return wareHouseItemCount;
+        return itemCount;
     }
 
     public int getLastCustomerId() throws SQLException {
@@ -373,6 +336,10 @@ public class DataGenerator {
 
     public void createSampleTables() {
 
+        String db_url = "jdbc:mariadb://127.0.0.1/";
+
+        String[] db_settings = sql_databases.get(db_url);
+
         String database = "testdata";
 
         String dropDatabase = "DROP DATABASE `" + database + "`";
@@ -398,16 +365,23 @@ public class DataGenerator {
                 "`postcode` varchar(50) NOT NULL," +
                 "PRIMARY KEY (`id`))";
 
-        executeSQLUpdate(dropDatabase);
-        executeSQLUpdate(createDatabase);
-        executeSQLUpdate(firstnames, "jdbc:mariadb://127.0.0.1/" +  database, JDBC_DRIVER, USERNAME, PASSWORD);
-        executeSQLUpdate(surnames, "jdbc:mariadb://127.0.0.1/" +  database, JDBC_DRIVER, USERNAME, PASSWORD);
-        executeSQLUpdate(addresses, "jdbc:mariadb://127.0.0.1/" +  database, JDBC_DRIVER, USERNAME, PASSWORD);
+        executeSQLUpdate(dropDatabase, "jdbc:mariadb://127.0.0.1/", db_settings);
+        executeSQLUpdate(createDatabase, "jdbc:mariadb://127.0.0.1/", db_settings);
+        executeSQLUpdate(firstnames, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
+        executeSQLUpdate(surnames, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
+        executeSQLUpdate(addresses, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
 
     }
 
 
-    public void loadSampleData(int batchExecuteValue) {
+    public void loadSampleData(int batchExecuteValue, String db_url) {
+
+            String[] db_settings = sql_databases.get(db_url);
+
+            String jdbc_driver = db_settings[0];
+
+            String username = db_settings[1];
+            String password = db_settings[2];
 
             String firstnamesFile = "./data/firstnames.csv";
             String surnamesFile = "./data/surnames.csv";
@@ -420,7 +394,7 @@ public class DataGenerator {
 
             try {
 
-                Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+                Connection connection = DriverManager.getConnection(db_url, username, password);
 
                 PreparedStatement firstnames = connection.prepareStatement("INSERT INTO testdata.firstnames (firstname) VALUES (?)");
                 PreparedStatement surnames = connection.prepareStatement("INSERT INTO testdata.surnames (surname) VALUES (?)");
@@ -591,7 +565,7 @@ public class DataGenerator {
                 "`address` varchar(150) NOT NULL CHECK (`address` <> '')," +
                 "PRIMARY KEY (`id`))";
 
-        String warehouseItem = "CREATE TABLE IF NOT EXISTS `warehouseitem` (" +
+        String item = "CREATE TABLE IF NOT EXISTS `item` (" +
                 "`id` bigint(20) unsigned NOT NULL," +
                 "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
                 "`balance` int(11) NOT NULL," +
@@ -653,11 +627,11 @@ public class DataGenerator {
                 "`amount` int(11) DEFAULT NULL CHECK (`amount` > 0)," +
                 "`discount` decimal(65,2) DEFAULT NULL," +
                 "`workId` bigint(20) unsigned NOT NULL," +
-                "`warehouseitemId` bigint(20) unsigned NOT NULL," +
-                "PRIMARY KEY (`workId`,`warehouseitemId`)," +
-                "KEY `warehouseitemId` (`warehouseitemId`)," +
+                "`itemId` bigint(20) unsigned NOT NULL," +
+                "PRIMARY KEY (`workId`,`itemId`)," +
+                "KEY `itemId` (`itemId`)," +
                 "CONSTRAINT `useditem_ibfk_1` FOREIGN KEY (`workId`) REFERENCES `work` (`id`)," +
-                "CONSTRAINT `useditem_ibfk_2` FOREIGN KEY (`warehouseitemId`) REFERENCES `warehouseitem` (`id`))";
+                "CONSTRAINT `useditem_ibfk_2` FOREIGN KEY (`itemId`) REFERENCES `item` (`id`))";
 
         String workHours = "CREATE TABLE IF NOT EXISTS `workhours` (" +
                 "`worktypeId` bigint(20) unsigned NOT NULL," +
@@ -672,23 +646,21 @@ public class DataGenerator {
 
 
         for (String db_url : sql_databases.keySet()) {
-            String[] db_info = sql_databases.get(db_url);
-            String db_driver = db_info[0];
-            String db_username = db_info[1];
-            String db_password = db_info[2];
 
-            executeSQLUpdate(dropDatabase, db_url, db_driver, db_username, db_password);
-            executeSQLUpdate(createDatabase, db_url, db_driver, db_username, db_password);
-            executeSQLUpdate(customer, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(warehouseItem, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(workType, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(invoice, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(target, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(work, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(workInvoice, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(workTarget, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(usedItem, db_url +  database, db_driver, db_username, db_password);
-            executeSQLUpdate(workHours, db_url +  database, db_driver, db_username, db_password);
+            String[] db_settings = sql_databases.get(db_url);
+
+            executeSQLUpdate(dropDatabase, db_url, db_settings);
+            executeSQLUpdate(createDatabase, db_url, db_settings);
+            executeSQLUpdate(customer, db_url +  database, db_settings);
+            executeSQLUpdate(item, db_url +  database, db_settings);
+            executeSQLUpdate(workType, db_url +  database, db_settings);
+            executeSQLUpdate(invoice, db_url +  database, db_settings);
+            executeSQLUpdate(target, db_url +  database, db_settings);
+            executeSQLUpdate(work, db_url +  database, db_settings);
+            executeSQLUpdate(workInvoice, db_url +  database, db_settings);
+            executeSQLUpdate(workTarget, db_url +  database, db_settings);
+            executeSQLUpdate(usedItem, db_url +  database, db_settings);
+            executeSQLUpdate(workHours, db_url +  database, db_settings);
 
         }
 
@@ -721,7 +693,7 @@ public class DataGenerator {
             System.out.println("Insertion of Customer related data started at: " + startTime.toString());
 
             for (int i = 0; i < threadCount; i++) {
-                DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, sql_databases, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
+                DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, sql_databases, neo4j_settings, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
                 executor.execute(thread);
                 customerIndex = customerIndex + iterationsPerThread;
                 invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
@@ -751,7 +723,9 @@ public class DataGenerator {
         }
     }
 
-    public void insertSequentialInvoices(int threadCount, int iterationsPerThread, int batchExecuteValue, int sequentialInvoices) {
+    public int insertSequentialInvoices(int threadCount, int iterationsPerThread, int batchExecuteValue, int sequentialInvoices) {
+
+        int firstInvoiceIndex = 0;
 
         try {
 
@@ -796,8 +770,12 @@ public class DataGenerator {
                 customer.setString(3, streetAddress);
                 customer.addBatch();
                 customer.executeBatch();
+                
+                String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+                String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+                String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
 
-                org.neo4j.driver.Driver driver = GraphDatabase.driver(NEO4J_DB_URL, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
+                org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
 
                 Session session = driver.session();
 
@@ -809,11 +787,11 @@ public class DataGenerator {
 
             }
 
-            int firstInvoiceIndex = invoiceIndex;
+            firstInvoiceIndex = invoiceIndex;
 
             for (int i = 0; i < threadCount; i++) {
 
-                DataGeneratorThreadSequentialInvoices thread = new DataGeneratorThreadSequentialInvoices(i, batchExecuteValue, sql_databases, lock, sequentialInvoices, customerIndex, invoiceIndex, firstInvoiceIndex);
+                DataGeneratorThreadSequentialInvoices thread = new DataGeneratorThreadSequentialInvoices(i, batchExecuteValue, sql_databases, neo4j_settings, lock, sequentialInvoices, customerIndex, invoiceIndex, firstInvoiceIndex);
                 executor.execute(thread);
                 invoiceIndex = invoiceIndex + sequentialInvoices;
             }
@@ -838,18 +816,18 @@ public class DataGenerator {
             e.printStackTrace();
         }
 
+    return firstInvoiceIndex;
     }
 
 
 
-    public void insertWorkData(int threadCount, int iterationsPerThread, int batchExecuteValue, int targetFactor, int workTypeFactor, int itemFactor) {
+    public void insertWorkData(int threadCount, int iterationsPerThread, int batchExecuteValue, int workTypeFactor, int itemFactor) {
 
         try {
 
-            int targetIndex = 0;
             int workIndex = 0;
 
-            int itemCount = getWareHouseItemCount();
+            int itemCount = getItemCount();
 
             int workTypeCount = getWorkTypeCount();
 
@@ -865,9 +843,8 @@ public class DataGenerator {
 
             for (int i = 0; i < threadCount; i++) {
 
-                DataGeneratorThreadWork thread = new DataGeneratorThreadWork(i, iterationsPerThread, batchExecuteValue, sql_databases, lock, workIndex, itemFactor, itemCount, workTypeFactor, workTypeCount);
+                DataGeneratorThreadWork thread = new DataGeneratorThreadWork(i, iterationsPerThread, batchExecuteValue, sql_databases, neo4j_settings, lock, workIndex, itemFactor, itemCount, workTypeFactor, workTypeCount);
                 executor.execute(thread);
-                targetIndex = targetIndex + iterationsPerThread*targetFactor;
                 workIndex = workIndex + iterationsPerThread;
 
             }
@@ -912,7 +889,7 @@ public class DataGenerator {
 
             for (int i = 0; i < threadCount; i++) {
 
-                DataGeneratorThreadItemsAndWorkTypes thread = new DataGeneratorThreadItemsAndWorkTypes(i, batchExecuteValue, sql_databases, lock, itemIndex, itemCount, workTypeIndex, workTypeCount);
+                DataGeneratorThreadItemsAndWorkTypes thread = new DataGeneratorThreadItemsAndWorkTypes(i, batchExecuteValue, sql_databases, neo4j_settings, lock, itemIndex, itemCount, workTypeIndex, workTypeCount);
                 executor.execute(thread);
                 itemIndex = itemIndex + itemCount;
                 workTypeIndex = workTypeIndex + workTypeCount;

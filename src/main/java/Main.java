@@ -9,43 +9,51 @@ public class Main
 
         HashMap<String, String[]> sql_databases = new HashMap<String, String[]>();
 
-        String db_url = "jdbc:mariadb://127.0.0.1:3306/";
+        String db_mariadb_url = "jdbc:mariadb://127.0.0.1:3306/";
         String db_driver = "org.mariadb.jdbc.Driver";
         String db_username = "root";
         String db_password = "root";
 
-        String[] db_info = new String[3];
+        String[] db_settings = new String[3];
 
-        db_info[0] = db_driver;
-        db_info[1] = db_username;
-        db_info[2] = db_password;
+        db_settings[0] = db_driver;
+        db_settings[1] = db_username;
+        db_settings[2] = db_password;
 
-        sql_databases.put(db_url, db_info);
+        sql_databases.put(db_mariadb_url, db_settings);
 
-        db_url = "jdbc:mysql://127.0.0.1:3307/";
+        String mysql_db_url = "jdbc:mysql://127.0.0.1:3307/";
         db_driver = "com.mysql.jdbc.Driver";
         db_username = "root";
         db_password = "root";
 
-        db_info = new String[3];
+        db_settings = new String[3];
 
-        db_info[0] = db_driver;
-        db_info[1] = db_username;
-        db_info[2] = db_password;
+        db_settings[0] = db_driver;
+        db_settings[1] = db_username;
+        db_settings[2] = db_password;
 
-        sql_databases.put(db_url, db_info);
+        sql_databases.put(mysql_db_url, db_settings);
 
+        HashMap<String, String> neo4j_settings = new HashMap<String, String>();
 
-        DataGenerator dataGenerator = new DataGenerator(sql_databases);
+        String neo4J_db_url = "bolt://localhost:7687";
+        String neo4J_username = "neo4j";
+        String neo4j_password = "admin";
+
+        neo4j_settings.put("NEO4J_DB_URL", neo4J_db_url);
+        neo4j_settings.put("NEO4J_USERNAME", neo4J_username);
+        neo4j_settings.put("NEO4J_PASSWORD", neo4j_password);
+
+        DataGenerator dataGenerator = new DataGenerator(sql_databases, neo4j_settings, db_mariadb_url);
 
         //dataGenerator.createTables();
 
-
-        dataGenerator.truncateDatabases();
+        //dataGenerator.truncateDatabases();
 
         //dataGenerator.getSampleData();
 
-        //dataGenerator.insertItemsAndWorkTypes(10, 10, 10, 10);
+        //dataGenerator.insertItemsAndWorkTypes(10, 10, 1000, 1000);
 
 
 
@@ -60,17 +68,22 @@ public class Main
         //dataGenerator.printSampleDataSizes();
 
 
+        //dataGenerator.insertWorkData(10,100,10,10,10);
 
-        //dataGenerator.insertWorkData(10,10,10,10,10,10);
-
-        //dataGenerator.insertCustomerData(10,10,10,10,10,10,10);
+        //dataGenerator.insertCustomerData(10,100,10,10,10,10,10);
 
 
-        dataGenerator.insertSequentialInvoices(10,10,10, 10);
+        QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
 
-        //QueryTester queryTester = new QueryTester();
+        queryTester.executeQueryTests(10, true);
 
-        //queryTester.executeQueryTests(4, true);
+        int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 100);
+
+        queryTester.executeRecursiveQueryTest(10, true, firstInvoiceIndex);
+
+//        firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 1000);
+
+//        queryTester.executeRecursiveQueryTest(10, true, firstInvoiceIndex);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

@@ -4,51 +4,114 @@ import org.neo4j.driver.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 public class QueryTester {
 
-    private static final String JDBC_DRIVER = "org.mariadb.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mariadb://127.0.0.1/";
-    private static final String DATABASE = "warehouse";
+    private HashMap<String, String[]> sql_databases;
 
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
+    HashMap<String, String> neo4j_settings;
 
-    public List<Long> measureQueryTimeSQL(Statement stmt, String sqlQuery, int iterations) throws SQLException {
-
-        System.out.println("Executing SQL Query: " + sqlQuery + " with " + iterations + " iterations.");
-
-        List<Long> results = new ArrayList<Long>();
-
-        ResultSet resultSet = null;
-
-        for(int i=0; i<iterations; i++) {
-
-            long startTimeInMilliseconds = System.currentTimeMillis();
-
-            resultSet = stmt.executeQuery(sqlQuery);
-
-            long endTimeInMilliseconds = System.currentTimeMillis();
-            long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
-
-            results.add(elapsedTimeMilliseconds);
-
-        }
-
-        resultSet.last();
-        System.out.println("Query returned "+resultSet.getRow()+" rows.");
-
-        return results;
+    public QueryTester(HashMap<String, String[]> sql_databases, HashMap<String, String> neo4j_settings) {
+        this.sql_databases = sql_databases;
+        this.neo4j_settings = neo4j_settings;
     }
 
-    public List<Long> measureQueryTimeCypher(Session session, String cypherQuery, int iterations) throws SQLException {
+    public HashMap<String, ArrayList<Long>> measureQueryTimeSQL(String sqlQuery, int iterations) {
 
-        System.out.println("Executing Cypher Query: " + cypherQuery + " with " + iterations + " iterations.");
+        HashMap<String, ArrayList<Long>> resultLists = new HashMap<String, ArrayList<Long>>();
+
+        ArrayList<Long> results = null;
+
+        Connection connection = null;
+        Statement stmt = null;
+
+        System.out.println("Executing SQL Query: " + sqlQuery + " in " + sql_databases.size() + " databases with " + iterations + " iterations.");
+
+        try {
+
+            for (String db_url : sql_databases.keySet()) {
+
+                String[] db_info = sql_databases.get(db_url);
+
+                String db_driver = db_info[0];
+                String db_username = db_info[1];
+                String db_password = db_info[2];
+
+                Class.forName(db_driver);
+
+                connection = DriverManager.getConnection(db_url + "warehouse", db_username, db_password);
+
+                DatabaseMetaData meta = connection.getMetaData();
+
+                String productName = meta.getDatabaseProductName();
+                String productVersion = meta.getDatabaseProductVersion();
+
+                stmt = connection.createStatement();
+
+                results = new ArrayList<Long>();
+
+                ResultSet resultSet = null;
+
+                for(int i=0; i<iterations; i++) {
+
+                    long startTimeInMilliseconds = System.currentTimeMillis();
+
+                    resultSet = stmt.executeQuery(sqlQuery);
+
+                    long endTimeInMilliseconds = System.currentTimeMillis();
+                    long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
+
+                    results.add(elapsedTimeMilliseconds);
+
+                }
+
+                resultLists.put(productVersion, results);
+
+                resultSet.last();
+                System.out.println("Query in url " + db_url + " returned " + resultSet.getRow() + " rows.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            try {
+                if (stmt != null) {
+                    connection.close();
+                }
+            } catch (SQLException se) {
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+
+        System.out.println();
+
+        return resultLists;
+    }
+
+    public List<Long> measureQueryTimeCypher(String cypherQuery, int iterations) {
+
+        String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+        String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+        String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
+
+        Session session = driver.session();
 
         List<Long> results = new ArrayList<Long>();
 
         Result result = null;
+
+        System.out.println("Executing Cypher Query: " + cypherQuery + " with " + iterations + " iterations.");
 
         for(int i=0; i<iterations; i++) {
 
@@ -67,18 +130,21 @@ public class QueryTester {
 
         List<Record> records = result.list();
 
-        System.out.println("Query returned: " + records.size() + " records.");
+        System.out.println("Cypher query returned: " + records.size() + " records.");
+
+        session.close();
+        driver.close();
 
         return results;
     }
 
-    public void showResults(List<Long> results, boolean showAll) throws SQLException {
+    public void showResults(List<Long> results, boolean showAll) {
 
         Collections.sort(results);
 
         if(showAll) {
-            System.out.println("Smallest number in resultset: " + results.get(0) + ".");
-            System.out.println("Biggest number in resultset: " + results.get(results.size() - 1) + ".");
+            System.out.println("Smallest number in resultset: " + results.get(0) + " ms.");
+            System.out.println("Biggest number in resultset: " + results.get(results.size() - 1) + " ms.");
         }
 
         if(results.size() > 2) {
@@ -88,108 +154,137 @@ public class QueryTester {
 
         long sum = 0;
 
+        if(showAll) {
+            System.out.println();
+            System.out.println("Content of the results table:");
+        }
+
         for(int i=0; i<results.size(); i++) {
 
             if(showAll) {
-                //System.out.println("Result with index " + i + ": " + results.get(i) + ".");
+                System.out.println("Index " + i + ": " + results.get(i) + ".");
             }
             sum = sum + results.get(i);
         }
 
         double average = sum / results.size();
 
-        System.out.println("Average time for query: " + average);
+        if(showAll) {
+            System.out.println();
+        }
+
+        System.out.println("Average time for query: " + average + " ms.");
+        System.out.println();
+
+
+    }
+
+    public void showSystemInfo(List<Long> results, boolean showAll) {
 
 
     }
 
     public void executeQueryTests(int iterations, boolean showAll) {
 
-        org.neo4j.driver.Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "admin"));
+        HashMap<String, ArrayList<Long>> resultLists;
+        List<Long> results;
 
-        Session session = driver.session();
 
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet resultSet = null;
+        String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,item,useditem " +
+                    "WHERE work.id=useditem.workid AND item.id=useditem.itemid";
 
-        try {
+        resultLists = measureQueryTimeSQL(workItemPriceSQL, iterations);
 
-            Class.forName(JDBC_DRIVER);
+        for (String databaseVersion : resultLists.keySet()) {
 
-            conn = DriverManager.getConnection(DB_URL + DATABASE, USERNAME, PASSWORD);
-            stmt = conn.createStatement();
+            if(databaseVersion.contains("MariaDB")) {
+                System.out.println("Results for MariaDB version " + databaseVersion);
+            }
+            else {
+                System.out.println("Results for MySQL version " + databaseVersion);
+            }
 
+            results = resultLists.get(databaseVersion);
+            showResults(results, showAll);
+
+        }
+
+        System.out.println();
+
+        String workItemPriceCypher = "MATCH (w:work)-[u:USED_ITEM]->(i:item) RETURN u.amount*u.discount*i.purchaseprice";
+
+        results = measureQueryTimeCypher(workItemPriceCypher, iterations);
+
+        showResults(results, showAll);
+
+        System.out.println();
+
+        String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,item,useditem WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND item.id=useditem.itemid";
+
+        resultLists = measureQueryTimeSQL(workPriceSQL, iterations);
+
+        for (String databaseVersion : resultLists.keySet()) {
+
+            if(databaseVersion.contains("MariaDB")) {
+                System.out.println("Results for MariaDB version " + databaseVersion);
+            }
+            else {
+                System.out.println("Results for MySQL version " + databaseVersion);
+            }
+
+            results = resultLists.get(databaseVersion);
+            showResults(results, showAll);
+
+        }
+
+        System.out.println();
+
+        String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)";
+
+        results = measureQueryTimeCypher(workPriceCypher, iterations);
+
+        showResults(results, showAll);
+
+        System.out.println();
+
+        String workOfInvoiceSQL = "SELECT * FROM invoice,workinvoice,work " +
+                "WHERE invoice.id=workinvoice.workId AND workinvoice.workId=work.id AND invoice.id=0";
+
+        resultLists = measureQueryTimeSQL(workOfInvoiceSQL, iterations);
+
+        for (String databaseVersion : resultLists.keySet()) {
+
+            if(databaseVersion.contains("MariaDB")) {
+                System.out.println("Results for MariaDB version " + databaseVersion);
+            }
+            else {
+                System.out.println("Results for MySQL version " + databaseVersion);
+            }
+
+            results = resultLists.get(databaseVersion);
+            showResults(results, showAll);
+
+        }
+
+        System.out.println();
+
+        String workOfInvoiceCypher = "MATCH (i:invoice { invoiceId:0 })-[wi:WORK_INVOICE]->(w:work) RETURN *";
+
+        results = measureQueryTimeCypher(workOfInvoiceCypher, iterations);
+
+        showResults(results, showAll);
+
+    }
+
+    public void executeRecursiveQueryTest(int iterations, boolean showAll, int invoiceId) {
+
+            HashMap<String, ArrayList<Long>> resultLists;
             List<Long> results;
-
-
-            String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,warehouseitem,useditem " +
-                    "WHERE work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
-
-            results = measureQueryTimeSQL(stmt, workItemPriceSQL, iterations);
-
-            showResults(results, showAll);
-
-            System.out.println();
-
-            String workItemPriceCypher = "MATCH (w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN u.amount*u.discount*i.purchaseprice";
-
-            results = measureQueryTimeCypher(session, workItemPriceCypher, iterations);
-
-            showResults(results, showAll);
-
-            System.out.println();
-
-            String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,warehouseitem,useditem WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND warehouseitem.id=useditem.warehouseitemid";
-
-            results = measureQueryTimeSQL(stmt, workPriceSQL, iterations);
-
-            showResults(results, showAll);
-
-            System.out.println();
-
-            String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)";
-
-            results = measureQueryTimeCypher(session, workPriceCypher, iterations);
-
-            showResults(results, showAll);
-
-
-            //asiakkaan laskujen töiden summat
-
-            /*
-
-            String customerWorkPricesSQL = "SELECT q1.customerId, q1.invoiceId, q2.workId, q2.price " +
-            "FROM (SELECT customer.id AS customerId, invoice.id AS invoiceId, work.id AS workId FROM customer, invoice, workinvoice, work " +
-            "WHERE customer.id=invoice.customerid AND invoice.id=workinvoice.invoiceId AND workinvoice.workId=work.id) AS q1, " +
-            "(SELECT work.id AS workId, SUM((price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount)) AS price " +
-            "FROM worktype,workhours,work,warehouseitem,useditem WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND useditem.warehouseitemid=warehouseitem.id GROUP BY work.id) AS q2 " +
-            "WHERE q1.workId = q2.workId";
-
-            measureQueryTimeSQL(stmt, customerWorkPricesSQL);
-
-            String customerWorkPricesCypher = "MATCH (c:customer)-[p:PAYS]->(i:invoice)-[wi:WORK_INVOICE]->(w:work) " +
-            "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) " +
-            "RETURN  c.customerId, i.invoiceId,w.workId, sum((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice))";
-
-            MATCH (c:customer)-[p:PAYS]->(i:invoice)-[wi:WORK_INVOICE]->(w:work)
-            WITH collect(w.workId, ((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice))) as rs1;
-            MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem)
-            WITH rs1, collect(c.customerId,i.invoiceId,w.workId) as rs2
-            UNWIND rs2 as resultSet
-            RETURN resultSet.customerId, resultSet.invoiceId,resultSet.workId, resultSet.price;
-
-
-            measureQueryTimeCypher(session, customerWorkPricesCypher);
-
-
-             */
-            System.out.println();
 
             String previousInvoicesSQL = "WITH previous_invoices AS (" +
                     "SELECT id,customerId,state,duedate,previousinvoice " +
                     "FROM invoice " +
-                    "WHERE id=0 " +
+                    "WHERE id=" + invoiceId + " " +
                     "UNION ALL " +
                     "SELECT j.id, j.customerId,j.state,j.duedate,j.previousinvoice " +
                     "FROM invoice i, invoice j " +
@@ -197,129 +292,31 @@ public class QueryTester {
                     ") " +
                     "SELECT * FROM previous_invoices";
 
-            results = measureQueryTimeSQL(stmt, previousInvoicesSQL, iterations);
+            sql_databases.remove("jdbc:mysql://127.0.0.1:3307/");
+
+            resultLists = measureQueryTimeSQL(previousInvoicesSQL, iterations);
+
+            for (String databaseVersion : resultLists.keySet()) {
+
+                if(databaseVersion.contains("MariaDB")) {
+                    System.out.println("Results for MariaDB version " + databaseVersion);
+                }
+                else {
+                    System.out.println("Results for MySQL version " + databaseVersion);
+                }
+
+                results = resultLists.get(databaseVersion);
+                showResults(results, showAll);
+
+            }
+
+
+            String previousInvoicesCypher = "MATCH (i:invoice { invoiceId:" + invoiceId + " })-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
+
+            results = measureQueryTimeCypher(previousInvoicesCypher, iterations);
 
             showResults(results, showAll);
 
-            System.out.println();
-
-            String previousInvoicesCypher = "MATCH (i:invoice { invoiceId:0 })-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
-
-            results = measureQueryTimeCypher(session, previousInvoicesCypher, iterations);
-
-            showResults(results, showAll);
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-
-            try {
-                if (stmt != null) {
-                    conn.close();
-                }
-            } catch (SQLException se) {
-            }
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
         }
-
-        session.close();
-        driver.close();
-
-/*
-        Tässä rekursiiviset esimerkkikyselyt:
-
-        MariaDB:
-
-        WITH previous_invoices AS (
-                SELECT
-                id,
-                customerId,
-                state,
-                duedate,
-                previousinvoice
-                FROM
-                invoice
-                WHERE id=0
-                UNION ALL
-                SELECT
-                j.id,
-                j.customerId,
-                j.state,
-                j.duedate,
-                j.previousinvoice
-                FROM
-                invoice i, invoice j
-                WHERE i.id = j.previousinvoice
-        )
-        SELECT
-                *
-                FROM
-        previous_invoices;
-
-        Neo4J
-
-        MATCH (i:invoice { invoiceId:0 })-[p:PREVIOUS_INVOICE *0..]->(j:invoice)
-        RETURN *;
-
-
-
-
-
-        MariaDB:
-
-SELECT q1.customerId, q1.invoiceId, q2.workId, q2.price
-FROM (select customer.id as customerId, invoice.id as invoiceId, work.id as workId from customer, invoice, workinvoice, work where customer.id=invoice.customerid and invoice.id=workinvoice.invoiceId and workinvoice.workId=work.id
-) as q1, (select work.id as workId, sum((price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount)) as price from worktype,workhours,work,warehouseitem,useditem where worktype.id=workhours.worktypeid and workhours.workid=work.id and work.id=useditem.workid and useditem.warehouseitemid=warehouseitem.id group by work.id
-) as q2
-WHERE q1.workId = q2.workId;
-
-Cypher:
-
-MATCH (c:customer)-[p:PAYS]->(i:invoice)-[wi:WORK_INVOICE]->(w:work)
-MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem)
-RETURN  c.customerId, i.invoiceId,w.workId, sum((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice));
-
-
-
-
-Lyhyt kysely:
-
-        Neo4J:
-
-        MATCH (w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN u.amount*u.discount*i.purchaseprice;
-
-        Started streaming 100000 records after 6 ms and completed after 703 ms, displaying first 1000 rows.
-
-        MariaDB:
-
-        select (purchaseprice * amount * useditem.discount) as price from work,warehouseitem,useditem
-        where work.id=useditem.workid and warehouseitem.id=useditem.warehouseitemid;
-
-
-        Pitkä kysely:
-
-        Neo4J:
-
-        MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:warehouseitem) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice);
-        Started streaming 300000 records after 29 ms and completed after 3437 ms, displaying first 1000 rows.
-
-
-                MariaDB:
-
-        select (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price from worktype,workhours,work,warehouseitem,useditem where worktype.id=workhours.worktypeid and workhours.workid=work.id and work.id=useditem.workid and warehouseitem.id=useditem.warehouseitemid;
-
-
-
-
-        */
-
-    }
 
 }
