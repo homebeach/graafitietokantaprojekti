@@ -127,8 +127,6 @@ public class DataGeneratorThreadWork extends Thread {
 
     public List<Integer> getItemIndexes(int index) {
 
-        System.out.println("itemCount " + itemCount);
-
         List<Integer> allItemIndexes = new ArrayList<Integer>();
         for(int i=0; i<itemCount; i++) {
             allItemIndexes.add(i);
@@ -142,8 +140,6 @@ public class DataGeneratorThreadWork extends Thread {
     }
 
     public List<Integer> getWorkTypeIndexes(int index) {
-
-        System.out.println("workTypeCount " + workTypeCount);
 
         List<Integer> allWorkTypeIndexes = new ArrayList<Integer>();
         for (int i = 0; i < workTypeCount; i++) {
@@ -198,8 +194,6 @@ public class DataGeneratorThreadWork extends Thread {
         int i = 0;
         while (i < itemIndexes.size()) {
 
-            System.out.println("Thread: " + threadIndex + " item iterator: " + i);
-
             r.setSeed(workIndex);
 
             int amount = 1 + r.nextInt(101);
@@ -238,8 +232,6 @@ public class DataGeneratorThreadWork extends Thread {
         i = 0;
         while (i < workTypeIndexes.size()) {
 
-            System.out.println("Thread: " + threadIndex + " work type iterator: " + i);
-
             r.setSeed(workIndex);
 
             int hours = r.nextInt(100);
@@ -271,7 +263,7 @@ public class DataGeneratorThreadWork extends Thread {
 
         workIndex++;
 
-        if (workIndex % batchExecuteValue == 0 || workIndex == (INITIALWORKINDEX + iterationCount - 1)) {
+        if (workIndex % batchExecuteValue == 0 || workIndex == (INITIALWORKINDEX + iterationCount)) {
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 

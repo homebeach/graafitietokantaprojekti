@@ -204,6 +204,80 @@ public class DataGenerator {
 
     }
 
+    public void truncateDatabasesCustomer() {
+
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet resultSet = null;
+
+        String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+        String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+        String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
+
+        Session session = driver.session();
+
+
+        session.run("MATCH (c:customer) DETACH DELETE c");
+        session.run("MATCH (i:invoice) DETACH DELETE i");
+        session.run("MATCH (t:target) DETACH DELETE t");
+
+
+
+        session.close();
+        driver.close();
+
+        for (String db_url : sql_databases.keySet()) {
+            String[] db_info = sql_databases.get(db_url);
+
+            String db_driver = db_info[0];
+            String db_username = db_info[1];
+            String db_password = db_info[2];
+
+            try {
+
+                Class.forName(db_driver);
+
+                conn = DriverManager.getConnection(db_url, db_username, db_password);
+                stmt = conn.createStatement();
+
+                stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
+
+                stmt.addBatch("TRUNCATE TABLE warehouse.workinvoice;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.worktarget;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.target;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.invoice;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.customer;");
+
+                stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
+                stmt.executeBatch();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+
+                try {
+                    if (stmt != null) {
+                        conn.close();
+                    }
+                } catch (SQLException se) {
+                }
+                try {
+                    if (conn != null) {
+                        conn.close();
+                    }
+                } catch (SQLException se) {
+                    se.printStackTrace();
+                }
+
+            }
+
+        }
+
+    }
+
+
     public void getSampleData() {
 
         try {
@@ -302,6 +376,54 @@ public class DataGenerator {
         return itemCount;
     }
 
+    public int getCustomerCount() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS CUSTOMERCOUNT FROM WAREHOUSE.CUSTOMER");
+
+        int customerCount = 0;
+
+        while(rs.next()) {
+
+            customerCount = rs.getInt("CUSTOMERCOUNT");
+            System.out.println("Customer count " + customerCount);
+
+        }
+
+        return customerCount;
+    }
+
+    public int getInvoiceCount() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS INVOICECOUNT FROM WAREHOUSE.INVOICE");
+
+        int invoiceCount = 0;
+
+        while(rs.next()) {
+
+            invoiceCount = rs.getInt("INVOICECOUNT");
+            System.out.println("Invoice count " + invoiceCount);
+
+        }
+
+        return invoiceCount;
+    }
+
+    public int getTargetCount() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT COUNT(*) AS TARGETCOUNT FROM WAREHOUSE.TARGET");
+
+        int targetCount = 0;
+
+        while(rs.next()) {
+
+            targetCount = rs.getInt("TARGETCOUNT");
+            System.out.println("Target count " + targetCount);
+
+        }
+
+        return targetCount;
+    }
+
     public int getLastCustomerId() throws SQLException {
 
         ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.CUSTOMER");
@@ -318,6 +440,22 @@ public class DataGenerator {
         return lastCustomerId;
     }
 
+    public int getLastWorkId() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.WORK");
+
+        int workId = 0;
+
+        while(rs.next()) {
+
+            workId = rs.getInt("LASTID");
+            System.out.println("Last work id " + workId);
+
+        }
+
+        return workId;
+    }
+
     public int getLastInvoiceId() throws SQLException {
 
         ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.INVOICE");
@@ -332,6 +470,22 @@ public class DataGenerator {
         }
 
         return invoiceId;
+    }
+
+    public int getLastTargetId() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.TARGET");
+
+        int targetId = 0;
+
+        while(rs.next()) {
+
+            targetId = rs.getInt("LASTID");
+            System.out.println("Last target id " + targetId);
+
+        }
+
+        return targetId;
     }
 
     public void createSampleTables() {
@@ -670,10 +824,30 @@ public class DataGenerator {
 
         try {
 
-            int customerIndex = 0;
-            int invoiceIndex = 0;
-            int targetIndex = 0;
-            int workIndex = 0;
+            int customerIndex;
+
+            if(getCustomerCount() == 0) {
+                customerIndex = 0;
+            } else {
+                customerIndex = getLastCustomerId() + 1;
+            }
+
+            int invoiceIndex;
+
+            if(getInvoiceCount() == 0) {
+                invoiceIndex = 0;
+            } else {
+                invoiceIndex = getLastInvoiceId() + 1;
+            }
+
+            int targetIndex;
+
+            if(getTargetCount() == 0) {
+                targetIndex = 0;
+            } else {
+                targetIndex = getLastTargetId() + 1;
+            }
+
             int workCount = getWorkCount();
 
             if(workCount < 1) {
@@ -693,13 +867,11 @@ public class DataGenerator {
             System.out.println("Insertion of Customer related data started at: " + startTime.toString());
 
             for (int i = 0; i < threadCount; i++) {
-                DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, sql_databases, neo4j_settings, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workIndex, workCount);
+                DataGeneratorThreadCustomer thread = new DataGeneratorThreadCustomer(i, iterationsPerThread, batchExecuteValue, sql_databases, neo4j_settings, lock, invoiceFactor, targetFactor, workFactor, sequentialInvoices, firstnames, surnames, addresses, customerIndex, invoiceIndex, targetIndex, workCount);
                 executor.execute(thread);
                 customerIndex = customerIndex + iterationsPerThread;
                 invoiceIndex = invoiceIndex + iterationsPerThread*invoiceFactor;
                 targetIndex = targetIndex + iterationsPerThread*targetFactor;
-                workIndex = workIndex + iterationsPerThread;
-
             }
 
             executor.shutdown();
@@ -712,7 +884,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of Customer related data finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);
@@ -806,7 +978,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of sequential invoices finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);
@@ -825,7 +997,14 @@ public class DataGenerator {
 
         try {
 
-            int workIndex = 0;
+
+            int workIndex;
+
+            if(getWorkCount() == 0) {
+                workIndex = 0;
+            } else {
+                workIndex = getLastWorkId() + 1;
+            }
 
             int itemCount = getItemCount();
 
@@ -859,7 +1038,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of Work related data finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);
@@ -906,7 +1085,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("mm:ss:SSS")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of items and work types finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);

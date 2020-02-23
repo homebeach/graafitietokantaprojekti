@@ -11,7 +11,11 @@ public class QueryTester {
 
     private HashMap<String, String[]> sql_databases;
 
-    HashMap<String, String> neo4j_settings;
+    private HashMap<String, String> neo4j_settings;
+
+    private HashMap<String, ArrayList<Long>> resultLists;
+
+    private List<Long> results;
 
     public QueryTester(HashMap<String, String[]> sql_databases, HashMap<String, String> neo4j_settings) {
         this.sql_databases = sql_databases;
@@ -179,19 +183,12 @@ public class QueryTester {
 
     }
 
-    public void showSystemInfo(List<Long> results, boolean showAll) {
-
-
-    }
-
     public void executeQueryTests(int iterations, boolean showAll) {
 
-        HashMap<String, ArrayList<Long>> resultLists;
-        List<Long> results;
+        System.out.println("Short query, item price");
 
-
-        String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,item,useditem " +
-                    "WHERE work.id=useditem.workid AND item.id=useditem.itemid";
+        String workItemPriceSQL = "SELECT (purchaseprice * amount * useditem.discount) AS price FROM work,useditem,item " +
+                    "WHERE work.id=useditem.workid AND useditem.itemid=item.id";
 
         resultLists = measureQueryTimeSQL(workItemPriceSQL, iterations);
 
@@ -219,7 +216,9 @@ public class QueryTester {
 
         System.out.println();
 
-        String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,item,useditem WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND item.id=useditem.itemid";
+        System.out.println("Long query, work price");
+
+        String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,useditem,item WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id AND work.id=useditem.workId AND useditem.itemId=item.id";
 
         resultLists = measureQueryTimeSQL(workPriceSQL, iterations);
 
@@ -246,6 +245,8 @@ public class QueryTester {
         showResults(results, showAll);
 
         System.out.println();
+
+        System.out.println("Query with defined key, work of invoice");
 
         String workOfInvoiceSQL = "SELECT * FROM invoice,workinvoice,work " +
                 "WHERE invoice.id=workinvoice.workId AND workinvoice.workId=work.id AND invoice.id=0";
@@ -276,47 +277,118 @@ public class QueryTester {
 
     }
 
-    public void executeRecursiveQueryTest(int iterations, boolean showAll, int invoiceId) {
+    public void executeAggregateQueryTest(int iterations, boolean showAll) {
 
-            HashMap<String, ArrayList<Long>> resultLists;
-            List<Long> results;
+        System.out.println("Aggregate query, invoice price");
 
-            String previousInvoicesSQL = "WITH previous_invoices AS (" +
-                    "SELECT id,customerId,state,duedate,previousinvoice " +
-                    "FROM invoice " +
-                    "WHERE id=" + invoiceId + " " +
-                    "UNION ALL " +
-                    "SELECT j.id, j.customerId,j.state,j.duedate,j.previousinvoice " +
-                    "FROM invoice i, invoice j " +
-                    "WHERE i.id = j.previousinvoice " +
-                    ") " +
-                    "SELECT * FROM previous_invoices";
+        String invoicePriceSQL = "SELECT q1.invoiceId AS invoiceId, sum(q2.price) AS invoicePrice " +
+                "FROM (" +
+                "SELECT invoice.id AS invoiceId, work.id AS workId " +
+                "FROM invoice, workinvoice, work " +
+                "WHERE invoice.id=workinvoice.invoiceId and workinvoice.workId=work.id " +
+                ") AS q1, (" +
+                "SELECT work.id AS workId, SUM((worktype.price * workhours.hours * workhours.discount) + (item.purchaseprice * useditem.amount * useditem.discount)) AS price " +
+                "FROM worktype,workhours,work,item,useditem " +
+                "WHERE worktype.id=workhours.worktypeid AND workhours.workid=work.id AND work.id=useditem.workid AND useditem.itemid=item.id GROUP BY work.id" +
+                ") AS q2 " +
+                "WHERE q1.workId = q2.workId GROUP BY q1.invoiceId";
 
-            sql_databases.remove("jdbc:mysql://127.0.0.1:3307/");
+        resultLists = measureQueryTimeSQL(invoicePriceSQL, iterations);
 
-            resultLists = measureQueryTimeSQL(previousInvoicesSQL, iterations);
+        for (String databaseVersion : resultLists.keySet()) {
 
-            for (String databaseVersion : resultLists.keySet()) {
-
-                if(databaseVersion.contains("MariaDB")) {
-                    System.out.println("Results for MariaDB version " + databaseVersion);
-                }
-                else {
-                    System.out.println("Results for MySQL version " + databaseVersion);
-                }
-
-                results = resultLists.get(databaseVersion);
-                showResults(results, showAll);
-
+            if(databaseVersion.contains("MariaDB")) {
+                System.out.println("Results for MariaDB version " + databaseVersion);
+            }
+            else {
+                System.out.println("Results for MySQL version " + databaseVersion);
             }
 
-
-            String previousInvoicesCypher = "MATCH (i:invoice { invoiceId:" + invoiceId + " })-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
-
-            results = measureQueryTimeCypher(previousInvoicesCypher, iterations);
-
+            results = resultLists.get(databaseVersion);
             showResults(results, showAll);
 
         }
+
+        System.out.println();
+
+        String invoicePriceCypher = "MATCH (inv:invoice)-[:WORK_INVOICE]->(w:work)<-[h:WORKHOURS]-(wt:worktype) " +
+                "WITH inv, w, SUM(wt.price*h.hours*h.discount) as workTimePrice " +
+                "OPTIONAL MATCH " +
+                "(w)-[u:USED_ITEM]->(i:item) " +
+                "WITH inv, workTimePrice + SUM(u.amount*u.discount*i.purchaseprice) as workItemPrice " +
+                "RETURN inv, sum(workItemPrice) as invoicePrice";
+
+        results = measureQueryTimeCypher(invoicePriceCypher, iterations);
+
+        showResults(results, showAll);
+
+        System.out.println();
+    }
+
+
+    public void executeRecursiveQueryTest(int iterations, boolean showAll, int invoiceId) {
+
+        System.out.println("Recursive query, invoices related to invoice id " + invoiceId);
+
+        String previousInvoicesSQL = "WITH previous_invoices AS (" +
+                "SELECT id,customerId,state,duedate,previousinvoice " +
+                "FROM invoice " +
+                "WHERE id=" + invoiceId + " " +
+                "UNION ALL " +
+                "SELECT j.id, j.customerId,j.state,j.duedate,j.previousinvoice " +
+                "FROM invoice i, invoice j " +
+                "WHERE i.id = j.previousinvoice " +
+                ") " +
+                "SELECT * FROM previous_invoices";
+
+        sql_databases.remove("jdbc:mysql://127.0.0.1:3307/");
+
+        resultLists = measureQueryTimeSQL(previousInvoicesSQL, iterations);
+
+        for (String databaseVersion : resultLists.keySet()) {
+
+            if(databaseVersion.contains("MariaDB")) {
+                System.out.println("Results for MariaDB version " + databaseVersion);
+            }
+            else {
+                System.out.println("Results for MySQL version " + databaseVersion);
+            }
+
+            results = resultLists.get(databaseVersion);
+            showResults(results, showAll);
+
+        }
+
+        previousInvoicesSQL = "SELECT  id,customerid,state,duedate,previousinvoice " +
+                "FROM (SELECT * FROM invoice " +
+                "ORDER BY previousinvoice, id) invoices_sorted, " +
+                "(SELECT @pv := '" + invoiceId + "') initialisation " +
+                "WHERE find_in_set(previousinvoice, @pv) " +
+                "AND length(@pv := concat(@pv, ',', id))";
+
+        resultLists = measureQueryTimeSQL(previousInvoicesSQL, iterations);
+
+        for (String databaseVersion : resultLists.keySet()) {
+
+            if(databaseVersion.contains("MariaDB")) {
+                System.out.println("Results for MariaDB version " + databaseVersion);
+            }
+            else {
+                System.out.println("Results for MySQL version " + databaseVersion);
+            }
+
+            results = resultLists.get(databaseVersion);
+            showResults(results, showAll);
+
+        }
+
+
+        String previousInvoicesCypher = "MATCH (i:invoice { invoiceId:" + invoiceId + " })-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN *";
+
+        results = measureQueryTimeCypher(previousInvoicesCypher, iterations);
+
+        showResults(results, showAll);
+
+    }
 
 }

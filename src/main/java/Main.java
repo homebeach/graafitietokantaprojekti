@@ -1,11 +1,9 @@
 import java.util.HashMap;
-import java.util.Random;
 
 public class Main
 {
     public static void main(String[] args)
     {
-
 
         HashMap<String, String[]> sql_databases = new HashMap<String, String[]>();
 
@@ -51,9 +49,11 @@ public class Main
 
         //dataGenerator.truncateDatabases();
 
+        //dataGenerator.truncateDatabasesCustomer();
+
         //dataGenerator.getSampleData();
 
-        //dataGenerator.insertItemsAndWorkTypes(10, 10, 1000, 1000);
+        //dataGenerator.insertItemsAndWorkTypes(1, 10, 10, 10);
 
 
 
@@ -68,18 +68,21 @@ public class Main
         //dataGenerator.printSampleDataSizes();
 
 
-        //dataGenerator.insertWorkData(10,100,10,10,10);
+        //dataGenerator.insertWorkData(1,10,10,10,10);
 
-        //dataGenerator.insertCustomerData(10,100,10,10,10,10,10);
+        //dataGenerator.insertCustomerData(1,10,10,10,10,10,10);
 
+        //dataGenerator.insertCustomerData(1,149,10,10,10,10,10);
 
-        QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
+        //QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
 
-        queryTester.executeQueryTests(10, true);
+        //queryTester.executeQueryTests(10, true);
 
-        int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 100);
+        //queryTester.executeAggregateQueryTest(10, true);
 
-        queryTester.executeRecursiveQueryTest(10, true, firstInvoiceIndex);
+        //int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 100);
+
+        //queryTester.executeRecursiveQueryTest(10, true, 105490);
 
 //        firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 1000);
 

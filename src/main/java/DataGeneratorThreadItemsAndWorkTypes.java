@@ -253,7 +253,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
             }
 
-            if (itemIndex % batchExecuteValue == 0 || itemIndex == (INITIALITEMINDEX + itemCount - 1)) {
+            if (itemIndex % batchExecuteValue == 0 || itemIndex == (INITIALITEMINDEX + itemCount) - 1) {
 
                 for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 
@@ -280,28 +280,44 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
             workType.setInt(1, workTypeIndex);
             workType.setInt(3, price);
 
+        }
+
             if (workTypeIndex % 2 == 0) {
 
-                workType.setString(2, "design");
+                for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+                    workType = preparedStatements.get("worktype");
+                    workType.setString(2, "design");
+                }
+
                 session.run("CREATE (wt:worktype {worktypeId: " + workTypeIndex + ", name:\"design\", price:" + price + "})");
 
             } else if (workTypeIndex % 3 == 0) {
 
-                workType.setString(2, "work");
+                for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+                    workType = preparedStatements.get("worktype");
+                    workType.setString(2, "work");
+                }
+
                 session.run("CREATE (wt:worktype {worktypeId: " + workTypeIndex + ", name:\"work\", price:" + price + "})");
 
             } else {
 
-                workType.setString(2, "supporting work");
+                for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+                    workType = preparedStatements.get("worktype");
+                    workType.setString(2, "supporting work");
+                }
+
                 session.run("CREATE (wt:worktype {worktypeId: " + workTypeIndex + ", name:\"supporting work\", price:" + price + "})");
 
             }
 
-            workType.addBatch();
+            for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
+                workType = preparedStatements.get("worktype");
+                workType.addBatch();
+            }
 
-        }
 
-        if (workTypeIndex % batchExecuteValue == 0 || workTypeIndex == (INITIALWORKTYPEINDEX + workTypeCount - 1)) {
+        if (workTypeIndex % batchExecuteValue == 0 || workTypeIndex == (INITIALWORKTYPEINDEX + workTypeCount) - 1) {
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 
