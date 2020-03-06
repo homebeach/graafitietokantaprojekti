@@ -93,16 +93,16 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
             }
 
-            for (int i = 0; i < itemCount; i++) {
+            for (int iterator = 0; iterator < itemCount; iterator++) {
 
-                insertItems(batchExecuteValue, session, preparedStatementsList);
+                insertItems(iterator, batchExecuteValue, session, preparedStatementsList);
                 itemIndex++;
 
             }
 
-            for (int i = 0; i < workTypeCount; i++) {
+            for (int iterator = 0; iterator < workTypeCount; iterator++) {
 
-                insertWorkTypes(batchExecuteValue, session, preparedStatementsList);
+                insertWorkTypes(iterator, batchExecuteValue, session, preparedStatementsList);
                 workTypeIndex++;
 
             }
@@ -130,7 +130,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
     }
 
 
-    public void insertItems(int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
+    public void insertItems(int iterator, int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
 
             PreparedStatement item;
 
@@ -253,7 +253,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
 
             }
 
-            if (itemIndex % batchExecuteValue == 0 || itemIndex == (INITIALITEMINDEX + itemCount) - 1) {
+            if (iterator % batchExecuteValue == 0 || iterator == itemCount - 1) {
 
                 for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 
@@ -267,7 +267,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
     }
 
 
-    public void insertWorkTypes(int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
+    public void insertWorkTypes(int iterator, int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
 
         PreparedStatement workType;
 
@@ -317,7 +317,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
             }
 
 
-        if (workTypeIndex % batchExecuteValue == 0 || workTypeIndex == (INITIALWORKTYPEINDEX + workTypeCount) - 1) {
+        if (iterator % batchExecuteValue == 0 || iterator == workTypeCount - 1) {
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 

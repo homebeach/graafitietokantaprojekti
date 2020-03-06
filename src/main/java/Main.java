@@ -47,46 +47,38 @@ public class Main
 
         //dataGenerator.createTables();
 
-        //dataGenerator.truncateDatabases();
-
-        //dataGenerator.truncateDatabasesCustomer();
-
         //dataGenerator.getSampleData();
 
-        //dataGenerator.insertItemsAndWorkTypes(1, 10, 10, 10);
+        //dataGenerator.insertItemsAndWorkTypes(10, 10, 10000, 10000);
 
 
+        //dataGenerator.createSampleTables("jdbc:mariadb://127.0.0.1:3306/");
 
-        /*
+        //dataGenerator.loadSampleData(10, "jdbc:mariadb://127.0.0.1:3306/");
 
-        dataGenerator.createTestTables();
 
-        dataGenerator.loadTestData(50);
-
-         */
 
         //dataGenerator.printSampleDataSizes();
 
+        //dataGenerator.insertWorkData(5,1000,10,10,10);
 
-        //dataGenerator.insertWorkData(1,10,10,10,10);
-
-        //dataGenerator.insertCustomerData(1,10,10,10,10,10,10);
+        //dataGenerator.insertCustomerData(5,1000,10,10,0,10,10);
 
         //dataGenerator.insertCustomerData(1,149,10,10,10,10,10);
 
-        //QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
+        QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
 
         //queryTester.executeQueryTests(10, true);
 
         //queryTester.executeAggregateQueryTest(10, true);
 
-        //int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 100);
+        int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(1,10,100);
 
-        //queryTester.executeRecursiveQueryTest(10, true, 105490);
+        queryTester.executeRecursiveQueryTest(10, true, firstInvoiceIndex);
 
-//        firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 1000);
+//      firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 1000);
 
-//        queryTester.executeRecursiveQueryTest(10, true, firstInvoiceIndex);
+//      queryTester.executeRecursiveQueryTest(10, true, firstInvoiceIndex);
 
         //TinkerPopGraph tinkerPopGraph = new TinkerPopGraph();
 

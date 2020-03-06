@@ -83,9 +83,9 @@ public class DataGeneratorThreadSequentialInvoices extends Thread {
 
             }
 
-            for (int i = 0; i < sequentialInvoiceCount; i++) {
+            for (int iterator = 0; iterator < sequentialInvoiceCount; iterator++) {
 
-                insertSequentialInvoices(batchExecuteValue, session, preparedStatementsList);
+                insertSequentialInvoices(iterator, batchExecuteValue, session, preparedStatementsList);
                 invoiceIndex++;
             }
 
@@ -108,7 +108,7 @@ public class DataGeneratorThreadSequentialInvoices extends Thread {
     }
 
 
-    public void insertSequentialInvoices(int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
+    public void insertSequentialInvoices(int iterator, int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
 
         PreparedStatement invoice;
 
@@ -189,7 +189,7 @@ public class DataGeneratorThreadSequentialInvoices extends Thread {
         int discountPercent = 1 + r.nextInt(101);
         double discount = (0.01 * discountPercent);
 
-        if (invoiceIndex % batchExecuteValue == 0 || invoiceIndex == (sequentialInvoiceCount - 1)) {
+        if (iterator % batchExecuteValue == 0 || iterator == (sequentialInvoiceCount - 1)) {
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 

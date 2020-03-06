@@ -89,9 +89,9 @@ public class DataGeneratorThreadWork extends Thread {
 
             }
 
-            for (int i = 0; i < iterationCount; i++) {
+            for (int iterator = 0; iterator < iterationCount; iterator++) {
 
-                insertWork(batchExecuteValue, session, preparedStatementsList);
+                insertWork(iterator, batchExecuteValue, session, preparedStatementsList);
 
             }
 
@@ -154,7 +154,7 @@ public class DataGeneratorThreadWork extends Thread {
     }
 
 
-    public void insertWork(int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
+    public void insertWork(int iterator, int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
 
         PreparedStatement work;
         PreparedStatement usedItem;
@@ -263,7 +263,7 @@ public class DataGeneratorThreadWork extends Thread {
 
         workIndex++;
 
-        if (workIndex % batchExecuteValue == 0 || workIndex == (INITIALWORKINDEX + iterationCount)) {
+        if (iterator % batchExecuteValue == 0 || iterator == (iterationCount - 1)) {
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 

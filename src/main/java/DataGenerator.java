@@ -1,4 +1,3 @@
-
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
@@ -204,6 +203,73 @@ public class DataGenerator {
 
     }
 
+    public void truncateDatabasesWork() {
+
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet resultSet = null;
+
+        String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+        String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+        String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
+
+        Session session = driver.session();
+
+
+        session.run("MATCH (w:work) DETACH DELETE w");
+
+        session.close();
+        driver.close();
+
+        for (String db_url : sql_databases.keySet()) {
+            String[] db_info = sql_databases.get(db_url);
+
+            String db_driver = db_info[0];
+            String db_username = db_info[1];
+            String db_password = db_info[2];
+
+            try {
+
+                Class.forName(db_driver);
+
+                conn = DriverManager.getConnection(db_url, db_username, db_password);
+                stmt = conn.createStatement();
+
+                stmt.addBatch("SET FOREIGN_KEY_CHECKS=0;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.work;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.useditem;");
+                stmt.addBatch("TRUNCATE TABLE warehouse.workhours;");
+                stmt.addBatch("SET FOREIGN_KEY_CHECKS=1;");
+                stmt.executeBatch();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+
+                try {
+                    if (stmt != null) {
+                        conn.close();
+                    }
+                } catch (SQLException se) {
+                }
+                try {
+                    if (conn != null) {
+                        conn.close();
+                    }
+                } catch (SQLException se) {
+                    se.printStackTrace();
+                }
+
+            }
+
+        }
+
+    }
+
+
+
     public void truncateDatabasesCustomer() {
 
         Connection conn = null;
@@ -337,7 +403,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             workCount = rs.getInt("WORKCOUNT");
-            System.out.println("Workcount " + workCount);
 
         }
 
@@ -353,7 +418,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             workTypeCount = rs.getInt("WORKTYPECOUNT");
-            System.out.println("Worktype count " + workTypeCount);
 
         }
 
@@ -369,7 +433,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             itemCount = rs.getInt("ITEMCOUNT");
-            System.out.println("Item count " + itemCount);
 
         }
 
@@ -385,7 +448,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             customerCount = rs.getInt("CUSTOMERCOUNT");
-            System.out.println("Customer count " + customerCount);
 
         }
 
@@ -401,7 +463,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             invoiceCount = rs.getInt("INVOICECOUNT");
-            System.out.println("Invoice count " + invoiceCount);
 
         }
 
@@ -417,7 +478,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             targetCount = rs.getInt("TARGETCOUNT");
-            System.out.println("Target count " + targetCount);
 
         }
 
@@ -433,7 +493,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             lastCustomerId = rs.getInt("LASTID");
-            System.out.println("Last customer id " + lastCustomerId);
 
         }
 
@@ -449,7 +508,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             workId = rs.getInt("LASTID");
-            System.out.println("Last work id " + workId);
 
         }
 
@@ -465,7 +523,6 @@ public class DataGenerator {
         while(rs.next()) {
 
             invoiceId = rs.getInt("LASTID");
-            System.out.println("Last invoice id " + invoiceId);
 
         }
 
@@ -481,16 +538,43 @@ public class DataGenerator {
         while(rs.next()) {
 
             targetId = rs.getInt("LASTID");
-            System.out.println("Last target id " + targetId);
 
         }
 
         return targetId;
     }
 
-    public void createSampleTables() {
+    public int getLastItemId() throws SQLException {
 
-        String db_url = "jdbc:mariadb://127.0.0.1/";
+        ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.ITEM");
+
+        int itemId = 0;
+
+        while(rs.next()) {
+
+            itemId = rs.getInt("LASTID");
+
+        }
+
+        return itemId;
+    }
+
+    public int getLastWorkTypeId() throws SQLException {
+
+        ResultSet rs = executeSQLQuery("SELECT MAX(ID) AS LASTID FROM WAREHOUSE.WORKTYPE");
+
+        int workTypeId = 0;
+
+        while(rs.next()) {
+
+            workTypeId = rs.getInt("LASTID");
+
+        }
+
+        return workTypeId;
+    }
+
+    public void createSampleTables(String db_url) {
 
         String[] db_settings = sql_databases.get(db_url);
 
@@ -567,7 +651,7 @@ public class DataGenerator {
                         // use comma as separator
                         String[] firstNameInArray = line.split(cvsSplitBy);
 
-                        String firstName = firstNameInArray[0];
+                        String firstName = firstNameInArray[0].replaceAll("[\\\\/:*?\"<>|]", "");
 
                         firstnames.setString(1, firstName);
                         firstnames.addBatch();
@@ -601,7 +685,7 @@ public class DataGenerator {
                         // use comma as separator
                         String[] surnameInArray = line.split(cvsSplitBy);
 
-                        String surname = surnameInArray[0].toLowerCase();
+                        String surname = surnameInArray[0].toLowerCase().replaceAll("[\\\\/:*?\"<>|]", "");
                         surname = surname.substring(0, 1).toUpperCase() + surname.substring(1);
 
                         surnames.setString(1, surname);
@@ -634,7 +718,7 @@ public class DataGenerator {
 
                         String[] addressInArray = line.split(cvsSplitBy);
 
-                        String street = addressInArray[3].toLowerCase();
+                        String street = addressInArray[3].toLowerCase().toLowerCase().replaceAll("[\\\\/:*?\"<>|]", "");
 
                         if(street.length() > 1) {
                             street = street.substring(0, 1).toUpperCase() + street.substring(1);
@@ -884,7 +968,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of Customer related data finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);
@@ -895,7 +979,7 @@ public class DataGenerator {
         }
     }
 
-    public int insertSequentialInvoices(int threadCount, int iterationsPerThread, int batchExecuteValue, int sequentialInvoices) {
+    public int insertSequentialInvoices(int threadCount, int batchExecuteValue, int sequentialInvoices) {
 
         int firstInvoiceIndex = 0;
 
@@ -978,7 +1062,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of sequential invoices finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);
@@ -1038,7 +1122,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of Work related data finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);
@@ -1053,8 +1137,21 @@ public class DataGenerator {
 
         try {
 
-            int itemIndex = 0;
-            int workTypeIndex = 0;
+            int itemIndex;
+
+            if(getItemCount() == 0) {
+                itemIndex = 0;
+            } else {
+                itemIndex = getLastItemId() + 1;
+            }
+
+            int workTypeIndex;
+
+            if(getWorkTypeCount() == 0) {
+                workTypeIndex = 0;
+            } else {
+                workTypeIndex = getLastWorkTypeId() + 1;
+            }
 
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
@@ -1085,7 +1182,7 @@ public class DataGenerator {
 
             long elapsedTimeMilliseconds = endTimeInMilliseconds - startTimeInMilliseconds;
 
-            String elapsedTime = (new SimpleDateFormat("HH:mm:ss")).format(new Date(elapsedTimeMilliseconds));
+            String elapsedTime = (new SimpleDateFormat("mm:ss")).format(new Date(elapsedTimeMilliseconds));
 
             System.out.println("Insertion of items and work types finished at: " + endTime.toString());
             System.out.println("Time elapsed: " + elapsedTime);

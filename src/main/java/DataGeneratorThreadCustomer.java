@@ -113,9 +113,9 @@ public class DataGeneratorThreadCustomer extends Thread {
 
             }
 
-            for (int i = 0; i < iterationCount; i++) {
+            for (int iterator = 0; iterator < iterationCount; iterator++) {
 
-                insertCustomer(batchExecuteValue, session, preparedStatementsList);
+                insertCustomer(iterator, batchExecuteValue, session, preparedStatementsList);
 
             }
 
@@ -164,7 +164,7 @@ public class DataGeneratorThreadCustomer extends Thread {
         return selectedWorkIndexes;
     }
 
-    public void insertCustomer(int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
+    public void insertCustomer(int iterator, int batchExecuteValue, Session session, List<HashMap> preparedStatementsList) throws SQLException, InterruptedException {
 
         PreparedStatement customer;
         PreparedStatement invoice;
@@ -174,7 +174,6 @@ public class DataGeneratorThreadCustomer extends Thread {
 
         int i = 0;
         int j = 0;
-        int k = 0;
 
         System.out.println("Thread: " + threadIndex + " customerIndex: " + customerIndex);
 
@@ -341,8 +340,6 @@ public class DataGeneratorThreadCustomer extends Thread {
 
         }
 
-        customerIndex++;
-
         List<Integer> workIndexes;
 
         int workIndex = 0;
@@ -353,9 +350,6 @@ public class DataGeneratorThreadCustomer extends Thread {
         while (i < targetFactor) {
 
             workIndexes = getWorkIndexes(targetIndex);
-
-            //System.out.println("workIndexes for target: " + targetIndex);
-            //System.out.println(workIndexes.toString());
 
             j = 0;
             while (j < workIndexes.size()) {
@@ -438,9 +432,10 @@ public class DataGeneratorThreadCustomer extends Thread {
         }
 
         workIndex++;
+        customerIndex++;
 
 
-        if (customerIndex % batchExecuteValue == 0 || customerIndex == (INITIALCUSTOMERINDEX + iterationCount)) {
+        if (iterator % batchExecuteValue == 0 || iterator == (iterationCount - 1)) {
 
             for (HashMap<String, PreparedStatement> preparedStatements : preparedStatementsList) {
 
