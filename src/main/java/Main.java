@@ -9,8 +9,8 @@ public class Main
 
         String db_mariadb_url = "jdbc:mariadb://127.0.0.1:3306/";
         String db_driver = "org.mariadb.jdbc.Driver";
-        String db_username = "root";
-        String db_password = "root";
+        String db_username = "";
+        String db_password = "";
 
         String[] db_settings = new String[3];
 
@@ -22,8 +22,8 @@ public class Main
 
         String mysql_db_url = "jdbc:mysql://127.0.0.1:3307/";
         db_driver = "com.mysql.jdbc.Driver";
-        db_username = "root";
-        db_password = "root";
+        db_username = "";
+        db_password = "";
 
         db_settings = new String[3];
 
@@ -36,8 +36,8 @@ public class Main
         HashMap<String, String> neo4j_settings = new HashMap<String, String>();
 
         String neo4J_db_url = "bolt://localhost:7687";
-        String neo4J_username = "neo4j";
-        String neo4j_password = "admin";
+        String neo4J_username = "";
+        String neo4j_password = "";
 
         neo4j_settings.put("NEO4J_DB_URL", neo4J_db_url);
         neo4j_settings.put("NEO4J_USERNAME", neo4J_username);
