@@ -136,14 +136,6 @@ public class Main
 
         tinkerPopGraph.printGraph();
 
-        -katsotaan Neo4J ajonaaikaiset parametrit kuntoon
-        -asenna mysql ja tee sama testi mysql kanssa yritä etsiä sama versio kuin intialaisten tutkimuksessa
-        -töiden summa asiakkaalle x
-        -vie 100 000 riviä
-
-        -kokeillaan a->b->c relaatio asiakkaalle x 100 000 rivillä
-
-
         */
     }
 }

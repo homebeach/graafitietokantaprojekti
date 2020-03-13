@@ -186,7 +186,7 @@ public class QueryTester {
     public void executeQueryTests(int iterations, boolean showAll) {
 
         System.out.println("Short query, worktype price");
-/*
+
         String workItemPriceSQL = "SELECT (price * hours * workhours.discount) as price FROM worktype,workhours,work WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id;";
 
         //resultLists = measureQueryTimeSQL(workItemPriceSQL, iterations);
@@ -204,7 +204,7 @@ public class QueryTester {
             //showResults(results, showAll);
 
         }
-*/
+
         System.out.println();
 
         String workItemPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work) RETURN (h.hours*h.discount*wt.price) as price;";
@@ -248,7 +248,7 @@ public class QueryTester {
         System.out.println();
 
         System.out.println("Query with defined key, work of invoice");
-/*
+
         String workOfInvoiceSQL = "SELECT * FROM invoice,workinvoice,work " +
                 "WHERE invoice.id=workinvoice.workId AND workinvoice.workId=work.id AND invoice.id=0";
 
@@ -267,7 +267,7 @@ public class QueryTester {
             showResults(results, showAll);
 
         }
-*/
+
         System.out.println();
 
         String workOfInvoiceCypher = "MATCH (i:invoice { invoiceId:0 })-[wi:WORK_INVOICE]->(w:work) RETURN *";
@@ -281,7 +281,7 @@ public class QueryTester {
     public void executeAggregateQueryTest(int iterations, boolean showAll) {
 
         System.out.println("Aggregate query, invoice price");
-/*
+
         String invoicePriceSQL = "SELECT q1.invoiceId AS invoiceId, sum(q2.price) AS invoicePrice " +
                 "FROM (" +
                 "SELECT invoice.id AS invoiceId, work.id AS workId " +
@@ -309,7 +309,7 @@ public class QueryTester {
             showResults(results, showAll);
 
         }
-*/
+
         System.out.println();
 
         String invoicePriceCypher = "MATCH (inv:invoice)-[:WORK_INVOICE]->(w:work)<-[h:WORKHOURS]-(wt:worktype) " +
