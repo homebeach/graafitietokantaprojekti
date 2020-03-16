@@ -26,7 +26,6 @@ public class DataGeneratorThreadCustomer extends Thread {
 
     private int threadIndex = 0;
     private int customerIndex = 0;
-    private final int INITIALCUSTOMERINDEX;
     private int invoiceIndex = 0;
     private int targetIndex = 0;
 
@@ -53,7 +52,6 @@ public class DataGeneratorThreadCustomer extends Thread {
         this.surnames = surnames;
         this.addresses = addresses;
         this.customerIndex = customerIndex;
-        this.INITIALCUSTOMERINDEX = customerIndex;
         this.invoiceIndex = invoiceIndex;
         this.targetIndex = targetIndex;
         this.workCount = workCount;
