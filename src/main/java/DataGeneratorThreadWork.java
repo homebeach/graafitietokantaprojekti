@@ -18,7 +18,6 @@ public class DataGeneratorThreadWork extends Thread {
     private int threadIndex = 0;
 
     private int workIndex = 0;
-    private final int INITIALWORKINDEX;
     private int itemFactor = 0;
     private int itemCount = 0;
     private int workTypeFactor = 0;
@@ -32,7 +31,6 @@ public class DataGeneratorThreadWork extends Thread {
         this.iterationCount = iterationCount;
         this.batchExecuteValue = batchExecuteValue;
         this.workIndex = workIndex;
-        this.INITIALWORKINDEX = workIndex;
         this.itemFactor = itemFactor;
         this.itemCount = itemCount;
         this.workTypeFactor = workTypeFactor;
