@@ -173,6 +173,8 @@ public class QueryTester {
 
         double average = sum / results.size();
 
+        double standardDeviation = calculateStandardDeviation(results);
+
         if(showAll) {
             System.out.println();
         }
@@ -180,7 +182,29 @@ public class QueryTester {
         System.out.println("Average time for query: " + average + " ms.");
         System.out.println();
 
+        System.out.println("Standard deviation of the results array: " + standardDeviation + " ms.");
+        System.out.println();
 
+
+
+    }
+
+    public static double calculateStandardDeviation(List<Long> results)
+    {
+        double sum = 0.0, standardDeviation = 0.0;
+        int size = results.size();
+
+        for(long result : results) {
+            sum += result;
+        }
+
+        double mean = sum/size;
+
+        for(double result: results) {
+            standardDeviation += Math.pow(result - mean, 2);
+        }
+
+        return Math.sqrt(standardDeviation/size);
     }
 
     public void executeQueryTests(int iterations, boolean showAll) {
@@ -189,7 +213,7 @@ public class QueryTester {
 
         String workItemPriceSQL = "SELECT (price * hours * workhours.discount) as price FROM worktype,workhours,work WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id;";
 
-        //resultLists = measureQueryTimeSQL(workItemPriceSQL, iterations);
+        resultLists = measureQueryTimeSQL(workItemPriceSQL, iterations);
 
         for (String databaseVersion : resultLists.keySet()) {
 
@@ -201,7 +225,7 @@ public class QueryTester {
             }
 
             results = resultLists.get(databaseVersion);
-            //showResults(results, showAll);
+            showResults(results, showAll);
 
         }
 
@@ -216,8 +240,6 @@ public class QueryTester {
         System.out.println();
 
         System.out.println("Long query, work price");
-
-        /*
 
         String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,useditem,item WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id AND work.id=useditem.workId AND useditem.itemId=item.id";
 
@@ -236,7 +258,7 @@ public class QueryTester {
             showResults(results, showAll);
 
         }
-        */
+
         System.out.println();
 
         String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)";

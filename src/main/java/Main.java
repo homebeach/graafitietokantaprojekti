@@ -9,8 +9,8 @@ public class Main
 
         String db_mariadb_url = "jdbc:mariadb://127.0.0.1:3306/";
         String db_driver = "org.mariadb.jdbc.Driver";
-        String db_username = "";
-        String db_password = "";
+        String db_username = "root";
+        String db_password = "root";
 
         String[] db_settings = new String[3];
 
@@ -21,9 +21,9 @@ public class Main
         sql_databases.put(db_mariadb_url, db_settings);
 
         String mysql_db_url = "jdbc:mysql://127.0.0.1:3307/";
-        db_driver = "com.mysql.jdbc.Driver";
-        db_username = "";
-        db_password = "";
+        db_driver = "org.mariadb.jdbc.Driver";
+        db_username = "root";
+        db_password = "root";
 
         db_settings = new String[3];
 
@@ -36,8 +36,8 @@ public class Main
         HashMap<String, String> neo4j_settings = new HashMap<String, String>();
 
         String neo4J_db_url = "bolt://localhost:7687";
-        String neo4J_username = "";
-        String neo4j_password = "";
+        String neo4J_username = "neo4j";
+        String neo4j_password = "admin";
 
         neo4j_settings.put("NEO4J_DB_URL", neo4J_db_url);
         neo4j_settings.put("NEO4J_USERNAME", neo4J_username);
@@ -68,13 +68,13 @@ public class Main
 
         QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
 
-        //queryTester.executeQueryTests(10, true);
+        //queryTester.executeQueryTests(12, true);
 
-        //queryTester.executeAggregateQueryTest(10, true);
+        //queryTester.executeAggregateQueryTest(12, true);
 
         int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(1,10,100);
 
-        queryTester.executeRecursiveQueryTest(10, true, firstInvoiceIndex);
+        queryTester.executeRecursiveQueryTest(12, true, firstInvoiceIndex);
 
 //      firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 1000);
 
