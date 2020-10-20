@@ -1000,6 +1000,9 @@ public class DataGenerator {
 
             System.out.println("Insertion of sequential invoices started at: " + startTime.toString());
 
+            String name = firstnames.get(0) + " " + surnames.get(0);
+
+            String streetAddress = addresses.get(0).get("street") + " " + addresses.get(0).get("city") + " " + addresses.get(0).get("district") + " " + addresses.get(0).get("region") + " " + addresses.get(0).get("postcode");
 
             for (String db_url : sql_databases.keySet()) {
 
@@ -1015,10 +1018,6 @@ public class DataGenerator {
 
                 PreparedStatement customer = connection.prepareStatement("INSERT INTO warehouse.customer (id, name, address) VALUES (?,?,?)");
 
-                String name = firstnames.get(0) + " " + surnames.get(0);
-
-                String streetAddress = addresses.get(0).get("street") + " " + addresses.get(0).get("city") + " " + addresses.get(0).get("district") + " " + addresses.get(0).get("region") + " " + addresses.get(0).get("postcode");
-
                 String sqlInsert = "INSERT INTO warehouse.customer (id, name, address) VALUES (" + customerIndex + ",\"" + name + "\",\"" + streetAddress + "\")";
 
                 customer.setInt(1, customerIndex);
@@ -1026,22 +1025,22 @@ public class DataGenerator {
                 customer.setString(3, streetAddress);
                 customer.addBatch();
                 customer.executeBatch();
-                
-                String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
-                String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
-                String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
-
-                org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
-
-                Session session = driver.session();
-
-                String cypherCreate = "CREATE (a:customer {customerId: " + customerIndex + ", name:\"" + name + "\",address:\"" + streetAddress + "\"})";
-                session.run(cypherCreate);
-
-                session.close();
-                driver.close();
 
             }
+
+            String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+            String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+            String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+            org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
+
+            Session session = driver.session();
+
+            String cypherCreate = "CREATE (a:customer {customerId: " + customerIndex + ", name:\"" + name + "\",address:\"" + streetAddress + "\"})";
+            session.run(cypherCreate);
+
+            session.close();
+            driver.close();
 
             firstInvoiceIndex = invoiceIndex;
 

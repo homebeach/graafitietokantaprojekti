@@ -51,12 +51,9 @@ public class Main
 
         //dataGenerator.insertItemsAndWorkTypes(10, 10, 10000, 10000);
 
-
         //dataGenerator.createSampleTables("jdbc:mariadb://127.0.0.1:3306/");
 
         //dataGenerator.loadSampleData(10, "jdbc:mariadb://127.0.0.1:3306/");
-
-
 
         //dataGenerator.printSampleDataSizes();
 
@@ -72,7 +69,7 @@ public class Main
 
         //queryTester.executeAggregateQueryTest(12, true);
 
-        int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(1,10,100);
+        int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(1,10,1000);
 
         queryTester.executeRecursiveQueryTest(12, true, firstInvoiceIndex);
 

@@ -119,6 +119,9 @@ public class QueryTester {
 
         for(int i=0; i<iterations; i++) {
 
+
+            System.out.println("Starting iteration: " + i + ".");
+
             long startTimeInMilliseconds = System.currentTimeMillis();
 
             //Result result = session.readTransaction(tx -> tx.run(cypherQuery));
@@ -147,8 +150,10 @@ public class QueryTester {
         Collections.sort(results);
 
         if(showAll) {
-            System.out.println("Smallest number in resultset: " + results.get(0) + " ms.");
-            System.out.println("Biggest number in resultset: " + results.get(results.size() - 1) + " ms.");
+            System.out.println("Smallest number in resultset: ");
+            System.out.println(results.get(0));
+            System.out.println("Biggest number in resultset: ");
+            System.out.println(results.get(results.size() - 1));
         }
 
         if(results.size() > 2) {
@@ -166,7 +171,7 @@ public class QueryTester {
         for(int i=0; i<results.size(); i++) {
 
             if(showAll) {
-                System.out.println("Index " + i + ": " + results.get(i) + ".");
+                System.out.println(results.get(i));
             }
             sum = sum + results.get(i);
         }
@@ -179,10 +184,12 @@ public class QueryTester {
             System.out.println();
         }
 
-        System.out.println("Average time for query: " + average + " ms.");
+        System.out.println("Average time for query: ");
+        System.out.println(average);
         System.out.println();
 
-        System.out.println("Standard deviation of the results array: " + standardDeviation + " ms.");
+        System.out.println("Standard deviation of the results array: ");
+        System.out.println(standardDeviation);
         System.out.println();
 
 
