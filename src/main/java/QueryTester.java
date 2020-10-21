@@ -268,7 +268,7 @@ public class QueryTester {
 
         System.out.println();
 
-        String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)";
+        String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice) as price";
 
         results = measureQueryTimeCypher(workPriceCypher, iterations);
 
