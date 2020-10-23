@@ -65,13 +65,13 @@ public class Main
 
         QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
 
-        //queryTester.executeQueryTests(12, true);
+        queryTester.executeQueryTests(12, true);
 
-        //queryTester.executeAggregateQueryTest(12, true);
+        queryTester.executeAggregateQueryTest(12, true);
 
-        int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(1,10,1000);
+        //int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(1,10,1000);
 
-        queryTester.executeRecursiveQueryTest(12, true, firstInvoiceIndex);
+        //queryTester.executeRecursiveQueryTest(12, true, firstInvoiceIndex);
 
 //      firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 1000);
 

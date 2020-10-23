@@ -216,39 +216,9 @@ public class QueryTester {
 
     public void executeQueryTests(int iterations, boolean showAll) {
 
-        System.out.println("Short query, worktype price");
+        System.out.println("Short query, work price");
 
-        String workItemPriceSQL = "SELECT (price * hours * workhours.discount) as price FROM worktype,workhours,work WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id;";
-
-        resultLists = measureQueryTimeSQL(workItemPriceSQL, iterations);
-
-        for (String databaseVersion : resultLists.keySet()) {
-
-            if(databaseVersion.contains("MariaDB")) {
-                System.out.println("Results for MariaDB version " + databaseVersion);
-            }
-            else {
-                System.out.println("Results for MySQL version " + databaseVersion);
-            }
-
-            results = resultLists.get(databaseVersion);
-            showResults(results, showAll);
-
-        }
-
-        System.out.println();
-
-        String workItemPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work) RETURN (h.hours*h.discount*wt.price) as price;";
-
-        results = measureQueryTimeCypher(workItemPriceCypher, iterations);
-
-        showResults(results, showAll);
-
-        System.out.println();
-
-        System.out.println("Long query, work price");
-
-        String workPriceSQL = "SELECT (price * hours * workhours.discount) + (purchaseprice * amount * useditem.discount) as price FROM worktype,workhours,work,useditem,item WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id AND work.id=useditem.workId AND useditem.itemId=item.id";
+        String workPriceSQL = "SELECT SUM(worktype.price * workhours.hours * workhours.discount) as price, work.id as workId FROM worktype,workhours,work WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id GROUP BY workId;";
 
         resultLists = measureQueryTimeSQL(workPriceSQL, iterations);
 
@@ -268,9 +238,39 @@ public class QueryTester {
 
         System.out.println();
 
-        String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) RETURN (h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice) as price";
+        String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work) RETURN SUM(h.hours*h.discount*wt.price) as price, w.workId as workId;";
 
         results = measureQueryTimeCypher(workPriceCypher, iterations);
+
+        showResults(results, showAll);
+
+        System.out.println();
+
+        System.out.println("Long query, work price");
+
+        String workPriceWithItemsSQL = "SELECT SUM((worktype.price * workhours.hours * workhours.discount) + (item.purchaseprice * useditem.amount * useditem.discount)) as price, work.id as workId FROM worktype,workhours,work,useditem,item WHERE worktype.id=workhours.worktypeId AND workhours.workId=work.id AND work.id=useditem.workId AND useditem.itemId=item.id GROUP BY workId";
+
+        resultLists = measureQueryTimeSQL(workPriceWithItemsSQL, iterations);
+
+        for (String databaseVersion : resultLists.keySet()) {
+
+            if(databaseVersion.contains("MariaDB")) {
+                System.out.println("Results for MariaDB version " + databaseVersion);
+            }
+            else {
+                System.out.println("Results for MySQL version " + databaseVersion);
+            }
+
+            results = resultLists.get(databaseVersion);
+            showResults(results, showAll);
+
+        }
+
+        System.out.println();
+
+        String workPriceWithItemsCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as price, w.workId as workId";
+
+        results = measureQueryTimeCypher(workPriceWithItemsCypher, iterations);
 
         showResults(results, showAll);
 

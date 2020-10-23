@@ -808,7 +808,7 @@ public class DataGenerator {
                 "`name` varchar(100) NOT NULL CHECK (`name` <> '')," +
                 "`balance` int(11) NOT NULL," +
                 "`unit` varchar(10) NOT NULL CHECK (`unit` <> '')," +
-                "`purchaseprice` decimal(65,2) NOT NULL," +
+                "`purchaseprice` decimal(65,10) NOT NULL," +
                 "`vat` decimal(65,2) NOT NULL," +
                 "`removed` tinyint(1) NOT NULL DEFAULT 0," +
                 "PRIMARY KEY (`id`))";
@@ -816,7 +816,7 @@ public class DataGenerator {
         String workType = "CREATE TABLE IF NOT EXISTS `worktype` (" +
                 "`id` bigint(20) unsigned NOT NULL," +
                 "`name` varchar(20) NOT NULL CHECK (`name` <> '')," +
-                "`price` decimal(65,2) NOT NULL," +
+                "`price` bigint(20) NOT NULL," +
                 "PRIMARY KEY (`id`))";
 
         String invoice = "CREATE TABLE IF NOT EXISTS `invoice` (" +

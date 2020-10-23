@@ -139,7 +139,7 @@ public class DataGeneratorThreadItemsAndWorkTypes extends Thread {
             Random r = new Random(itemIndex);
             int balance = r.nextInt(100);
             r.setSeed(itemIndex);
-            float purchaseprice = r.nextFloat();
+            float purchaseprice = r.nextFloat() + r.nextInt(100);
             r.setSeed(itemIndex);
             int vat = r.nextInt(50);
             r.setSeed(itemIndex);
