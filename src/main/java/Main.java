@@ -65,13 +65,42 @@ public class Main
 
         QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
 
-        queryTester.executeQueryTests(12, true);
+        //queryTester.executeQueryTestsSQL(12, true);
+        //queryTester.executeQueryTestsCypher(12, true);
+        //queryTester.executeAggregateQueryTestCypher(12, true);
+        //queryTester.executeAggregateQueryTestSQL(12, true);
+        //queryTester.executeQueryWithDefinedKeyCypher(12, true);
+        //queryTester.executeQueryWithDefinedKeySQL(12, true);
+        dataGenerator.cleanSequentialInvoices(10000);
 
-        queryTester.executeAggregateQueryTest(12, true);
+        /*
+        HashMap<String, Integer> customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,100);
 
-        //int firstInvoiceIndex = dataGenerator.insertSequentialInvoices(1,10,1000);
+        int invoiceIndex = customerInvoice.get("invoiceIndex");
+        int customerIndex = customerInvoice.get("customerIndex");
 
-        //queryTester.executeRecursiveQueryTest(12, true, firstInvoiceIndex);
+        queryTester.executeCyclicQueryTestSQL(12, true, invoiceIndex);
+        queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+
+        dataGenerator.cleanSequentialInvoices(customerIndex);
+
+        customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,1000);
+
+        invoiceIndex = customerInvoice.get("invoiceIndex");
+
+        queryTester.executeCyclicQueryTestSQL(12, true, invoiceIndex);
+        queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+*/
+        //dataGenerator.cleanSequentialInvoices(10000);
+
+        //queryTester.executeRecursiveQueryTest(12, true, 100000);
+
+
+      //  int customerIndex = customerInvoice.get("customerIndex");
+
+        //dataGenerator.cleanSequentialInvoices(10000);
 
 //      firstInvoiceIndex = dataGenerator.insertSequentialInvoices(10,10,10, 1000);
 

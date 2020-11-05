@@ -1,0 +1,532 @@
+/Library/Java/JavaVirtualMachines/jdk-13.0.2.jdk/Contents/Home/bin/java "-javaagent:/Applications/IntelliJ IDEA CE.app/Contents/lib/idea_rt.jar=57555:/Applications/IntelliJ IDEA CE.app/Contents/bin" -Dfile.encoding=UTF-8 -classpath /Users/homebeach/graafitietokantaprojekti/target/classes:/Users/homebeach/.m2/repository/org/mariadb/jdbc/mariadb-java-client/2.7.0/mariadb-java-client-2.7.0.jar:/Users/homebeach/.m2/repository/org/json/json/20180813/json-20180813.jar:/Users/homebeach/.m2/repository/com/github/javafaker/javafaker/0.18/javafaker-0.18.jar:/Users/homebeach/.m2/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar:/Users/homebeach/.m2/repository/org/yaml/snakeyaml/1.23/snakeyaml-1.23-android.jar:/Users/homebeach/.m2/repository/com/github/mifmif/generex/1.0.2/generex-1.0.2.jar:/Users/homebeach/.m2/repository/dk/brics/automaton/automaton/1.11-8/automaton-1.11-8.jar:/Users/homebeach/.m2/repository/org/apache/tinkerpop/gremlin-core/3.4.2/gremlin-core-3.4.2.jar:/Users/homebeach/.m2/repository/org/apache/tinkerpop/gremlin-shaded/3.4.2/gremlin-shaded-3.4.2.jar:/Users/homebeach/.m2/repository/commons-configuration/commons-configuration/1.10/commons-configuration-1.10.jar:/Users/homebeach/.m2/repository/commons-lang/commons-lang/2.6/commons-lang-2.6.jar:/Users/homebeach/.m2/repository/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2.jar:/Users/homebeach/.m2/repository/org/yaml/snakeyaml/1.15/snakeyaml-1.15.jar:/Users/homebeach/.m2/repository/org/javatuples/javatuples/1.2/javatuples-1.2.jar:/Users/homebeach/.m2/repository/com/carrotsearch/hppc/0.7.1/hppc-0.7.1.jar:/Users/homebeach/.m2/repository/com/jcabi/jcabi-manifests/1.1/jcabi-manifests-1.1.jar:/Users/homebeach/.m2/repository/com/jcabi/jcabi-log/0.14/jcabi-log-0.14.jar:/Users/homebeach/.m2/repository/com/squareup/javapoet/1.8.0/javapoet-1.8.0.jar:/Users/homebeach/.m2/repository/net/objecthunter/exp4j/0.4.8/exp4j-0.4.8.jar:/Users/homebeach/.m2/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar:/Users/homebeach/.m2/repository/org/slf4j/jcl-over-slf4j/1.7.25/jcl-over-slf4j-1.7.25.jar:/Users/homebeach/.m2/repository/org/apache/tinkerpop/gremlin-driver/3.4.2/gremlin-driver-3.4.2.jar:/Users/homebeach/.m2/repository/io/netty/netty-all/4.1.32.Final/netty-all-4.1.32.Final.jar:/Users/homebeach/.m2/repository/org/codehaus/groovy/groovy/2.5.6/groovy-2.5.6-indy.jar:/Users/homebeach/.m2/repository/org/codehaus/groovy/groovy-json/2.5.6/groovy-json-2.5.6-indy.jar:/Users/homebeach/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.7.0/junit-jupiter-api-5.7.0.jar:/Users/homebeach/.m2/repository/org/apiguardian/apiguardian-api/1.1.0/apiguardian-api-1.1.0.jar:/Users/homebeach/.m2/repository/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar:/Users/homebeach/.m2/repository/org/junit/platform/junit-platform-commons/1.7.0/junit-platform-commons-1.7.0.jar:/Users/homebeach/.m2/repository/org/neo4j/driver/neo4j-java-driver/4.1.1/neo4j-java-driver-4.1.1.jar:/Users/homebeach/.m2/repository/org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3.jar:/Users/homebeach/.m2/repository/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar:/Users/homebeach/.m2/repository/org/antlr/antlr4-runtime/4.7.2/antlr4-runtime-4.7.2.jar:/Users/homebeach/.m2/repository/org/opencypher/gremlin/cypher-gremlin-server-client/1.0.2/cypher-gremlin-server-client-1.0.2.jar:/Users/homebeach/.m2/repository/org/opencypher/gremlin/translation/1.0.2/translation-1.0.2.jar:/Users/homebeach/.m2/repository/org/opencypher/gremlin/cypher-gremlin-extensions/1.0.2/cypher-gremlin-extensions-1.0.2.jar:/Users/homebeach/.m2/repository/org/scala-lang/scala-library/2.12.7/scala-library-2.12.7.jar:/Users/homebeach/.m2/repository/org/scala-lang/modules/scala-java8-compat_2.12/0.8.0/scala-java8-compat_2.12-0.8.0.jar:/Users/homebeach/.m2/repository/com/lihaoyi/fastparse_2.12/2.0.4/fastparse_2.12-2.0.4.jar:/Users/homebeach/.m2/repository/com/lihaoyi/sourcecode_2.12/0.1.4/sourcecode_2.12-0.1.4.jar:/Users/homebeach/.m2/repository/org/opencypher/front-end-9.0/9.0.20190305/front-end-9.0-9.0.20190305.jar:/Users/homebeach/.m2/repository/org/opencypher/util-9.0/9.0.20190305/util-9.0-9.0.20190305.jar:/Users/homebeach/.m2/repository/org/opencypher/expressions-9.0/9.0.20190305/expressions-9.0-9.0.20190305.jar:/Users/homebeach/.m2/repository/org/opencypher/rewriting-9.0/9.0.20190305/rewriting-9.0-9.0.20190305.jar:/Users/homebeach/.m2/repository/org/opencypher/ast-9.0/9.0.20190305/ast-9.0-9.0.20190305.jar:/Users/homebeach/.m2/repository/org/opencypher/parser-9.0/9.0.20190305/parser-9.0-9.0.20190305.jar:/Users/homebeach/.m2/repository/org/scala-lang/scala-reflect/2.12.7/scala-reflect-2.12.7.jar:/Users/homebeach/.m2/repository/org/parboiled/parboiled-scala_2.12/1.2.0/parboiled-scala_2.12-1.2.0.jar:/Users/homebeach/.m2/repository/org/parboiled/parboiled-core/1.2.0/parboiled-core-1.2.0.jar Main
+Short query, work price
+Executing SQL Query: SELECT work.id AS workId, SUM( (worktype.price * workhours.hours * workhours.discount) ) AS price FROM work INNER JOIN workhours ON work.id = workhours.workId INNER JOIN worktype ON worktype.id = workhours.worktypeId GROUP BY work.id in 2 databases with 12 iterations.
+Query in url jdbc:mariadb://127.0.0.1:3306/ returned 10000 rows.
+Query in url jdbc:mysql://127.0.0.1:3307/ returned 10000 rows.
+
+Results for MySQL version 5.1.41
+Smallest number in resultset: 
+395
+Biggest number in resultset: 
+491
+
+Content of the results table:
+397
+397
+398
+398
+399
+401
+405
+406
+425
+425
+
+Average time for query: 
+405.0
+
+Standard deviation of the results array: 
+10.387011119662864
+
+Results for MariaDB version 10.5.6-MariaDB
+Smallest number in resultset: 
+193
+Biggest number in resultset: 
+265
+
+Content of the results table:
+195
+196
+199
+199
+200
+200
+202
+222
+229
+255
+
+Average time for query: 
+209.0
+
+Standard deviation of the results array: 
+18.59058901702687
+
+Long query, work price
+Executing SQL Query: SELECT work.id AS workId, SUM((worktype.price * workhours.hours * workhours.discount) + (item.purchaseprice * useditem.amount * useditem.discount) ) AS price FROM work INNER JOIN workhours ON work.id = workhours.workId INNER JOIN worktype ON worktype.id = workhours.worktypeId INNER JOIN useditem ON work.id = useditem.workId INNER JOIN item ON useditem.itemId = item.id GROUP BY work.id in 2 databases with 12 iterations.
+Query in url jdbc:mariadb://127.0.0.1:3306/ returned 10000 rows.
+Query in url jdbc:mysql://127.0.0.1:3307/ returned 10000 rows.
+
+Results for MySQL version 5.1.41
+Smallest number in resultset: 
+4914
+Biggest number in resultset: 
+5705
+
+Content of the results table:
+4929
+4930
+4933
+4939
+4944
+4946
+4950
+4956
+4957
+5042
+
+Average time for query: 
+4952.0
+
+Standard deviation of the results array: 
+31.280025575437115
+
+Results for MariaDB version 10.5.6-MariaDB
+Smallest number in resultset: 
+2189
+Biggest number in resultset: 
+2232
+
+Content of the results table:
+2191
+2191
+2192
+2195
+2195
+2196
+2196
+2197
+2199
+2225
+
+Average time for query: 
+2197.0
+
+Standard deviation of the results array: 
+9.434511116109833
+
+Query with defined key, work of invoice
+Executing SQL Query: SELECT * FROM work INNER JOIN workInvoice ON work.id=workInvoice.workId INNER JOIN invoice ON workInvoice.workId=invoice.id AND invoice.id=0 in 2 databases with 12 iterations.
+Query in url jdbc:mariadb://127.0.0.1:3306/ returned 94 rows.
+Query in url jdbc:mysql://127.0.0.1:3307/ returned 94 rows.
+
+Results for MySQL version 5.1.41
+Smallest number in resultset: 
+0
+Biggest number in resultset: 
+2
+
+Content of the results table:
+0
+0
+0
+0
+0
+0
+0
+1
+1
+1
+
+Average time for query: 
+0.0
+
+Standard deviation of the results array: 
+0.45825756949558394
+
+Results for MariaDB version 10.5.6-MariaDB
+Smallest number in resultset: 
+0
+Biggest number in resultset: 
+1
+
+Content of the results table:
+0
+0
+0
+0
+0
+0
+0
+0
+1
+1
+
+Average time for query: 
+0.0
+
+Standard deviation of the results array: 
+0.4
+
+Short query1, work price
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+lokak. 30, 2020 1:45:42 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 1237598030 created for server address localhost:7687
+Executing Cypher Query: MATCH (wt:worktype)-[h:WORKHOURS]->(w:work) WITH SUM(h.hours*h.discount*wt.price) as price, w RETURN price, w.workId as workId; with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+Cypher query returned: 10000 records.
+lokak. 30, 2020 1:45:47 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 1237598030
+lokak. 30, 2020 1:45:47 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+Smallest number in resultset: 
+237
+Biggest number in resultset: 
+596
+
+Content of the results table:
+245
+320
+360
+361
+370
+398
+413
+428
+440
+475
+
+Average time for query: 
+381.0
+
+Standard deviation of the results array: 
+62.464389855340784
+
+
+Short query2, work price
+Executing Cypher Query: MATCH (w:work) CALL {     WITH w     MATCH (wt:worktype)-[h:WORKHOURS]->(w)     RETURN SUM((h.hours*h.discount*wt.price)) as price } RETURN w.workId as workId, price; with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+lokak. 30, 2020 1:45:47 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 2143437117 created for server address localhost:7687
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+Cypher query returned: 10000 records.
+lokak. 30, 2020 1:45:50 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 2143437117
+lokak. 30, 2020 1:45:50 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+Smallest number in resultset: 
+6
+Biggest number in resultset: 
+247
+
+Content of the results table:
+157
+209
+212
+222
+224
+228
+234
+237
+241
+243
+
+Average time for query: 
+220.0
+
+Standard deviation of the results array: 
+23.84973794405297
+
+
+Long query1, work price
+Executing Cypher Query: MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) WITH SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as price, w RETURN price, w.workId as workId ORDER BY workId with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+lokak. 30, 2020 1:45:50 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 671467883 created for server address localhost:7687
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+lokak. 30, 2020 1:47:46 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 671467883
+lokak. 30, 2020 1:47:46 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+lokak. 30, 2020 1:47:47 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 956420404 created for server address localhost:7687
+lokak. 30, 2020 1:47:50 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 956420404
+lokak. 30, 2020 1:47:50 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+lokak. 30, 2020 1:47:50 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 363988129 created for server address localhost:7687
+lokak. 30, 2020 1:47:51 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 363988129
+lokak. 30, 2020 1:47:51 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+Cypher query returned: 10000 records.
+Smallest number in resultset: 
+8
+Biggest number in resultset: 
+9750
+
+Content of the results table:
+9647
+9670
+9680
+9681
+9682
+9688
+9694
+9696
+9712
+9743
+
+Average time for query: 
+9689.0
+
+Standard deviation of the results array: 
+24.162160499425543
+
+Long query2, work price
+Executing Cypher Query: MATCH (w:work) CALL {     WITH w     MATCH (wt:worktype)-[h:WORKHOURS]->(w)     RETURN SUM((h.hours*h.discount*wt.price)) as price } RETURN w.workId as workId, price; with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+Cypher query returned: 10000 records.
+Smallest number in resultset: 
+9
+Biggest number in resultset: 
+250
+
+Content of the results table:
+246
+246
+247
+247
+248
+249
+249
+250
+250
+250
+
+Average time for query: 
+248.0
+
+Standard deviation of the results array: 
+1.5362291495737217
+
+
+Query with defined key, work of invoice
+Executing Cypher Query: MATCH (i:invoice { invoiceId:0 })-[wi:WORK_INVOICE]->(w:work) RETURN * with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+Cypher query returned: 10 records.
+Smallest number in resultset: 
+7
+Biggest number in resultset: 
+120
+
+Content of the results table:
+64
+66
+68
+69
+70
+70
+70
+70
+71
+71
+
+Average time for query: 
+68.0
+
+Standard deviation of the results array: 
+2.1656407827707715
+
+Aggregate query, invoice price
+Executing SQL Query: SELECT q1.invoiceId, SUM(q2.price) AS invoicePrice FROM ( SELECT workinvoice.invoiceId, workinvoice.workId FROM workinvoice INNER JOIN invoice ON workinvoice.invoiceId = invoice.id ) AS q1 INNER JOIN ( SELECT workhours.workid AS workId, SUM( (worktype.price * workhours.hours * workhours.discount) + (item.purchaseprice * useditem.amount * useditem.discount) ) AS price FROM workhours INNER JOIN worktype ON workhours.worktypeid = worktype.id INNER JOIN useditem ON workhours.workid = useditem.workid INNER JOIN item ON useditem.itemid = item.id GROUP BY workhours.workid ) AS q2 USING (workId) GROUP BY q1.invoiceId in 2 databases with 12 iterations.
+Query in url jdbc:mariadb://127.0.0.1:3306/ returned 100000 rows.
+lokak. 30, 2020 2:35:48 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 1840976765 created for server address localhost:7687
+Query in url jdbc:mysql://127.0.0.1:3307/ returned 100000 rows.
+
+Results for MySQL version 5.1.41
+Smallest number in resultset: 
+234099
+Biggest number in resultset: 
+240026
+
+Content of the results table:
+234103
+234162
+234280
+234381
+234471
+235431
+235678
+238408
+238576
+239119
+
+Average time for query: 
+235860.0
+
+Standard deviation of the results array: 
+1931.0777534837896
+
+Results for MariaDB version 10.5.6-MariaDB
+Smallest number in resultset: 
+3016
+Biggest number in resultset: 
+5330
+
+Content of the results table:
+3018
+3020
+3026
+3030
+3031
+3031
+3035
+4521
+5252
+5257
+
+Average time for query: 
+3622.0
+
+Standard deviation of the results array: 
+928.1355989293805
+
+
+Executing Cypher Query: MATCH (inv:invoice) CALL { WITH inv MATCH (inv)-[:WORK_INVOICE]->(w:work) WITH inv, w OPTIONAL MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) RETURN w, SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice } RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+Cypher query returned: 100000 records.
+Smallest number in resultset: 
+4
+Biggest number in resultset: 
+916935
+
+Content of the results table:
+763390
+838520
+884253
+898668
+900708
+903309
+906047
+908414
+908963
+909549
+
+Average time for query: 
+882182.0
+
+Standard deviation of the results array: 
+44505.48308792974
+
+
+Aggregate query, invoice price
+
+Executing Cypher Query: MATCH (inv:invoice)-[:WORK_INVOICE]->(w:work) WITH inv, w OPTIONAL MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) WITH inv, w, SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+lokak. 30, 2020 5:33:09 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 1840976765
+lokak. 30, 2020 5:33:09 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+lokak. 30, 2020 5:33:09 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 98394724 created for server address localhost:7687
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+Cypher query returned: 100000 records.
+Smallest number in resultset: 
+8
+Biggest number in resultset: 
+927253
+
+Content of the results table:
+910352
+912359
+914029
+915051
+916043
+917904
+919503
+919600
+922545
+924812
+
+Average time for query: 
+917219.0
+
+Standard deviation of the results array: 
+4294.293301580599
+
+
+lokak. 30, 2020 8:36:39 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 98394724
+lokak. 30, 2020 8:36:39 AP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+
+Process finished with exit code 0

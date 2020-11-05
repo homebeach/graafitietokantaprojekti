@@ -284,12 +284,9 @@ public class DataGenerator {
 
         Session session = driver.session();
 
-
         session.run("MATCH (c:customer) DETACH DELETE c");
         session.run("MATCH (i:invoice) DETACH DELETE i");
         session.run("MATCH (t:target) DETACH DELETE t");
-
-
 
         session.close();
         driver.close();
@@ -344,6 +341,45 @@ public class DataGenerator {
     }
 
 
+    public void createSampleTables(String db_url) {
+
+        String[] db_settings = sql_databases.get(db_url);
+
+        String database = "testdata";
+
+        String dropDatabase = "DROP DATABASE `" + database + "`";
+
+        String createDatabase = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
+
+        String firstnames = "CREATE TABLE IF NOT EXISTS `firstnames` (" +
+                "`id` serial," +
+                "`firstname` varchar(100) NOT NULL," +
+                "PRIMARY KEY (`id`))";
+
+        String surnames = "CREATE TABLE IF NOT EXISTS `surnames` (" +
+                "`id` serial," +
+                "`surname` varchar(100) NOT NULL," +
+                "PRIMARY KEY (`id`))";
+
+        String addresses = "CREATE TABLE IF NOT EXISTS `addresses` (" +
+                "`id` serial," +
+                "`street` varchar(200) NOT NULL," +
+                "`city` varchar(100) NOT NULL," +
+                "`district` varchar(100) NOT NULL," +
+                "`region` varchar(50) NOT NULL," +
+                "`postcode` varchar(50) NOT NULL," +
+                "PRIMARY KEY (`id`))";
+
+        executeSQLUpdate(dropDatabase, "jdbc:mariadb://127.0.0.1/", db_settings);
+        executeSQLUpdate(createDatabase, "jdbc:mariadb://127.0.0.1/", db_settings);
+        executeSQLUpdate(firstnames, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
+        executeSQLUpdate(surnames, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
+        executeSQLUpdate(addresses, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
+
+    }
+
+
+
     public void getSampleData() {
 
         try {
@@ -385,6 +421,10 @@ public class DataGenerator {
         }
 
     }
+
+
+
+
 
     public void printSampleDataSizes() {
 
@@ -574,40 +614,36 @@ public class DataGenerator {
         return workTypeId;
     }
 
-    public void createSampleTables(String db_url) {
+    public void cleanSequentialInvoices(int customerId) {
 
-        String[] db_settings = sql_databases.get(db_url);
 
-        String database = "testdata";
+        String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+        String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+        String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
 
-        String dropDatabase = "DROP DATABASE `" + database + "`";
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
 
-        String createDatabase = "CREATE DATABASE IF NOT EXISTS `" + database + "`";
+        Session session = driver.session();
 
-        String firstnames = "CREATE TABLE IF NOT EXISTS `firstnames` (" +
-                "`id` serial," +
-                "`firstname` varchar(100) NOT NULL," +
-                "PRIMARY KEY (`id`))";
+        String deleteInvoicesCypher = "MATCH (i:invoice) WHERE i.customerId=" + customerId + " DETACH DELETE i";
+        String deleteCustomerCypher = "MATCH (c:customer) WHERE c.customerId=" + customerId + " DETACH DELETE c";
 
-        String surnames = "CREATE TABLE IF NOT EXISTS `surnames` (" +
-                "`id` serial," +
-                "`surname` varchar(100) NOT NULL," +
-                "PRIMARY KEY (`id`))";
+        session.run(deleteInvoicesCypher);
+        session.run(deleteCustomerCypher);
 
-        String addresses = "CREATE TABLE IF NOT EXISTS `addresses` (" +
-                "`id` serial," +
-                "`street` varchar(200) NOT NULL," +
-                "`city` varchar(100) NOT NULL," +
-                "`district` varchar(100) NOT NULL," +
-                "`region` varchar(50) NOT NULL," +
-                "`postcode` varchar(50) NOT NULL," +
-                "PRIMARY KEY (`id`))";
+        session.close();
+        driver.close();
 
-        executeSQLUpdate(dropDatabase, "jdbc:mariadb://127.0.0.1/", db_settings);
-        executeSQLUpdate(createDatabase, "jdbc:mariadb://127.0.0.1/", db_settings);
-        executeSQLUpdate(firstnames, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
-        executeSQLUpdate(surnames, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
-        executeSQLUpdate(addresses, "jdbc:mariadb://127.0.0.1/" +  database, db_settings);
+        String deleteInvoicesSQL = "DELETE FROM warehouse.invoice WHERE customerId = " + customerId;
+        String deleteCustomerSQL = "DELETE FROM warehouse.customer WHERE id = " + customerId;
+
+        for (String db_url : sql_databases.keySet()) {
+
+            String[] db_settings = sql_databases.get(db_url);
+            executeSQLUpdate(deleteInvoicesSQL, db_url, db_settings);
+            executeSQLUpdate(deleteCustomerSQL, db_url, db_settings);
+
+        }
 
     }
 
@@ -979,14 +1015,19 @@ public class DataGenerator {
         }
     }
 
-    public int insertSequentialInvoices(int threadCount, int batchExecuteValue, int sequentialInvoices) {
+    public HashMap<String, Integer> insertSequentialInvoices(int threadCount, int batchExecuteValue, int sequentialInvoices) {
 
         int firstInvoiceIndex = 0;
+
+        HashMap<String, Integer> customerInvoice = new HashMap<String, Integer>();
 
         try {
 
             int customerIndex = getLastCustomerId() + 1;
             int invoiceIndex = getLastInvoiceId() + 1;
+
+            customerInvoice.put("customerIndex", customerIndex);
+            customerInvoice.put("invoiceIndex", invoiceIndex);
 
             getSampleData();
 
@@ -1071,7 +1112,7 @@ public class DataGenerator {
             e.printStackTrace();
         }
 
-    return firstInvoiceIndex;
+    return customerInvoice;
     }
 
 

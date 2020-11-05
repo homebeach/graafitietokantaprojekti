@@ -1,0 +1,75 @@
+Excecuting recursive query test for optimized queries
+Recursive query SQL with Common Table Expressions, invoices related to invoice id 100000
+Executing SQL Query: WITH RECURSIVE previous_invoices AS (SELECT id, customerId, state, duedate, previousinvoice FROM invoice WHERE id=100000 UNION ALL SELECT i.id, i.customerId, i.state, i.duedate, i.previousinvoice FROM invoice AS i INNER JOIN previous_invoices AS j ON i.previousinvoice = j.id WHERE i.previousinvoice <> i.id) SELECT * FROM previous_invoices in 1 databases with 12 iterations.
+Query in url jdbc:mariadb://127.0.0.1:3306/ returned 1000 rows.
+
+Results for MariaDB version 10.5.6-MariaDB
+Smallest number in resultset: 
+27177
+Biggest number in resultset: 
+43850
+
+Content of the results table:
+29220
+31769
+32561
+34098
+35385
+38571
+39933
+43621
+43633
+43634
+
+Average time for query: 
+37242.0
+
+Standard deviation of the results array: 
+5108.35653121432
+
+Recursive query Cypher optimized, invoices related to invoice id 100000
+Executing Cypher Query: MATCH inv=(i:invoice { invoiceId:100000})-[p:PREVIOUS_INVOICE *0..]->(j:invoice) WHERE NOT (j)-[:PREVIOUS_INVOICE]->() RETURN nodes(inv) with 12 iterations.
+Starting iteration: 0.
+Starting iteration: 1.
+lokak. 26, 2020 8:54:10 IP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 1826699684 created for server address localhost:7687
+Starting iteration: 2.
+Starting iteration: 3.
+Starting iteration: 4.
+Starting iteration: 5.
+Starting iteration: 6.
+Starting iteration: 7.
+Starting iteration: 8.
+Starting iteration: 9.
+Starting iteration: 10.
+Starting iteration: 11.
+Cypher query returned: 1 records.
+lokak. 26, 2020 8:54:56 IP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 1826699684
+lokak. 26, 2020 8:54:56 IP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+Smallest number in resultset: 
+11
+Biggest number in resultset: 
+5043
+
+Content of the results table:
+2513
+2589
+2621
+2623
+4169
+4315
+4537
+4598
+4920
+5009
+
+Average time for query: 
+3789.0
+
+Standard deviation of the results array: 
+1009.6819499228458
+
+
+Process finished with exit code 0

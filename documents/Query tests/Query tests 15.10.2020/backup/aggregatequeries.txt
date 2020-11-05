@@ -1,0 +1,74 @@
+Recursive query, invoices related to invoice id 100000
+Executing SQL Query: SELECT  id,customerid,state,duedate,previousinvoice FROM (SELECT * FROM invoice ORDER BY previousinvoice, id) invoices_sorted, (SELECT @pv := '100000') initialisation WHERE find_in_set(previousinvoice, @pv) AND length(@pv := concat(@pv, ',', id)) in 2 databases with 12 iterations.
+Query in url jdbc:mariadb://127.0.0.1:3306/ returned 100 rows.
+Query in url jdbc:mysql://127.0.0.1:3307/ returned 100 rows.
+
+Results for MySQL version 5.1.41
+Smallest number in resultset: 54 ms.
+Biggest number in resultset: 100 ms.
+
+Content of the results table:
+Index 0: 54.
+Index 1: 55.
+Index 2: 55.
+Index 3: 55.
+Index 4: 55.
+Index 5: 56.
+Index 6: 56.
+Index 7: 56.
+Index 8: 56.
+Index 9: 59.
+
+Average time for query: 55.0 ms.
+
+Standard deviation of the results array: 1.268857754044952 ms.
+
+Results for MariaDB version 10.5.6-MariaDB
+Smallest number in resultset: 43 ms.
+Biggest number in resultset: 90 ms.
+
+Content of the results table:
+Index 0: 44.
+Index 1: 44.
+Index 2: 45.
+Index 3: 45.
+Index 4: 45.
+Index 5: 45.
+Index 6: 45.
+Index 7: 46.
+Index 8: 46.
+Index 9: 48.
+
+Average time for query: 45.0 ms.
+
+Standard deviation of the results array: 1.0999999999999999 ms.
+
+Executing Cypher Query: MATCH (i:invoice { invoiceId:100000 })-[p:PREVIOUS_INVOICE *0..]->(j:invoice) RETURN * with 12 iterations.
+lokak. 15, 2020 3:58:19 IP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Direct driver instance 1016925085 created for server address localhost:7687
+Cypher query returned: 100 records.
+lokak. 15, 2020 3:58:20 IP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing driver instance 1016925085
+lokak. 15, 2020 3:58:20 IP. org.neo4j.driver.internal.logging.JULogger info
+INFO: Closing connection pool towards localhost:7687
+Smallest number in resultset: 8 ms.
+Biggest number in resultset: 298 ms.
+
+Content of the results table:
+Index 0: 81.
+Index 1: 89.
+Index 2: 91.
+Index 3: 93.
+Index 4: 131.
+Index 5: 136.
+Index 6: 145.
+Index 7: 145.
+Index 8: 148.
+Index 9: 149.
+
+Average time for query: 120.0 ms.
+
+Standard deviation of the results array: 27.014070407844873 ms.
+
+
+Process finished with exit code 0
