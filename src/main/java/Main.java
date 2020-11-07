@@ -64,25 +64,30 @@ public class Main
         //dataGenerator.insertCustomerData(1,149,10,10,10,10,10);
 
         QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
-
+        //dataGenerator.cleanSequentialInvoices(10000);
+        //dataGenerator.deleteIndexes();
+        //dataGenerator.createIndexes();
         //queryTester.executeQueryTestsSQL(12, true);
         //queryTester.executeQueryTestsCypher(12, true);
         //queryTester.executeAggregateQueryTestCypher(12, true);
         //queryTester.executeAggregateQueryTestSQL(12, true);
         //queryTester.executeQueryWithDefinedKeyCypher(12, true);
         //queryTester.executeQueryWithDefinedKeySQL(12, true);
-        dataGenerator.cleanSequentialInvoices(10000);
+        //dataGenerator.cleanSequentialInvoices(10000);
 
-        /*
+
+
+
         HashMap<String, Integer> customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,100);
 
         int invoiceIndex = customerInvoice.get("invoiceIndex");
         int customerIndex = customerInvoice.get("customerIndex");
 
         queryTester.executeCyclicQueryTestSQL(12, true, invoiceIndex);
-        queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
-        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+        //queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
+        //queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
 
+        System.out.println("customerIndex " + customerIndex);
         dataGenerator.cleanSequentialInvoices(customerIndex);
 
         customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,1000);
@@ -90,9 +95,9 @@ public class Main
         invoiceIndex = customerInvoice.get("invoiceIndex");
 
         queryTester.executeCyclicQueryTestSQL(12, true, invoiceIndex);
-        queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
-        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
-*/
+        //queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
+        //queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+
         //dataGenerator.cleanSequentialInvoices(10000);
 
         //queryTester.executeRecursiveQueryTest(12, true, 100000);

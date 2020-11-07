@@ -647,6 +647,185 @@ public class DataGenerator {
 
     }
 
+    public void createIndexes() {
+
+        createIndexesSQL();
+        createIndexesCypher();
+
+    }
+
+    public void deleteIndexes() {
+
+        deleteIndexesSQL();
+        deleteIndexesCypher();
+
+    }
+
+    public void createIndexesSQL() {
+
+
+        String createInvoiceIndexIfNotExistsSQL = "CREATE INDEX IF NOT EXISTS invoiceIndex ON warehouse.invoice(previousinvoice)";
+        String createInvoiceIndexSQL = "CREATE INDEX invoiceIndex ON warehouse.invoice(previousinvoice)";
+        String createWorktypeIndexIfNotExistsSQL = "CREATE INDEX IF NOT EXISTS worktypeIndex ON warehouse.worktype(price)";
+        String createWorktypeIndexSQL = "CREATE INDEX worktypeIndex ON warehouse.worktype(price)";
+        String createWorkhoursIndexIfNotExistsSQL = "CREATE INDEX IF NOT EXISTS workhoursIndex ON warehouse.workhours(hours,discount)";
+        String createWorkhoursIndexSQL = "CREATE INDEX workhoursIndex ON warehouse.workhours(hours,discount)";
+        String createUseditemIndexIfNotExistsSQL = "CREATE INDEX IF NOT EXISTS usedItemIndex ON warehouse.useditem(amount, discount)";
+        String createUseditemIndexSQL = "CREATE INDEX usedItemIndex ON warehouse.useditem(amount, discount)";
+        String createItemIndexIfNotExistsSQL = "CREATE INDEX IF NOT EXISTS ItemIndex ON warehouse.item(purchaseprice)";
+        String createItemIndexSQL = "CREATE INDEX ItemIndex ON warehouse.item(purchaseprice)";
+
+
+
+        for (String db_url : sql_databases.keySet()) {
+
+            if(db_url.contains("mariadb")) {
+
+                String[] db_settings = sql_databases.get(db_url);
+                executeSQLUpdate(createInvoiceIndexIfNotExistsSQL, db_url, db_settings);
+                executeSQLUpdate(createWorktypeIndexIfNotExistsSQL, db_url, db_settings);
+                executeSQLUpdate(createWorkhoursIndexIfNotExistsSQL, db_url, db_settings);
+                executeSQLUpdate(createUseditemIndexIfNotExistsSQL, db_url, db_settings);
+                executeSQLUpdate(createItemIndexIfNotExistsSQL, db_url, db_settings);
+
+            } else {
+
+                String[] db_settings = sql_databases.get(db_url);
+                executeSQLUpdate(createInvoiceIndexSQL, db_url, db_settings);
+                executeSQLUpdate(createWorktypeIndexSQL, db_url, db_settings);
+                executeSQLUpdate(createWorkhoursIndexSQL, db_url, db_settings);
+                executeSQLUpdate(createUseditemIndexSQL, db_url, db_settings);
+                executeSQLUpdate(createItemIndexSQL, db_url, db_settings);
+
+            }
+
+        }
+
+    }
+
+    public void createIndexesCypher() {
+
+
+        String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+        String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+        String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
+
+        Session session = driver.session();
+
+        String createInvoiceIndexCypher = "CREATE INDEX invoiceIndex IF NOT EXISTS " +
+                "FOR (inv:invoice) " +
+                "ON (inv.invoiceId, inv.previousinvoice)";
+
+        String createCustomerIndexCypher = "CREATE INDEX customerIndex IF NOT EXISTS " +
+                "FOR (c:customer) " +
+                "ON (c.customerId) ";
+
+        String createWorkTypeIndexCypher = "CREATE INDEX worktypeIndex IF NOT EXISTS " +
+                "FOR (wt:worktype) " +
+                "ON (wt.price)";
+
+        String createWorkhoursIndexCypher = "CREATE INDEX workhoursIndex IF NOT EXISTS " +
+                "FOR (h:WORKHOURS) " +
+                "ON (h.hours, h.discount)";
+
+        String createUseditemIndexCypher = "CREATE INDEX useditemIndex IF NOT EXISTS " +
+                "FOR (u:USED_ITEM) " +
+                "ON (u.amount, u.discount)";
+
+        String createItemIndexCypher = "CREATE INDEX itemIndex IF NOT EXISTS " +
+                "FOR (i:item) " +
+                "ON (i.purchaseprice)";
+
+        session.run(createInvoiceIndexCypher);
+        session.run(createCustomerIndexCypher);
+        session.run(createWorkTypeIndexCypher);
+        session.run(createWorkhoursIndexCypher);
+        session.run(createUseditemIndexCypher);
+        session.run(createItemIndexCypher);
+
+        session.close();
+        driver.close();
+
+    }
+
+
+
+    public void deleteIndexesSQL() {
+
+        String dropInvoiceIndexIfExistsSQL = "DROP INDEX IF EXISTS invoiceIndex ON warehouse.invoice;";
+        String dropInvoiceIndexSQL = "DROP INDEX invoiceIndex ON warehouse.invoice;";
+        String dropWorktypeIndexIfExistsSQL = "DROP INDEX IF EXISTS worktypeIndex ON warehouse.worktype;";
+        String dropWorktypeIndexSQL = "DROP INDEX worktypeIndex ON warehouse.worktype;";
+        String dropWorkhoursIndexIfExistsSQL = "DROP INDEX IF EXISTS workhoursIndex ON warehouse.workhours;";
+        String dropWorkhoursIndexSQL = "DROP INDEX workhoursIndex ON warehouse.workhours;";
+        String dropUseditemIndexIfExistsSQL = "DROP INDEX IF EXISTS useditemIndex ON warehouse.useditem;";
+        String dropUseditemIndexSQL = "DROP INDEX useditemIndex ON warehouse.useditem;";
+        String dropItemIndexIfExistsSQL = "DROP INDEX IF EXISTS itemIndex ON warehouse.item;";
+        String dropItemIndexSQL = "DROP INDEX itemIndex ON warehouse.item;";
+
+        for (String db_url : sql_databases.keySet()) {
+
+            if(db_url.contains("mariadb")) {
+                /*
+                String[] db_settings = sql_databases.get(db_url);
+                executeSQLUpdate(dropInvoiceIndexIfExistsSQL, db_url, db_settings);
+                executeSQLUpdate(dropWorktypeIndexIfExistsSQL, db_url, db_settings);
+                executeSQLUpdate(dropWorkhoursIndexIfExistsSQL, db_url, db_settings);
+                executeSQLUpdate(dropUseditemIndexIfExistsSQL, db_url, db_settings);
+                executeSQLUpdate(dropItemIndexIfExistsSQL, db_url, db_settings);
+
+                 */
+
+            } else {
+
+                String[] db_settings = sql_databases.get(db_url);
+                executeSQLUpdate(dropInvoiceIndexSQL, db_url, db_settings);
+                executeSQLUpdate(dropWorktypeIndexSQL, db_url, db_settings);
+                executeSQLUpdate(dropWorkhoursIndexSQL, db_url, db_settings);
+                executeSQLUpdate(dropUseditemIndexSQL, db_url, db_settings);
+                executeSQLUpdate(dropItemIndexSQL, db_url, db_settings);
+
+            }
+
+        }
+
+    }
+
+    public void deleteIndexesCypher() {
+
+
+        String neo4j_db_url = neo4j_settings.get("NEO4J_DB_URL");
+        String neo4j_username = neo4j_settings.get("NEO4J_USERNAME");
+        String neo4j_password = neo4j_settings.get("NEO4J_PASSWORD");
+
+        org.neo4j.driver.Driver driver = GraphDatabase.driver(neo4j_db_url, AuthTokens.basic(neo4j_username, neo4j_password));
+
+        Session session = driver.session();
+
+        String dropCustomerIndexCypher = "DROP INDEX customerIndex IF EXISTS";
+        String dropInvoiceIndexCypher = "DROP INDEX invoiceIndex IF EXISTS";
+        String dropWorkTypeIndexCypher = "DROP INDEX worktypeIndex IF EXISTS";
+        String dropWorkhoursIndexCypher = "DROP INDEX workhoursIndex IF EXISTS";
+        String dropUseditemIndexCypher = "DROP INDEX useditemIndex IF EXISTS";
+        String dropItemIndexCypher = "DROP INDEX itemIndex IF EXISTS";
+
+
+        session.run(dropInvoiceIndexCypher);
+        session.run(dropCustomerIndexCypher);
+        session.run(dropWorkTypeIndexCypher);
+        session.run(dropWorkhoursIndexCypher);
+        session.run(dropUseditemIndexCypher);
+        session.run(dropItemIndexCypher);
+
+        session.close();
+        driver.close();
+
+    }
+
+
+
 
     public void loadSampleData(int batchExecuteValue, String db_url) {
 

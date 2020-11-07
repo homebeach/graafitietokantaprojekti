@@ -354,8 +354,8 @@ public class QueryTester {
         showResults(results, showAll);
 
         System.out.println();
-        /*
-        System.out.println("Query with defined key CALL, invoice prices for customerId 0");
+
+        System.out.println("Query with defined key 2, invoice prices for customerId 0");
 
         String invoicePricesForCustomerCypher2 = "MATCH (inv:invoice) WHERE inv.customerId=0 " +
                 "CALL { " +
@@ -373,7 +373,30 @@ public class QueryTester {
         results = measureQueryTimeCypher(invoicePricesForCustomerCypher2, iterations);
 
         showResults(results, showAll);
-*/
+
+        System.out.println("Query with defined key 3, invoice prices for customerId 0");
+
+        String invoicePricesForCustomerCypher3 = "MATCH (inv:invoice) WHERE inv.customerId=0 " +
+        "CALL { " +
+        "   WITH inv " +
+        "   MATCH (c:customer)-[:PAYS]->(inv) " +
+        "   RETURN c " +
+        "}" +
+        "CALL { " +
+        "   WITH c, inv " +
+        "   MATCH (inv)-[:WORK_INVOICE]->(w:work) " +
+        "   RETURN w " +
+        "} " +
+        "CALL { " +
+        "   WITH w " +
+        "   MATCH (wt:worktype)-[h:WORKHOURS]->(w)-[u:USED_ITEM]->(i:item) " +
+        "   RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
+        "} " +
+        "RETURN c, inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+
+        results = measureQueryTimeCypher(invoicePricesForCustomerCypher3, iterations);
+
+        showResults(results, showAll);
     }
 
     public void executeQueryTestsCypher(int iterations, boolean showAll) {
@@ -485,7 +508,7 @@ public class QueryTester {
     }
 
     public void executeAggregateQueryTestCypher(int iterations, boolean showAll) {
-        /*
+
         System.out.println("Aggregate query1, invoice price");
 
         System.out.println();
@@ -519,53 +542,36 @@ public class QueryTester {
         results = measureQueryTimeCypher(invoicePriceCypher2, iterations);
 
         showResults(results, showAll);
-        */
+
         System.out.println("Aggregate query3, invoice price");
 
         System.out.println();
 
         String invoicePriceCypher3 =
                 "MATCH (inv:invoice) " +
-                        "CALL { " +
-                        "WITH inv " +
-                        "MATCH (inv)-[:WORK_INVOICE]->(w:work) " +
-                        "RETURN w" +
-                        "} " +
-                        "CALL { " +
-                        "WITH w " +
-                        "MATCH (wt:worktype)-[h:WORKHOURS]->(w)-[u:USED_ITEM]->(i:item) " +
-                        "RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
-                        "} " +
-                        "RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+                "CALL { " +
+                "WITH inv " +
+                "MATCH (inv)-[:WORK_INVOICE]->(w:work) " +
+                "RETURN w" +
+                "} " +
+                "CALL { " +
+                "WITH w " +
+                "MATCH (wt:worktype)-[h:WORKHOURS]->(w)-[u:USED_ITEM]->(i:item) " +
+                "RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
+                "} " +
+                "RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
 
         results = measureQueryTimeCypher(invoicePriceCypher3, iterations);
 
         showResults(results, showAll);
 
-
-        /*
-        KOKEILE VIELÄ TÄTÄ!
-
-        MATCH (inv:invoice)
-        CALL {
-          WITH inv
-          MATCH (inv)-[:WORK_INVOICE]->(w:work)
-          RETURN w
-        }
-        CALL {
-          WITH w
-          MATCH (wt:worktype)-[h:WORKHOURS]->(w)-[u:USED_ITEM]->(i:item)
-          RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice
-         }
-        RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId
-        */
     }
 
 
 
     public void executeCyclicQueryTestSQL(int iterations, boolean showAll, int invoiceId) {
 
-        System.out.println("Excecuting recursive query test");
+        System.out.println("Executing recursive query test");
 
         System.out.println("Cyclic query SQL, invoices related to invoice id " + invoiceId);
 
@@ -596,7 +602,7 @@ public class QueryTester {
 
     public void executeRecursiveQueryTestCypher(int iterations, boolean showAll, int invoiceId) {
 
-        System.out.println("Excecuting recursive query test");
+        System.out.println("Executing recursive query test");
 
         System.out.println("Recursive query Cypher, invoices related to invoice id " + invoiceId);
 
@@ -608,12 +614,9 @@ public class QueryTester {
 
     }
 
-
-
-
     public void executeOptimizedRecursiveQueryTest(int iterations, boolean showAll, int invoiceId) {
 
-        System.out.println("Excecuting recursive query test for optimized queries");
+        System.out.println("Executing recursive query test for optimized queries");
 
         System.out.println("Recursive query SQL with Common Table Expressions, invoices related to invoice id " + invoiceId);
 
