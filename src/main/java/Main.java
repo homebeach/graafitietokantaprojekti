@@ -72,12 +72,12 @@ public class Main
         //queryTester.executeAggregateQueryTestCypher(12, true);
         //queryTester.executeAggregateQueryTestSQL(12, true);
         //queryTester.executeQueryWithDefinedKeyCypher(12, true);
-        //queryTester.executeQueryWithDefinedKeySQL(12, true);
+        queryTester.executeQueryWithDefinedKeySQL(12, true);
         //dataGenerator.cleanSequentialInvoices(10000);
 
 
 
-
+        /*
         HashMap<String, Integer> customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,100);
 
         int invoiceIndex = customerInvoice.get("invoiceIndex");
@@ -97,7 +97,7 @@ public class Main
         queryTester.executeCyclicQueryTestSQL(12, true, invoiceIndex);
         //queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
         //queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
-
+        */
         //dataGenerator.cleanSequentialInvoices(10000);
 
         //queryTester.executeRecursiveQueryTest(12, true, 100000);
