@@ -403,7 +403,7 @@ public class QueryTester {
 
         System.out.println("Short query1, work price");
 
-        String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work) WITH SUM(h.hours*h.discount*wt.price) as price, w RETURN price, w.workId as workId;";
+        String workPriceCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work) WITH SUM(h.hours*h.discount*wt.price) as price, w RETURN w.workId as workId, price;";
 
         results = measureQueryTimeCypher(workPriceCypher, iterations);
 
@@ -430,7 +430,7 @@ public class QueryTester {
 
         System.out.println("Long query1, work price");
 
-        String workPriceWithItemsCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) WITH SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as price, w RETURN price, w.workId as workId ORDER BY workId";
+        String workPriceWithItemsCypher = "MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) WITH SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as price, w RETURN w.workId as workId, price";
 
         results = measureQueryTimeCypher(workPriceWithItemsCypher, iterations);
 
@@ -446,7 +446,7 @@ public class QueryTester {
                 "} " +
                 "RETURN w.workId as workId, price;";
 
-        results = measureQueryTimeCypher(workPriceCypher2, iterations);
+        results = measureQueryTimeCypher(workPriceWithItemsCypher2, iterations);
 
         showResults(results, showAll);
 
