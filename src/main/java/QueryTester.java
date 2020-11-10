@@ -347,12 +347,12 @@ public class QueryTester {
                 "WITH c, inv, w " +
                 "OPTIONAL MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) " +
                 "WITH c, inv, w, SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
-                "RETURN c, inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+                "RETURN c, inv, SUM(workPrice) as invoicePrice";
 
         results = measureQueryTimeCypher(invoicePricesForCustomerCypher, iterations);
 
         showResults(results, showAll);
-
+        /*
         System.out.println();
 
         System.out.println("Query with defined key 2, invoice prices for customerId 0");
@@ -367,13 +367,13 @@ public class QueryTester {
                 "   OPTIONAL MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) " +
                 "   RETURN c, w, SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
                 "} " +
-                "RETURN c, inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+                "RETURN c, inv, SUM(workPrice) as invoicePrice";
 
 
         results = measureQueryTimeCypher(invoicePricesForCustomerCypher2, iterations);
 
         showResults(results, showAll);
-
+        */
         System.out.println("Query with defined key 3, invoice prices for customerId 0");
 
         String invoicePricesForCustomerCypher3 = "MATCH (inv:invoice) WHERE inv.customerId=0 " +
@@ -392,7 +392,7 @@ public class QueryTester {
         "   MATCH (wt:worktype)-[h:WORKHOURS]->(w)-[u:USED_ITEM]->(i:item) " +
         "   RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
         "} " +
-        "RETURN c, inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+        "RETURN c, inv, SUM(workPrice) as invoicePrice";
 
         results = measureQueryTimeCypher(invoicePricesForCustomerCypher3, iterations);
 
@@ -517,13 +517,13 @@ public class QueryTester {
         "WITH inv, w " +
         "OPTIONAL MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) " +
         "WITH inv, w, SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
-        "RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+        "RETURN inv, SUM(workPrice) as invoicePrice";
 
         results = measureQueryTimeCypher(invoicePriceCypher, iterations);
 
         showResults(results, showAll);
 
-
+        /*
         System.out.println("Aggregate query2, invoice price");
 
         System.out.println();
@@ -537,12 +537,12 @@ public class QueryTester {
                         "OPTIONAL MATCH (wt:worktype)-[h:WORKHOURS]->(w:work)-[u:USED_ITEM]->(i:item) " +
                         "RETURN w, SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
                         "} " +
-                        "RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+                        "RETURN inv, SUM(workPrice) as invoicePrice";
 
         results = measureQueryTimeCypher(invoicePriceCypher2, iterations);
 
         showResults(results, showAll);
-
+        */
         System.out.println("Aggregate query3, invoice price");
 
         System.out.println();
@@ -559,7 +559,7 @@ public class QueryTester {
                 "MATCH (wt:worktype)-[h:WORKHOURS]->(w)-[u:USED_ITEM]->(i:item) " +
                 "RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice " +
                 "} " +
-                "RETURN inv, SUM(workPrice) as invoicePrice order by inv.invoiceId";
+                "RETURN inv, SUM(workPrice) as invoicePrice";
 
         results = measureQueryTimeCypher(invoicePriceCypher3, iterations);
 

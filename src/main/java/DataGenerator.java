@@ -768,15 +768,13 @@ public class DataGenerator {
         for (String db_url : sql_databases.keySet()) {
 
             if(db_url.contains("mariadb")) {
-                /*
+
                 String[] db_settings = sql_databases.get(db_url);
                 executeSQLUpdate(dropInvoiceIndexIfExistsSQL, db_url, db_settings);
                 executeSQLUpdate(dropWorktypeIndexIfExistsSQL, db_url, db_settings);
                 executeSQLUpdate(dropWorkhoursIndexIfExistsSQL, db_url, db_settings);
                 executeSQLUpdate(dropUseditemIndexIfExistsSQL, db_url, db_settings);
                 executeSQLUpdate(dropItemIndexIfExistsSQL, db_url, db_settings);
-
-                 */
 
             } else {
 

@@ -69,14 +69,21 @@ public class Main
         //dataGenerator.createIndexes();
         //queryTester.executeQueryTestsSQL(12, true);
         /*
-        dataGenerator.createIndexes();
+        dataGenerator.createIndexesCypher();
 
-        queryTester.executeQueryTestsCypher(12, true);
+        queryTester.executeAggregateQueryTestCypher(12, true);
+        queryTester.executeQueryWithDefinedKeyCypher(12, true);
 
-        dataGenerator.deleteIndexes();
+        System.out.println();
+        System.out.println("DELETING INDEXES");
+        System.out.println();
 
-        queryTester.executeQueryTestsCypher(12, true);
+        dataGenerator.deleteIndexesCypher();
         */
+        
+        queryTester.executeAggregateQueryTestCypher(12, true);
+        queryTester.executeQueryWithDefinedKeyCypher(12, true);
+
         //queryTester.executeAggregateQueryTestCypher(12, true);
         //queryTester.executeAggregateQueryTestSQL(12, true);
         //queryTester.executeQueryWithDefinedKeyCypher(12, true);
