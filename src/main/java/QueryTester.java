@@ -397,6 +397,20 @@ public class QueryTester {
         results = measureQueryTimeCypher(invoicePricesForCustomerCypher3, iterations);
 
         showResults(results, showAll);
+
+        /*
+        MATCH (c:customer)-[:PAYS]->(inv:invoice)-[:WORK_INVOICE]->(w:work)
+        WHERE inv.customerId=0
+        CALL {
+            WITH w
+            MATCH (wt:worktype)-[h:WORKHOURS]->(w)-[u:USED_ITEM]->(i:item)
+            RETURN SUM((h.hours*h.discount*wt.price)+(u.amount*u.discount*i.purchaseprice)) as workPrice
+        }
+        RETURN c, inv, SUM(workPrice) as invoicePrice;
+
+         */
+
+
     }
 
     public void executeQueryTestsCypher(int iterations, boolean showAll) {
