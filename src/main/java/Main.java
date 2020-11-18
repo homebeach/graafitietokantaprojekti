@@ -66,30 +66,61 @@ public class Main
         QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
         //dataGenerator.cleanSequentialInvoices(10000);
         //dataGenerator.deleteIndexes();
-        //dataGenerator.createIndexes();
-        //queryTester.executeQueryTestsSQL(12, true);
-        /*
-        dataGenerator.createIndexesCypher();
+        queryTester.executeQueryTestsSQL(12, true);
+        queryTester.executeQueryTestsCypher(12, true);
 
-        queryTester.executeAggregateQueryTestCypher(12, true);
-        queryTester.executeQueryWithDefinedKeyCypher(12, true);
+        System.out.println();
+        System.out.println("CREATING INDEXES");
+        System.out.println();
+
+        dataGenerator.createIndexes();
+
+        queryTester.executeQueryTestsSQL(12, true);
+        queryTester.executeQueryTestsCypher(12, true);
 
         System.out.println();
         System.out.println("DELETING INDEXES");
         System.out.println();
 
-        dataGenerator.deleteIndexesCypher();
-        */
-        
+        dataGenerator.deleteIndexes();
+
+        System.out.println();
+        System.out.println("REMOVING MySQL");
+        System.out.println();
+
+        sql_databases.remove("jdbc:mysql://127.0.0.1:3307/");
+        queryTester.executeAggregateQueryTestSQL(12, true);
+        queryTester.executeQueryWithDefinedKeySQL(12, true);
+
+        System.out.println();
+        System.out.println("CREATING INDEXES");
+        System.out.println();
+
+        dataGenerator.createIndexesCypher();
+
         queryTester.executeAggregateQueryTestCypher(12, true);
         queryTester.executeQueryWithDefinedKeyCypher(12, true);
+
+        /*
+        System.out.println();
+        System.out.println("DELETING INDEXES");
+        System.out.println();
+
+        dataGenerator.deleteIndexesCypher();
+
+        
+        //queryTester.executeAggregateQueryTestCypher(12, true);
+        //queryTester.executeQueryWithDefinedKeyCypher(12, true);
 
         //queryTester.executeAggregateQueryTestCypher(12, true);
         //queryTester.executeAggregateQueryTestSQL(12, true);
         //queryTester.executeQueryWithDefinedKeyCypher(12, true);
         //queryTester.executeQueryWithDefinedKeySQL(12, true);
         //dataGenerator.cleanSequentialInvoices(10000);
+        */
 
+        queryTester.executeRecursiveQueryTestSQL(0, true, 10000);
+        queryTester.executeRecursiveQueryTestCypher(0, true, 10000);
 
 
         /*
