@@ -117,8 +117,6 @@ public class DataGeneratorThreadSequentialInvoices extends Thread {
 
         Random r = new Random();
 
-        System.out.println("Thread: " + threadIndex + " Invoiceindex: " + invoiceIndex);
-
         r.setSeed(invoiceIndex);
         //-- 0 = incomplete, 1 = complete, 2 = sent, 3 = paid
         int state = 1 + r.nextInt(3);

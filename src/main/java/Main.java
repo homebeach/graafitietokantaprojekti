@@ -66,6 +66,9 @@ public class Main
         QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
         //dataGenerator.cleanSequentialInvoices(10000);
         //dataGenerator.deleteIndexes();
+        /*
+        System.out.println("NO INDEXES");
+
         queryTester.executeQueryTestsSQL(12, true);
         queryTester.executeQueryTestsCypher(12, true);
 
@@ -78,6 +81,25 @@ public class Main
         queryTester.executeQueryTestsSQL(12, true);
         queryTester.executeQueryTestsCypher(12, true);
 
+
+        System.out.println();
+        System.out.println("DELETING INDEXES");
+        System.out.println();
+
+        dataGenerator.deleteIndexes();
+
+        queryTester.executeComplexQueryTestSQL(12, true);
+        queryTester.executeComplexQueryTestCypher(12, true);
+
+        System.out.println();
+        System.out.println("CREATING INDEXES");
+        System.out.println();
+
+        dataGenerator.createIndexes();
+
+        queryTester.executeComplexQueryTestSQL(12, true);
+        queryTester.executeComplexQueryTestCypher(12, true);
+
         System.out.println();
         System.out.println("DELETING INDEXES");
         System.out.println();
@@ -87,51 +109,29 @@ public class Main
         System.out.println();
         System.out.println("REMOVING MySQL");
         System.out.println();
-
         sql_databases.remove("jdbc:mysql://127.0.0.1:3307/");
-        queryTester.executeAggregateQueryTestSQL(12, true);
+
+
         queryTester.executeQueryWithDefinedKeySQL(12, true);
+        queryTester.executeQueryWithDefinedKeyCypher(12, true);
+
 
         System.out.println();
         System.out.println("CREATING INDEXES");
         System.out.println();
 
-        dataGenerator.createIndexesCypher();
-
-        queryTester.executeAggregateQueryTestCypher(12, true);
+        dataGenerator.createIndexes();
+        queryTester.executeQueryWithDefinedKeySQL(12, true);
         queryTester.executeQueryWithDefinedKeyCypher(12, true);
 
-        /*
-        System.out.println();
-        System.out.println("DELETING INDEXES");
-        System.out.println();
 
-        dataGenerator.deleteIndexesCypher();
-
-        
-        //queryTester.executeAggregateQueryTestCypher(12, true);
-        //queryTester.executeQueryWithDefinedKeyCypher(12, true);
-
-        //queryTester.executeAggregateQueryTestCypher(12, true);
-        //queryTester.executeAggregateQueryTestSQL(12, true);
-        //queryTester.executeQueryWithDefinedKeyCypher(12, true);
-        //queryTester.executeQueryWithDefinedKeySQL(12, true);
-        //dataGenerator.cleanSequentialInvoices(10000);
-        */
-
-        queryTester.executeRecursiveQueryTestSQL(0, true, 10000);
-        queryTester.executeRecursiveQueryTestCypher(0, true, 10000);
-
-
-        /*
         HashMap<String, Integer> customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,100);
 
         int invoiceIndex = customerInvoice.get("invoiceIndex");
         int customerIndex = customerInvoice.get("customerIndex");
 
-        queryTester.executeCyclicQueryTestSQL(12, true, invoiceIndex);
-        //queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
-        //queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestSQL(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
 
         System.out.println("customerIndex " + customerIndex);
         dataGenerator.cleanSequentialInvoices(customerIndex);
@@ -140,11 +140,41 @@ public class Main
 
         invoiceIndex = customerInvoice.get("invoiceIndex");
 
-        queryTester.executeCyclicQueryTestSQL(12, true, invoiceIndex);
-        //queryTester.executeOptimizedRecursiveQueryTest(12, true, invoiceIndex);
-        //queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestSQL(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+
+        dataGenerator.cleanSequentialInvoices(customerIndex);
+
+        System.out.println();
+        System.out.println("DELETING INDEXES");
+        System.out.println();
+
+        dataGenerator.deleteIndexes();
+
+        customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,100);
+
+        invoiceIndex = customerInvoice.get("invoiceIndex");
+        customerIndex = customerInvoice.get("customerIndex");
+
+        queryTester.executeRecursiveQueryTestSQL(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+
+        System.out.println("customerIndex " + customerIndex);
+        dataGenerator.cleanSequentialInvoices(customerIndex);
+
+        customerInvoice =  dataGenerator.insertSequentialInvoices(1,10,1000);
+
+        invoiceIndex = customerInvoice.get("invoiceIndex");
         */
-        //dataGenerator.cleanSequentialInvoices(10000);
+
+        int customerIndex = 10000;
+        int invoiceIndex = 100000;
+        queryTester.executeRecursiveQueryTestSQL(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestSQL(12, true, invoiceIndex);
+        queryTester.executeRecursiveQueryTestCypher(12, true, invoiceIndex);
+        
+        dataGenerator.cleanSequentialInvoices(customerIndex);
 
         //queryTester.executeRecursiveQueryTest(12, true, 100000);
 
