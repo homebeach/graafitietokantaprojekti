@@ -1206,7 +1206,7 @@ public class DataGenerator {
             customerInvoice.put("customerIndex", customerIndex);
             customerInvoice.put("invoiceIndex", invoiceIndex);
 
-            getSampleData();
+            //getSampleData();
 
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
@@ -1218,9 +1218,9 @@ public class DataGenerator {
 
             System.out.println("Insertion of sequential invoices started at: " + startTime.toString());
 
-            String name = firstnames.get(0) + " " + surnames.get(0);
+            String name = "Erkki Esimerkki"; //firstnames.get(0) + " " + surnames.get(0);
 
-            String streetAddress = addresses.get(0).get("street") + " " + addresses.get(0).get("city") + " " + addresses.get(0).get("district") + " " + addresses.get(0).get("region") + " " + addresses.get(0).get("postcode");
+            String streetAddress = "Esimerkkikatu 1 Testikaupunki 1010101"; //addresses.get(0).get("street") + " " + addresses.get(0).get("city") + " " + addresses.get(0).get("district") + " " + addresses.get(0).get("region") + " " + addresses.get(0).get("postcode");
 
             for (String db_url : sql_databases.keySet()) {
 
