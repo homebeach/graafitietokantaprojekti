@@ -56,14 +56,14 @@ public class Main
 
         QueryTester queryTester = new QueryTester(sql_databases, neo4j_settings);
 
-        queryTester.executeQueryTestsSQL(12, true);
+        //queryTester.executeQueryTestsSQL(12, true);
         queryTester.executeComplexQueryTestSQL(6, true);
         queryTester.executeQueryWithDefinedKeySQL(6, true);
 
         System.out.println("CREATING INDEXES");
         dataGenerator.createIndexesSQL();
 
-        queryTester.executeQueryTestsSQL(12, true);
+        //queryTester.executeQueryTestsSQL(12, true);
         queryTester.executeComplexQueryTestSQL(6, true);
         queryTester.executeQueryWithDefinedKeySQL(6, true);
 
